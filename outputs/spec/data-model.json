@@ -1,0 +1,3885 @@
+{
+  "skillVersion": "1.6",
+  "generatedAt": "2026-11-13T21:00:00Z",
+  "outputLanguage": "pt-BR",
+  "schemaVersion": "1",
+  "projectName": "Cobrança Inteligente (2.6 Cobrança · SEFAZ-MT)",
+  "paths": {
+    "specRoot": "outputs/spec",
+    "pipelineRoot": "outputs/spec",
+    "rulesRoot": ".claude/rules"
+  },
+  "changelog": [
+    {
+      "version": "1.0",
+      "date": "2026-11-13",
+      "summary": "Modelo inicial greenfield: 26 tabelas x_cbi_ da ETF §4 em 7 contextos (um por módulo), mais a referência nativa sys_user.",
+      "structural": true
+    }
+  ],
+  "boundedContexts": [
+    {
+      "id": "BC-INGESTAO",
+      "name": "Ingestão e Carteira Consolidada",
+      "description": "Entidades do módulo Ingestão e Carteira Consolidada; container principal CON-03/CON-04 do hld.md",
+      "moduleIds": [
+        "MOD-INGESTAO"
+      ],
+      "entities": [
+        {
+          "name": "Fonte",
+          "operationType": "NEW",
+          "purpose": "Cada sistema de origem que envia débitos ou score por API; guarda prazo de entrega e situação do último lote",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_fonte",
+          "columns": [
+            {
+              "name": "nome",
+              "type": "string(60)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "CCF, MPI, Big Data, IPVA, ITCD, SNE/DT-e ou Score UFMT"
+            },
+            {
+              "name": "endpoint",
+              "type": "string(200)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Caminho da API de ingestão da fonte (Scripted REST API)"
+            },
+            {
+              "name": "usuario_integracao",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Usuário de integração da fonte; só escreve pelo próprio endpoint"
+            },
+            {
+              "name": "tributo_escopo",
+              "type": "choice",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Tributo que a fonte alimenta · lista: TributoFonte"
+            },
+            {
+              "name": "ativa",
+              "type": "boolean",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Fonte participa do ciclo Horário-limite para a fonte"
+            },
+            {
+              "name": "prazo_recebimento",
+              "type": "string(5)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "entregar o lote do dia; passado o prazo sem entrega, a fonte fica em Falha"
+            },
+            {
+              "name": "status_atual",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Resultado do último lote · lista: StatusFonte",
+              "businessRuleRef": "RN-NOVO-ING-006"
+            },
+            {
+              "name": "ultima_execucao",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Último lote registrado"
+            },
+            {
+              "name": "pct_migracao",
+              "type": "decimal",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Percentual de regras migradas do MPI para o Big Data (RN-12); só na fonte MPI"
+            },
+            {
+              "name": "chave_natural",
+              "type": "string(60)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Campo de origem usado como chave do upsert"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [],
+          "relationships": [
+            {
+              "targetEntity": "Usuario",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "usuario_integracao",
+              "cascade": "NONE",
+              "nullable": false
+            },
+            {
+              "targetEntity": "LoteCarga",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "ultima_execucao",
+              "cascade": "NONE",
+              "nullable": true
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_fonte",
+              "excerpt": "Cada sistema de origem que envia débitos ou score por API; guarda prazo de entrega e situação do último lote"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-INGESTAO-05",
+              "excerpt": "Fonte sustenta RF-MOD-INGESTAO-05"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-INGESTAO-11",
+              "excerpt": "Fonte sustenta RF-MOD-INGESTAO-11"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-ING-006",
+              "excerpt": "Fonte sustenta RN-NOVO-ING-006"
+            }
+          ]
+        },
+        {
+          "name": "LoteCarga",
+          "operationType": "NEW",
+          "purpose": "Cada lote recebido de uma fonte, com pacotes, contagens e situação; é a trilha operacional da carga e a chave de idempotência do lote",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_sync_execucao",
+          "columns": [
+            {
+              "name": "fonte",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Fonte que enviou o lote"
+            },
+            {
+              "name": "id_lote_origem",
+              "type": "string(60)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Identificador do lote na fonte — chave de idempotência do lote",
+              "businessRuleRef": "RN-NOVO-ING-005"
+            },
+            {
+              "name": "inicio",
+              "type": "glide_date_time",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Recebimento do primeiro pacote"
+            },
+            {
+              "name": "fim",
+              "type": "glide_date_time",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Fechamento do lote"
+            },
+            {
+              "name": "status",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Resultado do lote · lista: StatusLote"
+            },
+            {
+              "name": "origem",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Como o lote chegou · lista: OrigemLote"
+            },
+            {
+              "name": "pacotes_esperados",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Quantidade de pacotes informada pela fonte no fechamento"
+            },
+            {
+              "name": "pacotes_recebidos",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Pacotes recebidos até o momento"
+            },
+            {
+              "name": "lidos",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Registros recebidos"
+            },
+            {
+              "name": "aceitos",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Registros gravados"
+            },
+            {
+              "name": "rejeitados",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Registros rejeitados na validação"
+            },
+            {
+              "name": "execucao_anterior",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Preenchida no reprocesso"
+            },
+            {
+              "name": "versao_modelo",
+              "type": "string(20)",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Somente no lote de score: versão do modelo UFMT"
+            },
+            {
+              "name": "mensagem_erro",
+              "type": "string(1000)",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Causa da falha, por etapa"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [
+            {
+              "name": "idx_lote_fonte_origem",
+              "columns": [
+                "fonte",
+                "id_lote_origem"
+              ],
+              "unique": true,
+              "purpose": "Idempotência do lote (RN-NOVO-ING-005)"
+            }
+          ],
+          "relationships": [
+            {
+              "targetEntity": "Fonte",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "fonte",
+              "cascade": "NONE",
+              "nullable": false
+            },
+            {
+              "targetEntity": "LoteCarga",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "execucao_anterior",
+              "cascade": "NONE",
+              "nullable": true
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_sync_execucao",
+              "excerpt": "Cada lote recebido de uma fonte, com pacotes, contagens e situação; é a trilha operacional da carga e a chave de idempotência do lote"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-INGESTAO-01",
+              "excerpt": "LoteCarga sustenta RF-MOD-INGESTAO-01"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-INGESTAO-04",
+              "excerpt": "LoteCarga sustenta RF-MOD-INGESTAO-04"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-ING-005",
+              "excerpt": "LoteCarga sustenta RN-NOVO-ING-005"
+            }
+          ]
+        },
+        {
+          "name": "RegistroRejeitado",
+          "operationType": "NEW",
+          "purpose": "Registro recusado na validação, com o motivo e a linha original para reprocesso",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_registro_rejeitado",
+          "columns": [
+            {
+              "name": "execucao",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Execução que rejeitou o registro"
+            },
+            {
+              "name": "chave_origem",
+              "type": "string(60)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Chave do registro na fonte"
+            },
+            {
+              "name": "motivo",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Motivo da rejeição (RNF-T-CONF-01) · lista: MotivoRejeicao",
+              "businessRuleRef": "RN-NOVO-ING-004"
+            },
+            {
+              "name": "conteudo_original",
+              "type": "string(4000)",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Linha original, para reprocesso; sujeita à política de retenção"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [],
+          "relationships": [
+            {
+              "targetEntity": "LoteCarga",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "execucao",
+              "cascade": "NONE",
+              "nullable": false
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_registro_rejeitado",
+              "excerpt": "Registro recusado na validação, com o motivo e a linha original para reprocesso"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-INGESTAO-02",
+              "excerpt": "RegistroRejeitado sustenta RF-MOD-INGESTAO-02"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-INGESTAO-08",
+              "excerpt": "RegistroRejeitado sustenta RF-MOD-INGESTAO-08"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-ING-004",
+              "excerpt": "RegistroRejeitado sustenta RN-NOVO-ING-004"
+            }
+          ]
+        },
+        {
+          "name": "Contribuinte",
+          "operationType": "NEW",
+          "purpose": "O contribuinte consolidado, chave da visão única e do isolamento do atendente",
+          "dataOwnership": {
+            "mode": "EXTERNAL_LOADED",
+            "source": "APIs de ingestão das fontes (INT-01 a INT-07)"
+          },
+          "tableName": "x_cbi_contribuinte",
+          "columns": [
+            {
+              "name": "documento",
+              "type": "string(14)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "CPF ou CNPJ normalizado; chave da consolidação",
+              "businessRuleRef": "RN-NOVO-ING-001"
+            },
+            {
+              "name": "tipo",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Tipo de pessoa · lista: TipoPessoa"
+            },
+            {
+              "name": "nome",
+              "type": "string(150)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Nome ou razão social"
+            },
+            {
+              "name": "segmento_atual",
+              "type": "choice",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Segmento na carteira do ciclo · lista: SegmentoContribuinte"
+            },
+            {
+              "name": "status_cobranca",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Situação da cobrança · lista: StatusCobranca"
+            },
+            {
+              "name": "score_atual",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Score vigente; nulo quando não há score (fallback)"
+            },
+            {
+              "name": "total_em_aberto",
+              "type": "currency",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Calculado — soma dos débitos em aberto"
+            },
+            {
+              "name": "maior_atraso_dias",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Calculado — maior atraso entre os débitos em aberto"
+            },
+            {
+              "name": "contumaz",
+              "type": "boolean",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Devedor contumaz"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [
+            {
+              "name": "idx_contribuinte_documento",
+              "columns": [
+                "documento"
+              ],
+              "unique": true,
+              "purpose": "Chave da consolidação: um contribuinte por documento (RN-NOVO-ING-001)"
+            }
+          ],
+          "relationships": [
+            {
+              "targetEntity": "Score",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "score_atual",
+              "cascade": "NONE",
+              "nullable": true
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_contribuinte",
+              "excerpt": "O contribuinte consolidado, chave da visão única e do isolamento do atendente"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-INGESTAO-03",
+              "excerpt": "Contribuinte sustenta RF-MOD-INGESTAO-03"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-INGESTAO-13",
+              "excerpt": "Contribuinte sustenta RF-MOD-INGESTAO-13"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-ING-001",
+              "excerpt": "Contribuinte sustenta RN-NOVO-ING-001"
+            }
+          ],
+          "migrationNotes": "total_em_aberto e maior_atraso_dias são calculados na consolidação (mesma justificativa da PosicaoTributo). documento guarda só dígitos; CPF mascarado na leitura por ACL de campo (SEC-004)."
+        },
+        {
+          "name": "Debito",
+          "operationType": "NEW",
+          "purpose": "Cada débito recebido de uma fonte, ligado ao contribuinte",
+          "dataOwnership": {
+            "mode": "EXTERNAL_LOADED",
+            "source": "APIs de ingestão das fontes (INT-01 a INT-07)"
+          },
+          "tableName": "x_cbi_debito",
+          "columns": [
+            {
+              "name": "contribuinte",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Devedor"
+            },
+            {
+              "name": "tributo",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Tributo do débito · lista: Tributo"
+            },
+            {
+              "name": "valor",
+              "type": "currency",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Valor original em aberto"
+            },
+            {
+              "name": "vencimento",
+              "type": "glide_date",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Data de vencimento"
+            },
+            {
+              "name": "instrumento",
+              "type": "choice",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Instrumento de constituição do débito · lista: Instrumento"
+            },
+            {
+              "name": "fonte",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Sistema de origem"
+            },
+            {
+              "name": "status",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Situação do débito · lista: StatusDebito"
+            },
+            {
+              "name": "data_regularizacao",
+              "type": "glide_date",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Preenchida apenas quando regularizado"
+            },
+            {
+              "name": "atraso_dias",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Calculado — dias desde o vencimento (0 se não vencido)"
+            },
+            {
+              "name": "id_origem",
+              "type": "string(40)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Chave natural na fonte — base do upsert",
+              "businessRuleRef": "RN-NOVO-ING-005"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [
+            {
+              "name": "idx_debito_fonte_origem",
+              "columns": [
+                "fonte",
+                "id_origem"
+              ],
+              "unique": true,
+              "purpose": "Reenvio da fonte atualiza, não duplica (RN-NOVO-ING-005)"
+            },
+            {
+              "name": "idx_debito_contribuinte_status",
+              "columns": [
+                "contribuinte",
+                "status"
+              ],
+              "unique": false,
+              "purpose": "Débitos em aberto do contribuinte na consolidação"
+            }
+          ],
+          "relationships": [
+            {
+              "targetEntity": "Contribuinte",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "contribuinte",
+              "cascade": "NONE",
+              "nullable": false
+            },
+            {
+              "targetEntity": "Fonte",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "fonte",
+              "cascade": "NONE",
+              "nullable": false
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_debito",
+              "excerpt": "Cada débito recebido de uma fonte, ligado ao contribuinte"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-INGESTAO-01",
+              "excerpt": "Debito sustenta RF-MOD-INGESTAO-01"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-INGESTAO-03",
+              "excerpt": "Debito sustenta RF-MOD-INGESTAO-03"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-ING-001",
+              "excerpt": "Debito sustenta RN-NOVO-ING-001"
+            }
+          ]
+        },
+        {
+          "name": "PosicaoTributo",
+          "operationType": "NEW",
+          "purpose": "Posição consolidada do contribuinte em cada tributo, gravada na carga para não somar na consulta",
+          "dataOwnership": {
+            "mode": "EXTERNAL_LOADED",
+            "source": "APIs de ingestão das fontes (INT-01 a INT-07)"
+          },
+          "tableName": "x_cbi_posicao_tributo",
+          "columns": [
+            {
+              "name": "contribuinte",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Contribuinte"
+            },
+            {
+              "name": "tributo",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Tributo · lista: Tributo"
+            },
+            {
+              "name": "total_em_aberto",
+              "type": "currency",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Soma dos débitos em aberto do tributo"
+            },
+            {
+              "name": "maior_atraso_dias",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Maior atraso do tributo"
+            },
+            {
+              "name": "qtd_debitos",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Quantidade de débitos em aberto"
+            },
+            {
+              "name": "status_parcelamento",
+              "type": "choice",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Situação do parcelamento do tributo · lista: StatusParcelamentoPosicao"
+            },
+            {
+              "name": "status_cobranca",
+              "type": "choice",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Situação da cobrança do tributo · lista: StatusCobrancaTributo"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [
+            {
+              "name": "idx_posicao_contribuinte_tributo",
+              "columns": [
+                "contribuinte",
+                "tributo"
+              ],
+              "unique": true,
+              "purpose": "Uma posição por contribuinte e tributo"
+            },
+            {
+              "name": "idx_posicao_filtros",
+              "columns": [
+                "tributo",
+                "maior_atraso_dias",
+                "total_em_aberto"
+              ],
+              "unique": false,
+              "purpose": "Filtros da carteira consolidada e do motor de critérios"
+            }
+          ],
+          "relationships": [
+            {
+              "targetEntity": "Contribuinte",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "contribuinte",
+              "cascade": "NONE",
+              "nullable": false
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_posicao_tributo",
+              "excerpt": "Posição consolidada do contribuinte em cada tributo, gravada na carga para não somar na consulta"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-INGESTAO-03",
+              "excerpt": "PosicaoTributo sustenta RF-MOD-INGESTAO-03"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-INGESTAO-14",
+              "excerpt": "PosicaoTributo sustenta RF-MOD-INGESTAO-14"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-ING-001",
+              "excerpt": "PosicaoTributo sustenta RN-NOVO-ING-001"
+            }
+          ],
+          "migrationNotes": "Desnormalização deliberada: total, maior atraso e quantidade são gravados na carga para a carteira e os critérios não somarem ~1,8 milhão de contribuintes na consulta (ETF §2.1; RNF-DES-001). Risco: divergir dos débitos se a consolidação falhar no meio — a consolidação recalcula a posição inteira do contribuinte a cada lote."
+        },
+        {
+          "name": "Parcelamento",
+          "operationType": "NEW",
+          "purpose": "Parcelamento de débito, com o alerta de risco quando há parcela vencida",
+          "dataOwnership": {
+            "mode": "EXTERNAL_LOADED",
+            "source": "APIs de ingestão das fontes (INT-01 a INT-07)"
+          },
+          "tableName": "x_cbi_parcelamento",
+          "columns": [
+            {
+              "name": "numero",
+              "type": "string(20)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Número do parcelamento"
+            },
+            {
+              "name": "contribuinte",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Contribuinte"
+            },
+            {
+              "name": "tributo",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Tributo parcelado · lista: Tributo"
+            },
+            {
+              "name": "parcelas_total",
+              "type": "integer",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Quantidade de parcelas"
+            },
+            {
+              "name": "parcelas_pagas",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Parcelas pagas"
+            },
+            {
+              "name": "parcelas_em_atraso",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Parcelas vencidas e não pagas"
+            },
+            {
+              "name": "valor",
+              "type": "currency",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Valor parcelado"
+            },
+            {
+              "name": "status",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Em risco quando há parcela vencida · lista: StatusParcelamento"
+            },
+            {
+              "name": "id_origem",
+              "type": "string(40)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Chave natural na fonte"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [
+            {
+              "name": "idx_parcelamento_origem",
+              "columns": [
+                "id_origem"
+              ],
+              "unique": true,
+              "purpose": "Chave natural na fonte"
+            }
+          ],
+          "relationships": [
+            {
+              "targetEntity": "Contribuinte",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "contribuinte",
+              "cascade": "NONE",
+              "nullable": false
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_parcelamento",
+              "excerpt": "Parcelamento de débito, com o alerta de risco quando há parcela vencida"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-INGESTAO-10",
+              "excerpt": "Parcelamento sustenta RF-MOD-INGESTAO-10"
+            }
+          ]
+        },
+        {
+          "name": "VinculoEconomico",
+          "operationType": "NEW",
+          "purpose": "Vínculo entre contribuintes do mesmo grupo econômico",
+          "dataOwnership": {
+            "mode": "EXTERNAL_LOADED",
+            "source": "APIs de ingestão das fontes (INT-01 a INT-07)"
+          },
+          "tableName": "x_cbi_vinculo_economico",
+          "columns": [
+            {
+              "name": "contribuinte",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Contribuinte de referência"
+            },
+            {
+              "name": "vinculado",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Empresa vinculada"
+            },
+            {
+              "name": "relacao",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Natureza do vínculo · lista: RelacaoVinculo"
+            },
+            {
+              "name": "fonte",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Fonte do vínculo"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [],
+          "relationships": [
+            {
+              "targetEntity": "Contribuinte",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "contribuinte",
+              "cascade": "NONE",
+              "nullable": false
+            },
+            {
+              "targetEntity": "Contribuinte",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "vinculado",
+              "cascade": "NONE",
+              "nullable": false
+            },
+            {
+              "targetEntity": "Fonte",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "fonte",
+              "cascade": "NONE",
+              "nullable": true
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_vinculo_economico",
+              "excerpt": "Vínculo entre contribuintes do mesmo grupo econômico"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-QUALIFICADA-04",
+              "excerpt": "VinculoEconomico sustenta RF-MOD-QUALIFICADA-04"
+            }
+          ]
+        },
+        {
+          "name": "Sinalizacao",
+          "operationType": "NEW",
+          "purpose": "Sinalização de cobrança coercitiva de outra coordenadoria, só informativa",
+          "dataOwnership": {
+            "mode": "EXTERNAL_LOADED",
+            "source": "APIs de ingestão das fontes (INT-01 a INT-07)"
+          },
+          "tableName": "x_cbi_sinalizacao",
+          "columns": [
+            {
+              "name": "contribuinte",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Contribuinte sinalizado"
+            },
+            {
+              "name": "debito",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Débito relacionado"
+            },
+            {
+              "name": "tipo",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Tipo da sinalização · lista: TipoSinalizacao"
+            },
+            {
+              "name": "fonte",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Fonte da sinalização (SNE/DT-e)"
+            },
+            {
+              "name": "data",
+              "type": "glide_date",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Data da sinalização"
+            },
+            {
+              "name": "ativa",
+              "type": "boolean",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Sinalização em vigor"
+            },
+            {
+              "name": "descricao",
+              "type": "string(300)",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Descrição resumida"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [],
+          "relationships": [
+            {
+              "targetEntity": "Contribuinte",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "contribuinte",
+              "cascade": "NONE",
+              "nullable": false
+            },
+            {
+              "targetEntity": "Debito",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "debito",
+              "cascade": "NONE",
+              "nullable": true
+            },
+            {
+              "targetEntity": "Fonte",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "fonte",
+              "cascade": "NONE",
+              "nullable": false
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_sinalizacao",
+              "excerpt": "Sinalização de cobrança coercitiva de outra coordenadoria, só informativa"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-INGESTAO-12",
+              "excerpt": "Sinalizacao sustenta RF-MOD-INGESTAO-12"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-ING-007",
+              "excerpt": "Sinalizacao sustenta RN-NOVO-ING-007"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BC-QUALIFICACAO",
+      "name": "Qualificação e Parametrização da Carteira",
+      "description": "Entidades do módulo Qualificação e Parametrização da Carteira; container principal CON-03/CON-04 do hld.md",
+      "moduleIds": [
+        "MOD-QUALIFICACAO"
+      ],
+      "entities": [
+        {
+          "name": "CriterioVersao",
+          "operationType": "NEW",
+          "purpose": "Versão numerada dos critérios de qualificação; imutável depois de publicada",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_criterio_versao",
+          "columns": [
+            {
+              "name": "numero",
+              "type": "integer",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Numeração sequencial automática"
+            },
+            {
+              "name": "estado",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Publicar exige prévia vigente; após Publicada, nenhum campo é editável · lista: EstadoCriterio",
+              "businessRuleRef": "RN-NOVO-QUA-005"
+            },
+            {
+              "name": "previa",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Prévia (carteira em Simulação) revisada; obrigatória para publicar e invalidada se os parâmetros mudarem",
+              "businessRuleRef": "RN-NOVO-QUA-006"
+            },
+            {
+              "name": "valor_minimo",
+              "type": "currency",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Valor mínimo em aberto"
+            },
+            {
+              "name": "tributo",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Tributo alvo · lista: TributoCriterio"
+            },
+            {
+              "name": "atraso_minimo_dias",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Tempo de atraso mínimo"
+            },
+            {
+              "name": "instrumento",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Instrumento alvo · lista: InstrumentoCriterio"
+            },
+            {
+              "name": "threshold_score",
+              "type": "decimal",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Aplicado apenas a quem tem score"
+            },
+            {
+              "name": "tipo_alvo",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Tipo de carteira que a versão forma · lista: SegmentoAlvo"
+            },
+            {
+              "name": "excluir_contumazes",
+              "type": "boolean",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Exclui devedores contumazes"
+            },
+            {
+              "name": "reservar_controle",
+              "type": "boolean",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Reserva grupo de controle (RN-09)"
+            },
+            {
+              "name": "pct_controle",
+              "type": "decimal",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Obrigatório se reservar_controle; padrão de 3% da carteira segmentada"
+            },
+            {
+              "name": "fundamentacao",
+              "type": "string(2000)",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Obrigatória na publicação"
+            },
+            {
+              "name": "versao_base",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Versão da qual esta foi copiada"
+            },
+            {
+              "name": "publicada_por",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Quem publicou"
+            },
+            {
+              "name": "publicada_em",
+              "type": "glide_date_time",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Quando publicou"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [],
+          "relationships": [
+            {
+              "targetEntity": "Carteira",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "previa",
+              "cascade": "NONE",
+              "nullable": true
+            },
+            {
+              "targetEntity": "CriterioVersao",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "versao_base",
+              "cascade": "NONE",
+              "nullable": true
+            },
+            {
+              "targetEntity": "Usuario",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "publicada_por",
+              "cascade": "NONE",
+              "nullable": true
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_criterio_versao",
+              "excerpt": "Versão numerada dos critérios de qualificação; imutável depois de publicada"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-QUALIFICACAO-01",
+              "excerpt": "CriterioVersao sustenta RF-MOD-QUALIFICACAO-01"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-QUALIFICACAO-02",
+              "excerpt": "CriterioVersao sustenta RF-MOD-QUALIFICACAO-02"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-QUA-001",
+              "excerpt": "CriterioVersao sustenta RN-NOVO-QUA-001"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-QUA-005",
+              "excerpt": "CriterioVersao sustenta RN-NOVO-QUA-005"
+            }
+          ]
+        },
+        {
+          "name": "Carteira",
+          "operationType": "NEW",
+          "purpose": "Carteira do ciclo formada por uma versão de critérios; imutável depois de confirmada",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_carteira",
+          "columns": [
+            {
+              "name": "ciclo",
+              "type": "string(7)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Ciclo de cobrança"
+            },
+            {
+              "name": "criterio_versao",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Versão de critérios aplicada"
+            },
+            {
+              "name": "estado",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Confirmar exige versão de critérios Publicada; após Confirmada, a carteira é imutável · lista: EstadoCarteira",
+              "businessRuleRef": "RN-NOVO-QUA-005"
+            },
+            {
+              "name": "semente_sorteio",
+              "type": "string(40)",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Semente do sorteio do controle — reprodutibilidade",
+              "businessRuleRef": "RN-NOVO-QUA-003"
+            },
+            {
+              "name": "qtd_massificada",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Calculado — contribuintes na massificada"
+            },
+            {
+              "name": "qtd_qualificada",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Calculado — contribuintes na qualificada"
+            },
+            {
+              "name": "qtd_controle",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Calculado — contribuintes no grupo de controle (3% da carteira segmentada)"
+            },
+            {
+              "name": "confirmada_por",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Quem confirmou"
+            },
+            {
+              "name": "confirmada_em",
+              "type": "glide_date_time",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Quando confirmou"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [],
+          "relationships": [
+            {
+              "targetEntity": "CriterioVersao",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "criterio_versao",
+              "cascade": "NONE",
+              "nullable": false
+            },
+            {
+              "targetEntity": "Usuario",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "confirmada_por",
+              "cascade": "NONE",
+              "nullable": true
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_carteira",
+              "excerpt": "Carteira do ciclo formada por uma versão de critérios; imutável depois de confirmada"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-QUALIFICACAO-03",
+              "excerpt": "Carteira sustenta RF-MOD-QUALIFICACAO-03"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-QUALIFICACAO-06",
+              "excerpt": "Carteira sustenta RF-MOD-QUALIFICACAO-06"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-QUA-005",
+              "excerpt": "Carteira sustenta RN-NOVO-QUA-005"
+            }
+          ]
+        },
+        {
+          "name": "CarteiraItem",
+          "operationType": "NEW",
+          "purpose": "Cada contribuinte × tributo da carteira, com segmento, grupo de controle e as marcas de notificado e regularizado",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_carteira_item",
+          "columns": [
+            {
+              "name": "carteira",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Carteira"
+            },
+            {
+              "name": "contribuinte",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Contribuinte"
+            },
+            {
+              "name": "tributo",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Tributo do débito que qualificou o item; recorte dos indicadores · lista: Tributo"
+            },
+            {
+              "name": "segmento",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Segmento definido pelos critérios · lista: SegmentoAlvo"
+            },
+            {
+              "name": "controle",
+              "type": "boolean",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Grupo de controle: não recebe nenhuma ação no ciclo (RN-09)",
+              "businessRuleRef": "RN-NOVO-QUA-003"
+            },
+            {
+              "name": "notificado",
+              "type": "boolean",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Recebeu comunicação ou interação no ciclo; base dos indicadores"
+            },
+            {
+              "name": "regularizado",
+              "type": "boolean",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Regularizou no ciclo; base dos indicadores"
+            },
+            {
+              "name": "score_snapshot",
+              "type": "decimal",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Score no momento da segmentação"
+            },
+            {
+              "name": "valor_snapshot",
+              "type": "currency",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Valor em aberto no momento da segmentação"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [
+            {
+              "name": "idx_item_carteira_contribuinte",
+              "columns": [
+                "carteira",
+                "contribuinte",
+                "tributo"
+              ],
+              "unique": true,
+              "purpose": "Um item por contribuinte e tributo na carteira"
+            },
+            {
+              "name": "idx_item_indicadores",
+              "columns": [
+                "carteira",
+                "controle",
+                "notificado",
+                "regularizado"
+              ],
+              "unique": false,
+              "purpose": "Contagens dos indicadores direto da tabela (RN-NOVO-MON-004)"
+            }
+          ],
+          "relationships": [
+            {
+              "targetEntity": "Carteira",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "carteira",
+              "cascade": "NONE",
+              "nullable": false
+            },
+            {
+              "targetEntity": "Contribuinte",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "contribuinte",
+              "cascade": "NONE",
+              "nullable": false
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_carteira_item",
+              "excerpt": "Cada contribuinte × tributo da carteira, com segmento, grupo de controle e as marcas de notificado e regularizado"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-QUALIFICACAO-04",
+              "excerpt": "CarteiraItem sustenta RF-MOD-QUALIFICACAO-04"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-QUALIFICACAO-05",
+              "excerpt": "CarteiraItem sustenta RF-MOD-QUALIFICACAO-05"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-MONITORAMENTO-01",
+              "excerpt": "CarteiraItem sustenta RF-MOD-MONITORAMENTO-01"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-QUA-003",
+              "excerpt": "CarteiraItem sustenta RN-NOVO-QUA-003"
+            }
+          ],
+          "migrationNotes": "score_snapshot e valor_snapshot congelam os valores do momento da carteira, para o efeito incremental não mudar quando o score ou o débito mudarem depois (RN-NOVO-MON-005)."
+        }
+      ]
+    },
+    {
+      "id": "BC-SCORE",
+      "name": "Scoring de Liquidez",
+      "description": "Entidades do módulo Scoring de Liquidez; container principal CON-03/CON-04 do hld.md",
+      "moduleIds": [
+        "MOD-SCORE"
+      ],
+      "entities": [
+        {
+          "name": "Score",
+          "operationType": "NEW",
+          "purpose": "Score de liquidez recebido da UFMT por lote, com a versão do modelo",
+          "dataOwnership": {
+            "mode": "EXTERNAL_LOADED",
+            "source": "APIs de ingestão das fontes (INT-01 a INT-07)"
+          },
+          "tableName": "x_cbi_score",
+          "columns": [
+            {
+              "name": "contribuinte",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Contribuinte pontuado"
+            },
+            {
+              "name": "valor",
+              "type": "decimal",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Score de liquidez"
+            },
+            {
+              "name": "faixa",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Calculado — faixa correspondente ao valor"
+            },
+            {
+              "name": "versao_modelo",
+              "type": "string(20)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Versão do modelo que gerou o score"
+            },
+            {
+              "name": "lote",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Execução de ingestão que trouxe o score"
+            },
+            {
+              "name": "vigente",
+              "type": "boolean",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Apenas um score vigente por contribuinte",
+              "businessRuleRef": "RN-NOVO-SCO-001"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [
+            {
+              "name": "idx_score_contribuinte_vigente",
+              "columns": [
+                "contribuinte",
+                "vigente"
+              ],
+              "unique": false,
+              "purpose": "Score vigente do contribuinte na fila e nos critérios"
+            }
+          ],
+          "relationships": [
+            {
+              "targetEntity": "Contribuinte",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "contribuinte",
+              "cascade": "NONE",
+              "nullable": false
+            },
+            {
+              "targetEntity": "ScoreFaixa",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "faixa",
+              "cascade": "NONE",
+              "nullable": true
+            },
+            {
+              "targetEntity": "LoteCarga",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "lote",
+              "cascade": "NONE",
+              "nullable": false
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_score",
+              "excerpt": "Score de liquidez recebido da UFMT por lote, com a versão do modelo"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-SCORE-01",
+              "excerpt": "Score sustenta RF-MOD-SCORE-01"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-SCO-001",
+              "excerpt": "Score sustenta RN-NOVO-SCO-001"
+            }
+          ]
+        },
+        {
+          "name": "ScoreFaixa",
+          "operationType": "NEW",
+          "purpose": "Faixas parametrizáveis que classificam o score",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_score_faixa",
+          "columns": [
+            {
+              "name": "nome",
+              "type": "string(30)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Alto, Médio-alto, Médio, Baixo"
+            },
+            {
+              "name": "limite_inferior",
+              "type": "decimal",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Limite inferior, inclusivo"
+            },
+            {
+              "name": "limite_superior",
+              "type": "decimal",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Limite superior, exclusivo"
+            },
+            {
+              "name": "ordem",
+              "type": "integer",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Ordem de exibição"
+            },
+            {
+              "name": "ativa",
+              "type": "boolean",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Faixa em uso"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [],
+          "relationships": [],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_score_faixa",
+              "excerpt": "Faixas parametrizáveis que classificam o score"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-SCORE-02",
+              "excerpt": "ScoreFaixa sustenta RF-MOD-SCORE-02"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-SCO-002",
+              "excerpt": "ScoreFaixa sustenta RN-NOVO-SCO-002"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BC-REGUAS",
+      "name": "Réguas de Cobrança Massificada",
+      "description": "Entidades do módulo Réguas de Cobrança Massificada; container principal CON-03/CON-04 do hld.md",
+      "moduleIds": [
+        "MOD-REGUAS"
+      ],
+      "entities": [
+        {
+          "name": "Regua",
+          "operationType": "NEW",
+          "purpose": "Régua de cobrança de um segmento",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_regua",
+          "columns": [
+            {
+              "name": "nome",
+              "type": "string(80)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Ex.: R-ICMS-01 · ICMS Normal"
+            },
+            {
+              "name": "segmento_alvo",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Segmento atendido pela régua · lista: SegmentoRegua"
+            },
+            {
+              "name": "estado",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Uma régua ativa por segmento alvo · lista: EstadoRegua",
+              "businessRuleRef": "RN-NOVO-REG-005"
+            },
+            {
+              "name": "versao",
+              "type": "integer",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Versão da régua"
+            },
+            {
+              "name": "regua_base",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Régua da qual esta versão foi copiada"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [],
+          "relationships": [
+            {
+              "targetEntity": "Regua",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "regua_base",
+              "cascade": "NONE",
+              "nullable": true
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_regua",
+              "excerpt": "Régua de cobrança de um segmento"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-REGUAS-01",
+              "excerpt": "Regua sustenta RF-MOD-REGUAS-01"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-REGUAS-08",
+              "excerpt": "Regua sustenta RF-MOD-REGUAS-08"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-REG-003",
+              "excerpt": "Regua sustenta RN-NOVO-REG-003"
+            }
+          ]
+        },
+        {
+          "name": "ReguaEtapa",
+          "operationType": "NEW",
+          "purpose": "Etapa da régua: prazo, canal e modelo de mensagem",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_regua_etapa",
+          "columns": [
+            {
+              "name": "regua",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Régua"
+            },
+            {
+              "name": "ordem",
+              "type": "integer",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Ordem, derivada do offset"
+            },
+            {
+              "name": "offset_dias",
+              "type": "integer",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Dias em relação ao vencimento"
+            },
+            {
+              "name": "canal",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Canal de envio · lista: Canal"
+            },
+            {
+              "name": "template",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Mensagem da etapa"
+            },
+            {
+              "name": "encaminha_qualificada",
+              "type": "boolean",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Quem chega aqui sem regularizar segue à qualificada (RN-04)"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [],
+          "relationships": [
+            {
+              "targetEntity": "Regua",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "regua",
+              "cascade": "NONE",
+              "nullable": false
+            },
+            {
+              "targetEntity": "ModeloMensagem",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "template",
+              "cascade": "NONE",
+              "nullable": false
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_regua_etapa",
+              "excerpt": "Etapa da régua: prazo, canal e modelo de mensagem"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-REGUAS-01",
+              "excerpt": "ReguaEtapa sustenta RF-MOD-REGUAS-01"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-REG-003",
+              "excerpt": "ReguaEtapa sustenta RN-NOVO-REG-003"
+            }
+          ]
+        },
+        {
+          "name": "ModeloMensagem",
+          "operationType": "NEW",
+          "purpose": "Modelo de mensagem por canal, com variáveis",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_template",
+          "columns": [
+            {
+              "name": "nome",
+              "type": "string(80)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Nome do template"
+            },
+            {
+              "name": "canal",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Canal ao qual se destina · lista: Canal"
+            },
+            {
+              "name": "assunto",
+              "type": "string(150)",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Somente e-mail"
+            },
+            {
+              "name": "corpo",
+              "type": "string(4000)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Texto com variáveis permitidas"
+            },
+            {
+              "name": "ativo",
+              "type": "boolean",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Template em uso"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [],
+          "relationships": [],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_template",
+              "excerpt": "Modelo de mensagem por canal, com variáveis"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-REGUAS-01",
+              "excerpt": "ModeloMensagem sustenta RF-MOD-REGUAS-01"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-REGUAS-05",
+              "excerpt": "ModeloMensagem sustenta RF-MOD-REGUAS-05"
+            }
+          ]
+        },
+        {
+          "name": "Consentimento",
+          "operationType": "NEW",
+          "purpose": "Opt-in e opt-out do contribuinte por canal",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_consentimento",
+          "columns": [
+            {
+              "name": "contribuinte",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Contribuinte"
+            },
+            {
+              "name": "canal",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Canal consentido · lista: Canal"
+            },
+            {
+              "name": "opt_in",
+              "type": "boolean",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Consentimento vigente",
+              "businessRuleRef": "RN-NOVO-REG-002"
+            },
+            {
+              "name": "data_opt_in",
+              "type": "glide_date_time",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Quando consentiu"
+            },
+            {
+              "name": "origem",
+              "type": "string(60)",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Como o consentimento foi obtido"
+            },
+            {
+              "name": "data_opt_out",
+              "type": "glide_date_time",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Quando revogou"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [
+            {
+              "name": "idx_consentimento_contribuinte_canal",
+              "columns": [
+                "contribuinte",
+                "canal"
+              ],
+              "unique": true,
+              "purpose": "Um consentimento por contribuinte e canal, consultado no envio"
+            }
+          ],
+          "relationships": [
+            {
+              "targetEntity": "Contribuinte",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "contribuinte",
+              "cascade": "NONE",
+              "nullable": false
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_consentimento",
+              "excerpt": "Opt-in e opt-out do contribuinte por canal"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-REGUAS-04",
+              "excerpt": "Consentimento sustenta RF-MOD-REGUAS-04"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-REG-002",
+              "excerpt": "Consentimento sustenta RN-NOVO-REG-002"
+            }
+          ]
+        },
+        {
+          "name": "Comunicacao",
+          "operationType": "NEW",
+          "purpose": "Cada mensagem criada pela régua, com situação de entrega, tentativas e a marca de pagamento em até 30 dias",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_comunicacao",
+          "columns": [
+            {
+              "name": "contribuinte",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Destinatário"
+            },
+            {
+              "name": "debito",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Débito ao qual a comunicação se refere"
+            },
+            {
+              "name": "tributo",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Tributo do débito; recorte dos indicadores · lista: Tributo"
+            },
+            {
+              "name": "regua",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Régua de origem"
+            },
+            {
+              "name": "etapa",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Etapa que gerou a comunicação"
+            },
+            {
+              "name": "canal",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Canal de envio · lista: Canal"
+            },
+            {
+              "name": "status",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "“Lido” evita confusão com débito em aberto · lista: StatusComunicacao"
+            },
+            {
+              "name": "data_prevista",
+              "type": "glide_date",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Data em que a etapa é devida"
+            },
+            {
+              "name": "data_envio",
+              "type": "glide_date_time",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Quando foi enviada"
+            },
+            {
+              "name": "id_provedor",
+              "type": "string(60)",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Identificador no provedor — chave do callback"
+            },
+            {
+              "name": "tentativas",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Tentativas de envio",
+              "businessRuleRef": "RN-NOVO-REG-004"
+            },
+            {
+              "name": "erro",
+              "type": "string(500)",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Motivo da falha"
+            },
+            {
+              "name": "paga_ate_30d",
+              "type": "boolean",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Calculado — houve pagamento em até 30 dias após o envio; base do retorno das réguas"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [
+            {
+              "name": "idx_comunicacao_provedor",
+              "columns": [
+                "id_provedor"
+              ],
+              "unique": true,
+              "purpose": "Retorno de status do provedor sem duplicar (SEC-007)"
+            },
+            {
+              "name": "idx_comunicacao_regua_status",
+              "columns": [
+                "regua",
+                "status",
+                "data_prevista"
+              ],
+              "unique": false,
+              "purpose": "Motor de réguas e reenvio"
+            }
+          ],
+          "relationships": [
+            {
+              "targetEntity": "Contribuinte",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "contribuinte",
+              "cascade": "NONE",
+              "nullable": false
+            },
+            {
+              "targetEntity": "Debito",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "debito",
+              "cascade": "NONE",
+              "nullable": true
+            },
+            {
+              "targetEntity": "Regua",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "regua",
+              "cascade": "NONE",
+              "nullable": false
+            },
+            {
+              "targetEntity": "ReguaEtapa",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "etapa",
+              "cascade": "NONE",
+              "nullable": false
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_comunicacao",
+              "excerpt": "Cada mensagem criada pela régua, com situação de entrega, tentativas e a marca de pagamento em até 30 dias"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-REGUAS-02",
+              "excerpt": "Comunicacao sustenta RF-MOD-REGUAS-02"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-REGUAS-06",
+              "excerpt": "Comunicacao sustenta RF-MOD-REGUAS-06"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-REGUAS-07",
+              "excerpt": "Comunicacao sustenta RF-MOD-REGUAS-07"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-REG-001",
+              "excerpt": "Comunicacao sustenta RN-NOVO-REG-001"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BC-QUALIFICADA",
+      "name": "Cobrança Qualificada",
+      "description": "Entidades do módulo Cobrança Qualificada; container principal CON-03/CON-04 do hld.md",
+      "moduleIds": [
+        "MOD-QUALIFICADA"
+      ],
+      "entities": [
+        {
+          "name": "Caso",
+          "operationType": "NEW",
+          "purpose": "Caso de cobrança qualificada (estende a tabela nativa task)",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_caso",
+          "columns": [
+            {
+              "name": "number",
+              "type": "string(14)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Número do caso (Number Maintenance)"
+            },
+            {
+              "name": "contribuinte",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Contribuinte trabalhado"
+            },
+            {
+              "name": "carteira_item",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Item da carteira que originou o caso"
+            },
+            {
+              "name": "origem_caso",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Como o caso nasceu · lista: OrigemCaso"
+            },
+            {
+              "name": "estagio",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Estágio da abordagem · lista: EstagioCaso"
+            },
+            {
+              "name": "prioridade_ordem",
+              "type": "integer",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Calculado — ordenação da fila por score, valor e atraso",
+              "businessRuleRef": "RN-NOVO-CQ-003"
+            },
+            {
+              "name": "motivo_encerramento",
+              "type": "choice",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Motivo do encerramento · lista: MotivoEncerramento"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [
+            {
+              "name": "idx_caso_fila",
+              "columns": [
+                "estagio",
+                "prioridade_ordem"
+              ],
+              "unique": false,
+              "purpose": "Ordenação da fila do atendente"
+            }
+          ],
+          "relationships": [
+            {
+              "targetEntity": "Contribuinte",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "contribuinte",
+              "cascade": "NONE",
+              "nullable": false
+            },
+            {
+              "targetEntity": "CarteiraItem",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "carteira_item",
+              "cascade": "NONE",
+              "nullable": true
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_caso",
+              "excerpt": "Caso de cobrança qualificada (estende a tabela nativa task)"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-QUALIFICADA-01",
+              "excerpt": "Caso sustenta RF-MOD-QUALIFICADA-01"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-QUALIFICADA-02",
+              "excerpt": "Caso sustenta RF-MOD-QUALIFICADA-02"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-QUALIFICADA-03",
+              "excerpt": "Caso sustenta RF-MOD-QUALIFICADA-03"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-CQ-003",
+              "excerpt": "Caso sustenta RN-NOVO-CQ-003"
+            }
+          ],
+          "migrationNotes": "Estende a tabela nativa task: herda número, atribuição (assigned_to), situação e datas; os campos listados são só os próprios."
+        },
+        {
+          "name": "Interacao",
+          "operationType": "NEW",
+          "purpose": "Contato registrado no caso; não pode ser alterado nem excluído",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_interacao",
+          "columns": [
+            {
+              "name": "caso",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Caso"
+            },
+            {
+              "name": "tipo",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Sistema para eventos automáticos · lista: TipoInteracao"
+            },
+            {
+              "name": "resultado",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Resultado do contato · lista: ResultadoInteracao"
+            },
+            {
+              "name": "anotacao",
+              "type": "string(4000)",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Anotação livre"
+            },
+            {
+              "name": "autor",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Nulo quando o tipo é Sistema"
+            },
+            {
+              "name": "data_hora",
+              "type": "glide_date_time",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Momento do contato"
+            },
+            {
+              "name": "comunicacao",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Comunicação de régua, quando a interação é automática"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [],
+          "relationships": [
+            {
+              "targetEntity": "Caso",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "caso",
+              "cascade": "NONE",
+              "nullable": false
+            },
+            {
+              "targetEntity": "Usuario",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "autor",
+              "cascade": "NONE",
+              "nullable": true
+            },
+            {
+              "targetEntity": "Comunicacao",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "comunicacao",
+              "cascade": "NONE",
+              "nullable": true
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_interacao",
+              "excerpt": "Contato registrado no caso; não pode ser alterado nem excluído"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-QUALIFICADA-05",
+              "excerpt": "Interacao sustenta RF-MOD-QUALIFICADA-05"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-CQ-002",
+              "excerpt": "Interacao sustenta RN-NOVO-CQ-002"
+            }
+          ]
+        },
+        {
+          "name": "Followup",
+          "operationType": "NEW",
+          "purpose": "Lembrete de próximo contato do caso (estende a tabela nativa task)",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_followup",
+          "columns": [
+            {
+              "name": "caso",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Caso"
+            },
+            {
+              "name": "lembrete",
+              "type": "string(200)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Texto do lembrete"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [],
+          "relationships": [
+            {
+              "targetEntity": "Caso",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "caso",
+              "cascade": "NONE",
+              "nullable": false
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_followup",
+              "excerpt": "Lembrete de próximo contato do caso (estende a tabela nativa task)"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-QUALIFICADA-06",
+              "excerpt": "Followup sustenta RF-MOD-QUALIFICADA-06"
+            }
+          ],
+          "migrationNotes": "Estende a tabela nativa task: herda número, atribuição (assigned_to), situação e datas; os campos listados são só os próprios."
+        }
+      ]
+    },
+    {
+      "id": "BC-MONITORAMENTO",
+      "name": "Monitoramento e KPIs",
+      "description": "Entidades do módulo Monitoramento e KPIs; container principal CON-03/CON-04 do hld.md",
+      "moduleIds": [
+        "MOD-MONITORAMENTO"
+      ],
+      "entities": [
+        {
+          "name": "Regularizacao",
+          "operationType": "NEW",
+          "purpose": "Regularização de débito com a origem atribuída (espontânea ou resposta à cobrança)",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_regularizacao",
+          "columns": [
+            {
+              "name": "debito",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Débito regularizado"
+            },
+            {
+              "name": "contribuinte",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Contribuinte"
+            },
+            {
+              "name": "valor",
+              "type": "currency",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Valor regularizado"
+            },
+            {
+              "name": "data",
+              "type": "glide_date",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Data da regularização"
+            },
+            {
+              "name": "tributo",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Tributo do débito; recorte dos indicadores · lista: Tributo"
+            },
+            {
+              "name": "origem",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Atribuição dentro da janela parametrizável · lista: OrigemRegularizacao",
+              "businessRuleRef": "RN-NOVO-MON-003"
+            },
+            {
+              "name": "canal",
+              "type": "choice",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Canal do toque atribuído · lista: CanalRegularizacao"
+            },
+            {
+              "name": "instrumento",
+              "type": "choice",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Instrumento do toque atribuído · lista: InstrumentoRegularizacao"
+            },
+            {
+              "name": "atendente",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Atendente da interação atribuída; recorte dos indicadores"
+            },
+            {
+              "name": "comunicacao_origem",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Comunicação atribuída"
+            },
+            {
+              "name": "interacao_origem",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Interação atribuída"
+            },
+            {
+              "name": "carteira_item",
+              "type": "reference",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Item da carteira do ciclo"
+            },
+            {
+              "name": "grupo_controle",
+              "type": "boolean",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Calculado — contribuinte estava no controle; nesse caso a origem é sempre Espontânea"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [],
+          "relationships": [
+            {
+              "targetEntity": "Debito",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "debito",
+              "cascade": "NONE",
+              "nullable": false
+            },
+            {
+              "targetEntity": "Contribuinte",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "contribuinte",
+              "cascade": "NONE",
+              "nullable": false
+            },
+            {
+              "targetEntity": "Usuario",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "atendente",
+              "cascade": "NONE",
+              "nullable": true
+            },
+            {
+              "targetEntity": "Comunicacao",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "comunicacao_origem",
+              "cascade": "NONE",
+              "nullable": true
+            },
+            {
+              "targetEntity": "Interacao",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "interacao_origem",
+              "cascade": "NONE",
+              "nullable": true
+            },
+            {
+              "targetEntity": "CarteiraItem",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "carteira_item",
+              "cascade": "NONE",
+              "nullable": true
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_regularizacao",
+              "excerpt": "Regularização de débito com a origem atribuída (espontânea ou resposta à cobrança)"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-MONITORAMENTO-02",
+              "excerpt": "Regularizacao sustenta RF-MOD-MONITORAMENTO-02"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-MONITORAMENTO-08",
+              "excerpt": "Regularizacao sustenta RF-MOD-MONITORAMENTO-08"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-MON-001",
+              "excerpt": "Regularizacao sustenta RN-NOVO-MON-001"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-MON-003",
+              "excerpt": "Regularizacao sustenta RN-NOVO-MON-003"
+            }
+          ]
+        },
+        {
+          "name": "Meta",
+          "operationType": "NEW",
+          "purpose": "Meta de regularização por tributo e ciclo",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_meta",
+          "columns": [
+            {
+              "name": "tributo",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Tributo · lista: Tributo"
+            },
+            {
+              "name": "ciclo",
+              "type": "string(7)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Ciclo"
+            },
+            {
+              "name": "meta_pct",
+              "type": "decimal",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Meta de regularização"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [
+            {
+              "name": "idx_meta_tributo_ciclo",
+              "columns": [
+                "tributo",
+                "ciclo"
+              ],
+              "unique": true,
+              "purpose": "Uma meta por tributo e ciclo"
+            }
+          ],
+          "relationships": [],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_meta",
+              "excerpt": "Meta de regularização por tributo e ciclo"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-MONITORAMENTO-06",
+              "excerpt": "Meta sustenta RF-MOD-MONITORAMENTO-06"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-GOVERNANCA-05",
+              "excerpt": "Meta sustenta RF-MOD-GOVERNANCA-05"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "BC-GOVERNANCA",
+      "name": "Governança, Acesso e Auditoria",
+      "description": "Entidades do módulo Governança, Acesso e Auditoria; container principal CON-03/CON-04 do hld.md",
+      "moduleIds": [
+        "MOD-GOVERNANCA"
+      ],
+      "entities": [
+        {
+          "name": "Parametro",
+          "operationType": "NEW",
+          "purpose": "Parâmetros gerais lidos pelas regras por chave",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_parametro",
+          "columns": [
+            {
+              "name": "chave",
+              "type": "string(60)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Ex.: janela_atribuicao_dias, max_tentativas_envio, tamanho_lote"
+            },
+            {
+              "name": "valor",
+              "type": "string(200)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Valor do parâmetro"
+            },
+            {
+              "name": "grupo",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Agrupamento · lista: GrupoParametro"
+            },
+            {
+              "name": "descricao",
+              "type": "string(300)",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Finalidade do parâmetro"
+            },
+            {
+              "name": "vigente_desde",
+              "type": "glide_date",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Início da vigência"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [
+            {
+              "name": "idx_parametro_chave",
+              "columns": [
+                "chave"
+              ],
+              "unique": true,
+              "purpose": "Parâmetros lidos por chave"
+            }
+          ],
+          "relationships": [],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_parametro",
+              "excerpt": "Parâmetros gerais lidos pelas regras por chave"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-GOVERNANCA-05",
+              "excerpt": "Parametro sustenta RF-MOD-GOVERNANCA-05"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-GOV-003",
+              "excerpt": "Parametro sustenta RN-NOVO-GOV-003"
+            }
+          ]
+        },
+        {
+          "name": "EventoAuditoria",
+          "operationType": "NEW",
+          "purpose": "Evento de auditoria imutável; aponta o registro por tabela e identificador",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "aplicação x_cbi_"
+          },
+          "tableName": "x_cbi_auditoria_evento",
+          "columns": [
+            {
+              "name": "tabela",
+              "type": "string(80)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Tabela do registro auditado"
+            },
+            {
+              "name": "registro",
+              "type": "string(32)",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Registro auditado"
+            },
+            {
+              "name": "acao",
+              "type": "choice",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Tipo do evento · lista: AcaoAuditoria"
+            },
+            {
+              "name": "usuario",
+              "type": "reference",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Quem executou"
+            },
+            {
+              "name": "data_hora",
+              "type": "glide_date_time",
+              "nullable": false,
+              "operationType": "NEW",
+              "notes": "Quando"
+            },
+            {
+              "name": "detalhe",
+              "type": "string(4000)",
+              "nullable": true,
+              "operationType": "NEW",
+              "notes": "Valor anterior e novo, ou contexto do evento"
+            }
+          ],
+          "primaryKey": [
+            "sys_id"
+          ],
+          "identifierStrategy": "sys_id gerado pela plataforma ServiceNow",
+          "indexes": [],
+          "relationships": [
+            {
+              "targetEntity": "Usuario",
+              "type": "MANY_TO_ONE",
+              "foreignKey": "usuario",
+              "cascade": "NONE",
+              "nullable": false
+            }
+          ],
+          "traceability": [
+            {
+              "section": "ETF §4.2",
+              "itemId": "x_cbi_auditoria_evento",
+              "excerpt": "Evento de auditoria imutável; aponta o registro por tabela e identificador"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RF-MOD-GOVERNANCA-04",
+              "excerpt": "EventoAuditoria sustenta RF-MOD-GOVERNANCA-04"
+            },
+            {
+              "section": "requirements.md / business-rules.md",
+              "itemId": "RN-NOVO-GOV-003",
+              "excerpt": "EventoAuditoria sustenta RN-NOVO-GOV-003"
+            }
+          ]
+        },
+        {
+          "name": "Usuario",
+          "operationType": "EXISTING_REF",
+          "purpose": "Usuário nativo do ServiceNow (sys_user): autor de interação, atendente, quem publica e confirma",
+          "dataOwnership": {
+            "mode": "EXTERNAL_PROJECTION",
+            "source": "plataforma ServiceNow (SSO da SEFAZ-MT)"
+          },
+          "tableName": "sys_user",
+          "columns": [],
+          "traceability": [
+            {
+              "section": "ETF §4",
+              "itemId": "sys_user",
+              "excerpt": "reutiliza sys_user para autoria, atendimento e auditoria"
+            },
+            {
+              "section": "requirements.md",
+              "itemId": "RF-MOD-GOVERNANCA-01",
+              "excerpt": "controle de acesso por papel"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "enumerations": [
+    {
+      "name": "Tributo",
+      "values": [
+        {
+          "value": "ICMS_NORMAL",
+          "label": "ICMS Normal"
+        },
+        {
+          "value": "ICMS_ST",
+          "label": "ICMS ST"
+        },
+        {
+          "value": "IPVA",
+          "label": "IPVA"
+        },
+        {
+          "value": "ITCD",
+          "label": "ITCD"
+        }
+      ],
+      "usedIn": [
+        "CarteiraItem.tributo",
+        "Comunicacao.tributo",
+        "Debito.tributo",
+        "Meta.tributo",
+        "Parcelamento.tributo",
+        "PosicaoTributo.tributo",
+        "Regularizacao.tributo"
+      ]
+    },
+    {
+      "name": "TributoFonte",
+      "values": [
+        {
+          "value": "ICMS_NORMAL",
+          "label": "ICMS Normal"
+        },
+        {
+          "value": "ICMS_ST",
+          "label": "ICMS ST"
+        },
+        {
+          "value": "IPVA",
+          "label": "IPVA"
+        },
+        {
+          "value": "ITCD",
+          "label": "ITCD"
+        },
+        {
+          "value": "MULTIPLOS",
+          "label": "Múltiplos"
+        }
+      ],
+      "usedIn": [
+        "Fonte.tributo_escopo"
+      ]
+    },
+    {
+      "name": "TributoCriterio",
+      "values": [
+        {
+          "value": "ICMS_NORMAL",
+          "label": "ICMS Normal"
+        },
+        {
+          "value": "ICMS_ST",
+          "label": "ICMS ST"
+        },
+        {
+          "value": "IPVA",
+          "label": "IPVA"
+        },
+        {
+          "value": "ITCD",
+          "label": "ITCD"
+        },
+        {
+          "value": "TODOS",
+          "label": "Todos"
+        }
+      ],
+      "usedIn": [
+        "CriterioVersao.tributo"
+      ]
+    },
+    {
+      "name": "StatusFonte",
+      "values": [
+        {
+          "value": "OK",
+          "label": "OK"
+        },
+        {
+          "value": "EM_TRANSICAO",
+          "label": "Em transição"
+        },
+        {
+          "value": "FALHA",
+          "label": "Falha"
+        }
+      ],
+      "usedIn": [
+        "Fonte.status_atual"
+      ]
+    },
+    {
+      "name": "StatusLote",
+      "values": [
+        {
+          "value": "EM_ANDAMENTO",
+          "label": "Em andamento"
+        },
+        {
+          "value": "OK",
+          "label": "OK"
+        },
+        {
+          "value": "PARCIAL",
+          "label": "Parcial"
+        },
+        {
+          "value": "FALHA",
+          "label": "Falha"
+        }
+      ],
+      "usedIn": [
+        "LoteCarga.status"
+      ]
+    },
+    {
+      "name": "OrigemLote",
+      "values": [
+        {
+          "value": "RECEBIDO_FONTE",
+          "label": "Recebido da fonte"
+        },
+        {
+          "value": "REPROCESSO",
+          "label": "Reprocesso"
+        }
+      ],
+      "usedIn": [
+        "LoteCarga.origem"
+      ]
+    },
+    {
+      "name": "MotivoRejeicao",
+      "values": [
+        {
+          "value": "DOC_INVALIDO",
+          "label": "CPF/CNPJ inválido"
+        },
+        {
+          "value": "CAMPO_AUSENTE",
+          "label": "Campo obrigatório ausente"
+        },
+        {
+          "value": "CONTRIB_NAO_ENCONTRADO",
+          "label": "Contribuinte não encontrado"
+        },
+        {
+          "value": "FORMATO_INVALIDO",
+          "label": "Formato inválido"
+        },
+        {
+          "value": "OUTRO",
+          "label": "Outro"
+        }
+      ],
+      "usedIn": [
+        "RegistroRejeitado.motivo"
+      ]
+    },
+    {
+      "name": "TipoPessoa",
+      "values": [
+        {
+          "value": "PF",
+          "label": "Pessoa física"
+        },
+        {
+          "value": "PJ",
+          "label": "Pessoa jurídica"
+        }
+      ],
+      "usedIn": [
+        "Contribuinte.tipo"
+      ]
+    },
+    {
+      "name": "SegmentoContribuinte",
+      "values": [
+        {
+          "value": "MASSIFICADA",
+          "label": "Massificada"
+        },
+        {
+          "value": "QUALIFICADA",
+          "label": "Qualificada"
+        },
+        {
+          "value": "SEM_CARTEIRA",
+          "label": "Sem carteira"
+        }
+      ],
+      "usedIn": [
+        "Contribuinte.segmento_atual"
+      ]
+    },
+    {
+      "name": "StatusCobranca",
+      "values": [
+        {
+          "value": "SEM_ACAO",
+          "label": "Sem ação"
+        },
+        {
+          "value": "NOTIFICADO",
+          "label": "Notificado"
+        },
+        {
+          "value": "EM_COBRANCA",
+          "label": "Em cobrança"
+        },
+        {
+          "value": "REGULARIZADO",
+          "label": "Regularizado"
+        }
+      ],
+      "usedIn": [
+        "Contribuinte.status_cobranca"
+      ]
+    },
+    {
+      "name": "StatusCobrancaTributo",
+      "values": [
+        {
+          "value": "NOTIFICADO",
+          "label": "Notificado"
+        },
+        {
+          "value": "EM_COBRANCA",
+          "label": "Em cobrança"
+        },
+        {
+          "value": "REGULARIZADO",
+          "label": "Regularizado"
+        }
+      ],
+      "usedIn": [
+        "PosicaoTributo.status_cobranca"
+      ]
+    },
+    {
+      "name": "Instrumento",
+      "values": [
+        {
+          "value": "AUTO_INFRACAO",
+          "label": "Auto de infração"
+        },
+        {
+          "value": "DECLARACAO",
+          "label": "Declaração"
+        },
+        {
+          "value": "OUTRO",
+          "label": "Outro"
+        }
+      ],
+      "usedIn": [
+        "Debito.instrumento"
+      ]
+    },
+    {
+      "name": "InstrumentoCriterio",
+      "values": [
+        {
+          "value": "AUTO_INFRACAO",
+          "label": "Auto de infração"
+        },
+        {
+          "value": "DECLARACAO",
+          "label": "Declaração"
+        },
+        {
+          "value": "TODOS",
+          "label": "Todos"
+        }
+      ],
+      "usedIn": [
+        "CriterioVersao.instrumento"
+      ]
+    },
+    {
+      "name": "StatusDebito",
+      "values": [
+        {
+          "value": "EM_ABERTO",
+          "label": "Em aberto"
+        },
+        {
+          "value": "PARCELADO",
+          "label": "Parcelado"
+        },
+        {
+          "value": "REGULARIZADO",
+          "label": "Regularizado"
+        }
+      ],
+      "usedIn": [
+        "Debito.status"
+      ]
+    },
+    {
+      "name": "StatusParcelamentoPosicao",
+      "values": [
+        {
+          "value": "SEM_PARCELAMENTO",
+          "label": "Sem parcelamento"
+        },
+        {
+          "value": "ATIVO",
+          "label": "Ativo"
+        },
+        {
+          "value": "EM_RISCO",
+          "label": "Em risco"
+        }
+      ],
+      "usedIn": [
+        "PosicaoTributo.status_parcelamento"
+      ]
+    },
+    {
+      "name": "StatusParcelamento",
+      "values": [
+        {
+          "value": "ATIVO",
+          "label": "Ativo"
+        },
+        {
+          "value": "EM_RISCO",
+          "label": "Em risco"
+        },
+        {
+          "value": "ENCERRADO",
+          "label": "Encerrado"
+        }
+      ],
+      "usedIn": [
+        "Parcelamento.status"
+      ]
+    },
+    {
+      "name": "RelacaoVinculo",
+      "values": [
+        {
+          "value": "FILIAL",
+          "label": "Filial"
+        },
+        {
+          "value": "CONTROLADORA",
+          "label": "Controladora"
+        },
+        {
+          "value": "OUTRO",
+          "label": "Outro"
+        }
+      ],
+      "usedIn": [
+        "VinculoEconomico.relacao"
+      ]
+    },
+    {
+      "name": "TipoSinalizacao",
+      "values": [
+        {
+          "value": "PROTESTO_PGE",
+          "label": "Protesto (PGE)"
+        },
+        {
+          "value": "NOTIFICACAO_COERCITIVA",
+          "label": "Notificação coercitiva"
+        },
+        {
+          "value": "OUTRO",
+          "label": "Outro"
+        }
+      ],
+      "usedIn": [
+        "Sinalizacao.tipo"
+      ]
+    },
+    {
+      "name": "EstadoCriterio",
+      "values": [
+        {
+          "value": "RASCUNHO",
+          "label": "Rascunho"
+        },
+        {
+          "value": "PUBLICADA",
+          "label": "Publicada"
+        }
+      ],
+      "usedIn": [
+        "CriterioVersao.estado"
+      ]
+    },
+    {
+      "name": "SegmentoAlvo",
+      "values": [
+        {
+          "value": "QUALIFICADA",
+          "label": "Qualificada"
+        },
+        {
+          "value": "MASSIFICADA",
+          "label": "Massificada"
+        }
+      ],
+      "usedIn": [
+        "CarteiraItem.segmento",
+        "CriterioVersao.tipo_alvo"
+      ]
+    },
+    {
+      "name": "EstadoCarteira",
+      "values": [
+        {
+          "value": "SIMULACAO",
+          "label": "Simulação"
+        },
+        {
+          "value": "CONFIRMADA",
+          "label": "Confirmada"
+        }
+      ],
+      "usedIn": [
+        "Carteira.estado"
+      ]
+    },
+    {
+      "name": "SegmentoRegua",
+      "values": [
+        {
+          "value": "ICMS_NORMAL",
+          "label": "ICMS Normal"
+        },
+        {
+          "value": "ICMS_ST",
+          "label": "ICMS ST"
+        },
+        {
+          "value": "IPVA",
+          "label": "IPVA"
+        },
+        {
+          "value": "ITCD",
+          "label": "ITCD"
+        },
+        {
+          "value": "PARCELAMENTOS_INADIMPLENTES",
+          "label": "Parcelamentos inadimplentes"
+        }
+      ],
+      "usedIn": [
+        "Regua.segmento_alvo"
+      ]
+    },
+    {
+      "name": "EstadoRegua",
+      "values": [
+        {
+          "value": "RASCUNHO",
+          "label": "Rascunho"
+        },
+        {
+          "value": "ATIVA",
+          "label": "Ativa"
+        },
+        {
+          "value": "PAUSADA",
+          "label": "Pausada"
+        }
+      ],
+      "usedIn": [
+        "Regua.estado"
+      ]
+    },
+    {
+      "name": "Canal",
+      "values": [
+        {
+          "value": "EMAIL",
+          "label": "E-mail"
+        },
+        {
+          "value": "SMS",
+          "label": "SMS"
+        },
+        {
+          "value": "WHATSAPP",
+          "label": "WhatsApp"
+        }
+      ],
+      "usedIn": [
+        "Comunicacao.canal",
+        "Consentimento.canal",
+        "ModeloMensagem.canal",
+        "ReguaEtapa.canal"
+      ]
+    },
+    {
+      "name": "StatusComunicacao",
+      "values": [
+        {
+          "value": "PENDENTE",
+          "label": "Pendente"
+        },
+        {
+          "value": "ENVIADO",
+          "label": "Enviado"
+        },
+        {
+          "value": "ENTREGUE",
+          "label": "Entregue"
+        },
+        {
+          "value": "LIDO",
+          "label": "Lido"
+        },
+        {
+          "value": "FALHA",
+          "label": "Falha"
+        },
+        {
+          "value": "FALHA_DEFINITIVA",
+          "label": "Falha definitiva"
+        },
+        {
+          "value": "SEM_OPT_IN",
+          "label": "Sem opt-in"
+        }
+      ],
+      "usedIn": [
+        "Comunicacao.status"
+      ]
+    },
+    {
+      "name": "OrigemCaso",
+      "values": [
+        {
+          "value": "CARTEIRA_CONFIRMADA",
+          "label": "Carteira confirmada"
+        },
+        {
+          "value": "ESGOTAMENTO_REGUA",
+          "label": "Esgotamento de régua"
+        }
+      ],
+      "usedIn": [
+        "Caso.origem_caso"
+      ]
+    },
+    {
+      "name": "EstagioCaso",
+      "values": [
+        {
+          "value": "NOVO",
+          "label": "Novo"
+        },
+        {
+          "value": "PRIMEIRO_CONTATO",
+          "label": "1º contato"
+        },
+        {
+          "value": "NEGOCIACAO",
+          "label": "Negociação"
+        },
+        {
+          "value": "FOLLOW_UP",
+          "label": "Follow-up"
+        }
+      ],
+      "usedIn": [
+        "Caso.estagio"
+      ]
+    },
+    {
+      "name": "MotivoEncerramento",
+      "values": [
+        {
+          "value": "REGULARIZACAO",
+          "label": "Regularização"
+        },
+        {
+          "value": "OUTRO",
+          "label": "Outro"
+        }
+      ],
+      "usedIn": [
+        "Caso.motivo_encerramento"
+      ]
+    },
+    {
+      "name": "TipoInteracao",
+      "values": [
+        {
+          "value": "LIGACAO",
+          "label": "Ligação"
+        },
+        {
+          "value": "EMAIL",
+          "label": "E-mail"
+        },
+        {
+          "value": "REUNIAO",
+          "label": "Reunião"
+        },
+        {
+          "value": "WHATSAPP",
+          "label": "WhatsApp"
+        },
+        {
+          "value": "SISTEMA",
+          "label": "Sistema"
+        }
+      ],
+      "usedIn": [
+        "Interacao.tipo"
+      ]
+    },
+    {
+      "name": "ResultadoInteracao",
+      "values": [
+        {
+          "value": "NEGOCIACAO_EM_CURSO",
+          "label": "Negociação em curso"
+        },
+        {
+          "value": "SEM_CONTATO",
+          "label": "Sem contato"
+        },
+        {
+          "value": "PROMESSA_PAGAMENTO",
+          "label": "Promessa de pagamento"
+        },
+        {
+          "value": "RECUSA",
+          "label": "Recusa"
+        }
+      ],
+      "usedIn": [
+        "Interacao.resultado"
+      ]
+    },
+    {
+      "name": "OrigemRegularizacao",
+      "values": [
+        {
+          "value": "RESPOSTA_COBRANCA",
+          "label": "Resposta à cobrança"
+        },
+        {
+          "value": "ESPONTANEA",
+          "label": "Espontânea"
+        }
+      ],
+      "usedIn": [
+        "Regularizacao.origem"
+      ]
+    },
+    {
+      "name": "CanalRegularizacao",
+      "values": [
+        {
+          "value": "EMAIL",
+          "label": "E-mail"
+        },
+        {
+          "value": "SMS",
+          "label": "SMS"
+        },
+        {
+          "value": "WHATSAPP",
+          "label": "WhatsApp"
+        },
+        {
+          "value": "ATENDIMENTO",
+          "label": "Atendimento"
+        }
+      ],
+      "usedIn": [
+        "Regularizacao.canal"
+      ]
+    },
+    {
+      "name": "InstrumentoRegularizacao",
+      "values": [
+        {
+          "value": "REGUA_MASSIFICADA",
+          "label": "Régua massificada"
+        },
+        {
+          "value": "COBRANCA_QUALIFICADA",
+          "label": "Cobrança qualificada"
+        }
+      ],
+      "usedIn": [
+        "Regularizacao.instrumento"
+      ]
+    },
+    {
+      "name": "GrupoParametro",
+      "values": [
+        {
+          "value": "INTEGRACAO",
+          "label": "Integração"
+        },
+        {
+          "value": "CARTEIRA",
+          "label": "Carteira"
+        },
+        {
+          "value": "REGUAS",
+          "label": "Réguas"
+        },
+        {
+          "value": "ATRIBUICAO",
+          "label": "Atribuição"
+        },
+        {
+          "value": "ANALYTICS",
+          "label": "Analytics"
+        }
+      ],
+      "usedIn": [
+        "Parametro.grupo"
+      ]
+    },
+    {
+      "name": "AcaoAuditoria",
+      "values": [
+        {
+          "value": "PUBLICACAO",
+          "label": "Publicação"
+        },
+        {
+          "value": "CONFIRMACAO",
+          "label": "Confirmação"
+        },
+        {
+          "value": "INTERACAO",
+          "label": "Interação"
+        },
+        {
+          "value": "ALTERACAO_PARAMETRO",
+          "label": "Alteração de parâmetro"
+        },
+        {
+          "value": "EXPORTACAO",
+          "label": "Exportação"
+        },
+        {
+          "value": "OUTRO",
+          "label": "Outro"
+        }
+      ],
+      "usedIn": [
+        "EventoAuditoria.acao"
+      ]
+    }
+  ],
+  "asyncChannels": [
+    {
+      "kind": "OTHER",
+      "name": "API de ingestão por lote (7 fontes)",
+      "direction": "INBOUND",
+      "operationType": "NEW",
+      "payloadSummary": "Abrir lote, pacotes numerados de registros, fechar lote com a quantidade de pacotes",
+      "retryAndIdempotency": "Fonte reenvia o pacote; controle por fonte + id_lote_origem + sequência; registro por chave natural (RN-NOVO-ING-005)"
+    },
+    {
+      "kind": "WEBHOOK",
+      "name": "Retorno de status do provedor",
+      "direction": "INBOUND",
+      "operationType": "NEW",
+      "payloadSummary": "id_provedor e situação de entrega",
+      "retryAndIdempotency": "Status repetido não muda nada (índice único em id_provedor)"
+    },
+    {
+      "kind": "SCHEDULED_JOB",
+      "name": "Fechamento do ciclo diário de carga",
+      "direction": "BOTH",
+      "operationType": "NEW",
+      "payloadSummary": "Marca fontes sem entrega como Falha, consolida e grava a última carga",
+      "retryAndIdempotency": "Reexecução recalcula a posição inteira; seguro repetir"
+    },
+    {
+      "kind": "SCHEDULED_JOB",
+      "name": "Motor de réguas diário",
+      "direction": "OUTBOUND",
+      "operationType": "NEW",
+      "payloadSummary": "Cria as comunicações devidas e entrega à camada de envio",
+      "retryAndIdempotency": "Uma comunicação por item, régua e etapa; reenvio até o limite de tentativas (RN-NOVO-REG-004)"
+    },
+    {
+      "kind": "SCHEDULED_JOB",
+      "name": "Atualização intraciclo de regularização",
+      "direction": "BOTH",
+      "operationType": "NEW",
+      "payloadSummary": "Encerra caso e régua de quem regularizou e atribui a origem",
+      "retryAndIdempotency": "Regularização já atribuída não é recalculada"
+    },
+    {
+      "kind": "SCHEDULED_JOB",
+      "name": "Coleta diária do Platform Analytics",
+      "direction": "OUTBOUND",
+      "operationType": "NEW",
+      "payloadSummary": "Indicadores calculados das tabelas",
+      "retryAndIdempotency": "Coleta do dia pode ser refeita"
+    },
+    {
+      "kind": "OTHER",
+      "name": "Envio ao provedor de mensagens (REST Message)",
+      "direction": "OUTBOUND",
+      "operationType": "NEW",
+      "payloadSummary": "Mensagem renderizada por canal",
+      "retryAndIdempotency": "Falha volta para reenvio até o limite; id_provedor guardado na resposta"
+    }
+  ],
+  "migrationsState": [],
+  "openQuestions": [
+    {
+      "description": "Nome do escopo da aplicação a confirmar",
+      "affectedEntity": "todas (prefixo x_cbi_)",
+      "requiredInformation": "TI aprova o escopo x_cbi_ (gaps.md GAP-013)"
+    },
+    {
+      "description": "Prazo de guarda do conteúdo original dos registros rejeitados e das comunicações",
+      "affectedEntity": "RegistroRejeitado, Comunicacao",
+      "requiredInformation": "Prazos do encarregado de dados (GAP-024)"
+    },
+    {
+      "description": "Fonte do consentimento fora do IPVA",
+      "affectedEntity": "Consentimento",
+      "requiredInformation": "Origem do opt-in de SMS e WhatsApp para ICMS, ITCD e parcelamentos (GAP-028)"
+    },
+    {
+      "description": "Formato e duração do ciclo da carteira",
+      "affectedEntity": "Carteira (ciclo), Meta (ciclo)",
+      "requiredInformation": "Ciclo mensal ou outro; regra de virada (GAP-023)"
+    },
+    {
+      "description": "Origem da marca de contumaz",
+      "affectedEntity": "Contribuinte (contumaz)",
+      "requiredInformation": "CCF ou Credep (GAP-017)"
+    },
+    {
+      "description": "Contato-chave do contribuinte não modelado",
+      "affectedEntity": "Contribuinte",
+      "requiredInformation": "Decisão sobre o contato-chave do protótipo (GAP-025)"
+    },
+    {
+      "description": "StatusComunicacao ganhou FALHA_DEFINITIVA, que a ETF não lista: a regra de reenvio limitado (RN-NOVO-REG-004) e o cenário 3 de RF-MOD-REGUAS-07 precisam distinguir a falha que ainda será reenviada da que esgotou as tentativas",
+      "affectedEntity": "Comunicacao.status",
+      "requiredInformation": "Confirmar com a Coordenação"
+    },
+    {
+      "description": "Listas de opções das telas do product-requirements divergiam da ETF em quatro campos; o modelo segue a ETF e as telas foram alinhadas",
+      "affectedEntity": "Comunicacao.status, Caso.estagio, Interacao.tipo, Interacao.resultado",
+      "requiredInformation": "Confirmar com a Coordenação os valores da ETF"
+    }
+  ]
+}

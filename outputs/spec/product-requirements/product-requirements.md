@@ -179,7 +179,7 @@ referência visual; não há `prototype.md` (protótipo dispensado, ver isençã
 | valorMin | Valor mínimo em aberto | currency | Não | — | — | — | R$ 0,00 | — | ≥ 0 | maior que o valor máximo → «O mínimo não pode passar do máximo» | RF-MOD-INGESTAO-14 |
 | valorMax | Valor máximo em aberto | currency | Não | — | — | — | R$ 0,00 | — | ≥ 0 | — | RF-MOD-INGESTAO-14 |
 | statusCobranca | Situação da cobrança | select | Não | múltipla | `NOTIFICADO` — Notificado; `EM_COBRANCA` — Em cobrança; `REGULARIZADO` — Regularizado | enum:StatusCobrancaTributo | — | — | — | — | RF-MOD-INGESTAO-14 |
-| statusParcelamento | Parcelamento | select | Não | múltipla | `SEM_PARCELAMENTO` — Sem parcelamento; `ATIVO` — Ativo; `EM_RISCO` — Em risco | enum:StatusParcelamento | — | — | — | — | RF-MOD-INGESTAO-10 |
+| statusParcelamento | Parcelamento | select | Não | múltipla | `SEM_PARCELAMENTO` — Sem parcelamento; `ATIVO` — Ativo; `EM_RISCO` — Em risco | enum:StatusParcelamentoPosicao | — | — | — | — | RF-MOD-INGESTAO-10 |
 
 **Grid / listagem**
 
@@ -236,7 +236,7 @@ referência visual; não há `prototype.md` (protótipo dispensado, ver isençã
 | documento | CPF/CNPJ | readonly | Sim | — | — | — | CPF mascarado: ***.***.***-NN; CNPJ completo | — | 14 dígitos | — | RF-MOD-GOVERNANCA-03 |
 | tipo | Tipo de pessoa | readonly | Sim | única | `PF` — Pessoa física; `PJ` — Pessoa jurídica | enum:TipoPessoa | — | — | — | — | RF-MOD-INGESTAO-13 |
 | nome | Nome ou razão social | readonly | Sim | — | — | — | — | — | 150 caracteres | — | RF-MOD-INGESTAO-13 |
-| segmentoAtual | Segmento no ciclo | readonly | Não | única | `MASSIFICADA` — Massificada; `QUALIFICADA` — Qualificada; `SEM_CARTEIRA` — Sem carteira | enum:Segmento | — | — | — | — | RF-MOD-INGESTAO-13 |
+| segmentoAtual | Segmento no ciclo | readonly | Não | única | `MASSIFICADA` — Massificada; `QUALIFICADA` — Qualificada; `SEM_CARTEIRA` — Sem carteira | enum:SegmentoContribuinte | — | — | — | — | RF-MOD-INGESTAO-13 |
 | statusCobranca | Situação da cobrança | readonly | Sim | única | `SEM_ACAO` — Sem ação; `NOTIFICADO` — Notificado; `EM_COBRANCA` — Em cobrança; `REGULARIZADO` — Regularizado | enum:StatusCobranca | — | — | — | — | RF-MOD-INGESTAO-09 |
 | totalEmAberto | Total em aberto | readonly | Não | — | — | — | R$ 0,00 | — | — | — | RF-MOD-INGESTAO-13 |
 | contumaz | Devedor contumaz | readonly | Não | — | — | — | Sim/Não | — | — | — | RF-MOD-INGESTAO-13 |
@@ -465,7 +465,7 @@ referência visual; não há `prototype.md` (protótipo dispensado, ver isençã
 | Campo | Rótulo | Tipo | Obrig. | Seleção | Opções (valor — rótulo) | Origem das opções | Máscara/Formato | Default | Limites | Validação → mensagem | RF/PR |
 |-------|--------|------|--------|---------|--------------------------|-------------------|-----------------|---------|---------|----------------------|-------|
 | nome | Nome da régua | text | Sim | — | — | — | — | — | até 80 caracteres | vazio → «Informe o nome da régua» | RF-MOD-REGUAS-01 |
-| segmento | Segmento | select | Sim | única | `PARCELAMENTOS` — Parcelamentos inadimplentes; `IPVA` — IPVA; `ITCD` — ITCD; `ICMS_NORMAL` — ICMS Normal; `ICMS_ST` — ICMS ST | static | — | — | — | segmento com régua ativa → «Já existe régua ativa para este segmento» | RF-MOD-REGUAS-01 |
+| segmento | Segmento | select | Sim | única | `PARCELAMENTOS_INADIMPLENTES` — Parcelamentos inadimplentes; `IPVA` — IPVA; `ITCD` — ITCD; `ICMS_NORMAL` — ICMS Normal; `ICMS_ST` — ICMS ST | enum:SegmentoRegua | — | — | — | segmento com régua ativa → «Já existe régua ativa para este segmento» | RF-MOD-REGUAS-01 |
 | estado | Estado | select | Sim | única | `RASCUNHO` — Rascunho; `ATIVA` — Ativa; `PAUSADA` — Pausada | enum:EstadoRegua | — | RASCUNHO | — | — | RF-MOD-REGUAS-08 |
 | etapaOffset | Prazo da etapa (dias) | number | Sim | — | — | — | inteiro | — | 0 a 365 | fora de 0 a 365 → «Informe de 0 a 365 dias» | RF-MOD-REGUAS-01 |
 | etapaCanal | Canal da etapa | select | Sim | única | `EMAIL` — E-mail; `SMS` — SMS; `WHATSAPP` — WhatsApp | enum:Canal | — | — | — | — | RF-MOD-REGUAS-01 |
@@ -521,7 +521,7 @@ referência visual; não há `prototype.md` (protótipo dispensado, ver isençã
 |-------|--------|------|--------|---------|--------------------------|-------------------|-----------------|---------|---------|----------------------|-------|
 | regua | Régua | lookup | Não | múltipla | *(dinâmica)* | domainTable:x_cbi_regua | — | todas | — | — | RF-MOD-REGUAS-09 |
 | canal | Canal | select | Não | múltipla | `EMAIL` — E-mail; `SMS` — SMS; `WHATSAPP` — WhatsApp | enum:Canal | — | todos | — | — | RF-MOD-REGUAS-09 |
-| situacao | Situação | select | Não | múltipla | `CRIADA` — Criada; `ENVIADA` — Enviada; `ENTREGUE` — Entregue; `FALHA` — Falha; `FALHA_DEFINITIVA` — Falha definitiva; `NAO_ENVIADA_SEM_CONSENTIMENTO` — Não enviada — sem consentimento | enum:SituacaoComunicacao | — | todas | — | — | RF-MOD-REGUAS-06 |
+| situacao | Situação | select | Não | múltipla | `PENDENTE` — Pendente; `ENVIADO` — Enviado; `ENTREGUE` — Entregue; `LIDO` — Lido; `FALHA` — Falha; `FALHA_DEFINITIVA` — Falha definitiva; `SEM_OPT_IN` — Sem opt-in | enum:StatusComunicacao | — | todas | — | — | RF-MOD-REGUAS-06 |
 | data | Data de envio | daterange | Não | — | — | — | DD/MM/AAAA | hoje | máx. 31 dias | intervalo acima de 31 dias → «Escolha no máximo 31 dias» | RF-MOD-REGUAS-09 |
 
 **Grid / listagem**
@@ -578,7 +578,7 @@ referência visual; não há `prototype.md` (protótipo dispensado, ver isençã
 
 | Campo | Rótulo | Tipo | Obrig. | Seleção | Opções (valor — rótulo) | Origem das opções | Máscara/Formato | Default | Limites | Validação → mensagem | RF/PR |
 |-------|--------|------|--------|---------|--------------------------|-------------------|-----------------|---------|---------|----------------------|-------|
-| estagio | Estágio | select | Não | múltipla | `NOVO` — Novo; `EM_CONTATO` — Em contato; `NEGOCIACAO` — Negociação; `ENCERRADO` — Encerrado | enum:EstagioCaso | — | abertos | — | — | RF-MOD-QUALIFICADA-03 |
+| estagio | Estágio | select | Não | múltipla | `NOVO` — Novo; `PRIMEIRO_CONTATO` — 1º contato; `NEGOCIACAO` — Negociação; `FOLLOW_UP` — Follow-up | enum:EstagioCaso | — | todos (casos abertos) | — | — | RF-MOD-QUALIFICADA-03 |
 | tributo | Tributo | select | Não | múltipla | `ICMS_NORMAL` — ICMS Normal; `ICMS_ST` — ICMS ST; `IPVA` — IPVA; `ITCD` — ITCD | enum:Tributo | — | todos | — | — | RF-MOD-QUALIFICADA-03 |
 
 **Grid / listagem**
@@ -633,8 +633,8 @@ referência visual; não há `prototype.md` (protótipo dispensado, ver isençã
 
 | Campo | Rótulo | Tipo | Obrig. | Seleção | Opções (valor — rótulo) | Origem das opções | Máscara/Formato | Default | Limites | Validação → mensagem | RF/PR |
 |-------|--------|------|--------|---------|--------------------------|-------------------|-----------------|---------|---------|----------------------|-------|
-| interacaoTipo | Tipo de contato | select | Sim | única | `TELEFONE` — Telefone; `EMAIL` — E-mail; `PRESENCIAL` — Presencial; `VISITA_TECNICA` — Visita técnica | enum:TipoInteracao | — | — | — | vazio → «Escolha o tipo de contato» | RF-MOD-QUALIFICADA-05 |
-| interacaoResultado | Resultado | select | Sim | única | `SEM_CONTATO` — Sem contato; `PROMESSA_PAGAMENTO` — Promessa de pagamento; `PARCELAMENTO_SOLICITADO` — Parcelamento solicitado; `RECUSA` — Recusa; `OUTRO` — Outro | enum:ResultadoInteracao | — | — | — | vazio → «Escolha o resultado» | RF-MOD-QUALIFICADA-05 |
+| interacaoTipo | Tipo de contato | select | Sim | única | `LIGACAO` — Ligação; `EMAIL` — E-mail; `REUNIAO` — Reunião; `WHATSAPP` — WhatsApp (`SISTEMA` — Sistema é só para eventos automáticos, não aparece para o atendente) | enum:TipoInteracao | — | — | — | vazio → «Escolha o tipo de contato» | RF-MOD-QUALIFICADA-05 |
+| interacaoResultado | Resultado | select | Sim | única | `NEGOCIACAO_EM_CURSO` — Negociação em curso; `SEM_CONTATO` — Sem contato; `PROMESSA_PAGAMENTO` — Promessa de pagamento; `RECUSA` — Recusa | enum:ResultadoInteracao | — | — | — | vazio → «Escolha o resultado» | RF-MOD-QUALIFICADA-05 |
 | interacaoDescricao | Descrição | textarea | Sim | — | — | — | — | — | até 2000 caracteres | vazio → «Descreva o contato» | RF-MOD-QUALIFICADA-05 |
 | followupData | Data do follow-up | date | Não | — | — | — | DD/MM/AAAA | — | hoje ou futura | passado → «A data do follow-up deve ser hoje ou futura» | RF-MOD-QUALIFICADA-06 |
 | atribuidoA | Atendente | lookup | Sim | única | *(dinâmica)* | domainTable:sys_user (papel atendente) | — | atendente atual | — | só o coordenador altera | RF-MOD-QUALIFICADA-07 |
@@ -690,8 +690,8 @@ referência visual; não há `prototype.md` (protótipo dispensado, ver isençã
 | Campo | Rótulo | Tipo | Obrig. | Seleção | Opções (valor — rótulo) | Origem das opções | Máscara/Formato | Default | Limites | Validação → mensagem | RF/PR |
 |-------|--------|------|--------|---------|--------------------------|-------------------|-----------------|---------|---------|----------------------|-------|
 | origem | Origem | select | Não | múltipla | `ESPONTANEA` — Espontânea; `RESPOSTA_COBRANCA` — Resposta à cobrança | enum:OrigemRegularizacao | — | todas | — | — | RF-MOD-MONITORAMENTO-02 |
-| canal | Canal | select | Não | múltipla | `EMAIL` — E-mail; `SMS` — SMS; `WHATSAPP` — WhatsApp; `ATENDIMENTO` — Atendimento | enum:CanalOrigem | — | todos | — | — | RF-MOD-MONITORAMENTO-08 |
-| instrumento | Instrumento | select | Não | múltipla | `AUTO_INFRACAO` — Auto de infração; `DECLARACAO` — Declaração; `OUTRO` — Outro | enum:Instrumento | — | todos | — | — | RF-MOD-MONITORAMENTO-08 |
+| canal | Canal | select | Não | múltipla | `EMAIL` — E-mail; `SMS` — SMS; `WHATSAPP` — WhatsApp; `ATENDIMENTO` — Atendimento | enum:CanalRegularizacao | — | todos | — | — | RF-MOD-MONITORAMENTO-08 |
+| instrumento | Instrumento | select | Não | múltipla | `REGUA_MASSIFICADA` — Régua massificada; `COBRANCA_QUALIFICADA` — Cobrança qualificada | enum:InstrumentoRegularizacao | — | todos | — | — | RF-MOD-MONITORAMENTO-08 |
 | tributo | Tributo | select | Não | múltipla | `ICMS_NORMAL` — ICMS Normal; `ICMS_ST` — ICMS ST; `IPVA` — IPVA; `ITCD` — ITCD | enum:Tributo | — | todos | — | — | RF-MOD-MONITORAMENTO-08 |
 | periodo | Período | daterange | Não | — | — | — | DD/MM/AAAA | ciclo atual | máx. 12 meses | — | RF-MOD-MONITORAMENTO-08 |
 
@@ -862,7 +862,7 @@ referência visual; não há `prototype.md` (protótipo dispensado, ver isençã
 | Campo | Rótulo | Tipo | Obrig. | Seleção | Opções (valor — rótulo) | Origem das opções | Máscara/Formato | Default | Limites | Validação → mensagem | RF/PR |
 |-------|--------|------|--------|---------|--------------------------|-------------------|-----------------|---------|---------|----------------------|-------|
 | usuario | Usuário | lookup | Não | única | *(dinâmica)* | domainTable:sys_user | — | — | — | — | RF-MOD-GOVERNANCA-06 |
-| acao | Ação | select | Não | múltipla | `INTERACAO` — Interação registrada; `PUBLICACAO` — Versão publicada; `CONFIRMACAO` — Carteira confirmada; `PARAMETRO` — Parâmetro alterado; `EXPORTACAO` — Exportação; `REATRIBUICAO` — Reatribuição de caso | enum:AcaoAuditoria | — | todas | — | — | RF-MOD-GOVERNANCA-04 |
+| acao | Ação | select | Não | múltipla | `PUBLICACAO` — Publicação; `CONFIRMACAO` — Confirmação; `INTERACAO` — Interação; `ALTERACAO_PARAMETRO` — Alteração de parâmetro; `EXPORTACAO` — Exportação; `OUTRO` — Outro | enum:AcaoAuditoria | — | todas | — | — | RF-MOD-GOVERNANCA-04 |
 | periodo | Período | daterange | Não | — | — | — | DD/MM/AAAA | últimos 30 dias | máx. 12 meses | intervalo acima de 12 meses → «Escolha no máximo 12 meses» | RF-MOD-GOVERNANCA-06 |
 
 **Grid / listagem**

@@ -99,10 +99,24 @@ Fonte: discovery-document.md, product-requirements.md, business-rules.md (sem le
 
 ## Amarração Técnica
 
-*(Preenchida pelas fases técnicas: spec-data-model (Entidades) e spec-api-contracts (Endpoints).)*
+*(Coluna Entidades preenchida pela spec-data-model a partir do `data-model.json`; Endpoints pela spec-api-contracts.)*
 
 | Tela | Entidades | Endpoints |
 |------|-----------|-----------|
+| TEL-001 | Fonte, LoteCarga, RegistroRejeitado | — |
+| TEL-002 | PosicaoTributo, Contribuinte | — |
+| TEL-003 | Contribuinte, Debito, Parcelamento, Comunicacao, Sinalizacao | — |
+| TEL-004 | CriterioVersao | — |
+| TEL-005 | Carteira, CarteiraItem | — |
+| TEL-006 | Score, ScoreFaixa, LoteCarga | — |
+| TEL-007 | Regua, ReguaEtapa, ModeloMensagem | — |
+| TEL-008 | Comunicacao, Regua, Consentimento | — |
+| TEL-009 | Caso | — |
+| TEL-010 | Caso, Interacao, Followup, Debito, Parcelamento, Sinalizacao, VinculoEconomico | — |
+| TEL-011 | Regularizacao | — |
+| TEL-012 | CarteiraItem, Regularizacao, Comunicacao, Meta | — |
+| TEL-013 | Parametro, ScoreFaixa, Meta | — |
+| TEL-014 | EventoAuditoria, CriterioVersao | — |
 
 ## Cobertura
 
@@ -134,7 +148,8 @@ MÉTRICAS:
     Regua.pausada → TEL-008
     Regularizacao.registrada → SEM TELA — verificar
     Score.vigente → TEL-006
-  % telas com amarração técnica: 0.0%
+  % telas com amarração técnica: 100.0%
+  entidades do data-model sem tela: Usuario
 RESULTADO: OK (0 erro(s), 3 aviso(s))
 ```
 

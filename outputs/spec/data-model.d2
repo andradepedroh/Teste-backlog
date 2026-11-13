@@ -1,0 +1,349 @@
+# Diagrama ER — Cobrança Inteligente (2.6 Cobrança · SEFAZ-MT) (gerado por render-er.mjs)
+direction: right
+
+BC-INGESTAO: "Ingestão e Carteira Consolidada" {
+  Fonte: "Fonte (x_cbi_fonte)" {
+    shape: sql_table
+    "nome": "string(60)"
+    "endpoint": "string(200)"
+    "usuario_integracao": "reference" {constraint: [foreign_key]}
+    "tributo_escopo": "choice"
+    "ativa": "boolean"
+    "prazo_recebimento": "string(5)"
+    "status_atual": "choice"
+    "ultima_execucao": "reference" {constraint: [foreign_key]}
+    "pct_migracao": "decimal"
+    "chave_natural": "string(60)"
+  }
+  LoteCarga: "LoteCarga (x_cbi_sync_execucao)" {
+    shape: sql_table
+    "fonte": "reference" {constraint: [foreign_key]}
+    "id_lote_origem": "string(60)"
+    "inicio": "glide_date_time"
+    "fim": "glide_date_time"
+    "status": "choice"
+    "origem": "choice"
+    "pacotes_esperados": "integer"
+    "pacotes_recebidos": "integer"
+    "lidos": "integer"
+    "aceitos": "integer"
+    "rejeitados": "integer"
+    "execucao_anterior": "reference" {constraint: [foreign_key]}
+    "versao_modelo": "string(20)"
+    "mensagem_erro": "string(1000)"
+  }
+  RegistroRejeitado: "RegistroRejeitado (x_cbi_registro_rejeitado)" {
+    shape: sql_table
+    "execucao": "reference" {constraint: [foreign_key]}
+    "chave_origem": "string(60)"
+    "motivo": "choice"
+    "conteudo_original": "string(4000)"
+  }
+  Contribuinte: "Contribuinte (x_cbi_contribuinte)" {
+    shape: sql_table
+    "documento": "string(14)"
+    "tipo": "choice"
+    "nome": "string(150)"
+    "segmento_atual": "choice"
+    "status_cobranca": "choice"
+    "score_atual": "reference" {constraint: [foreign_key]}
+    "total_em_aberto": "currency"
+    "maior_atraso_dias": "integer"
+    "contumaz": "boolean"
+  }
+  Debito: "Debito (x_cbi_debito)" {
+    shape: sql_table
+    "contribuinte": "reference" {constraint: [foreign_key]}
+    "tributo": "choice"
+    "valor": "currency"
+    "vencimento": "glide_date"
+    "instrumento": "choice"
+    "fonte": "reference" {constraint: [foreign_key]}
+    "status": "choice"
+    "data_regularizacao": "glide_date"
+    "atraso_dias": "integer"
+    "id_origem": "string(40)"
+  }
+  PosicaoTributo: "PosicaoTributo (x_cbi_posicao_tributo)" {
+    shape: sql_table
+    "contribuinte": "reference" {constraint: [foreign_key]}
+    "tributo": "choice"
+    "total_em_aberto": "currency"
+    "maior_atraso_dias": "integer"
+    "qtd_debitos": "integer"
+    "status_parcelamento": "choice"
+    "status_cobranca": "choice"
+  }
+  Parcelamento: "Parcelamento (x_cbi_parcelamento)" {
+    shape: sql_table
+    "numero": "string(20)"
+    "contribuinte": "reference" {constraint: [foreign_key]}
+    "tributo": "choice"
+    "parcelas_total": "integer"
+    "parcelas_pagas": "integer"
+    "parcelas_em_atraso": "integer"
+    "valor": "currency"
+    "status": "choice"
+    "id_origem": "string(40)"
+  }
+  VinculoEconomico: "VinculoEconomico (x_cbi_vinculo_economico)" {
+    shape: sql_table
+    "contribuinte": "reference" {constraint: [foreign_key]}
+    "vinculado": "reference" {constraint: [foreign_key]}
+    "relacao": "choice"
+    "fonte": "reference" {constraint: [foreign_key]}
+  }
+  Sinalizacao: "Sinalizacao (x_cbi_sinalizacao)" {
+    shape: sql_table
+    "contribuinte": "reference" {constraint: [foreign_key]}
+    "debito": "reference" {constraint: [foreign_key]}
+    "tipo": "choice"
+    "fonte": "reference" {constraint: [foreign_key]}
+    "data": "glide_date"
+    "ativa": "boolean"
+    "descricao": "string(300)"
+  }
+}
+
+BC-QUALIFICACAO: "Qualificação e Parametrização da Carteira" {
+  CriterioVersao: "CriterioVersao (x_cbi_criterio_versao)" {
+    shape: sql_table
+    "numero": "integer"
+    "estado": "choice"
+    "previa": "reference" {constraint: [foreign_key]}
+    "valor_minimo": "currency"
+    "tributo": "choice"
+    "atraso_minimo_dias": "integer"
+    "instrumento": "choice"
+    "threshold_score": "decimal"
+    "tipo_alvo": "choice"
+    "excluir_contumazes": "boolean"
+    "reservar_controle": "boolean"
+    "pct_controle": "decimal"
+    "fundamentacao": "string(2000)"
+    "versao_base": "reference" {constraint: [foreign_key]}
+    "publicada_por": "reference" {constraint: [foreign_key]}
+    "publicada_em": "glide_date_time"
+  }
+  Carteira: "Carteira (x_cbi_carteira)" {
+    shape: sql_table
+    "ciclo": "string(7)"
+    "criterio_versao": "reference" {constraint: [foreign_key]}
+    "estado": "choice"
+    "semente_sorteio": "string(40)"
+    "qtd_massificada": "integer"
+    "qtd_qualificada": "integer"
+    "qtd_controle": "integer"
+    "confirmada_por": "reference" {constraint: [foreign_key]}
+    "confirmada_em": "glide_date_time"
+  }
+  CarteiraItem: "CarteiraItem (x_cbi_carteira_item)" {
+    shape: sql_table
+    "carteira": "reference" {constraint: [foreign_key]}
+    "contribuinte": "reference" {constraint: [foreign_key]}
+    "tributo": "choice"
+    "segmento": "choice"
+    "controle": "boolean"
+    "notificado": "boolean"
+    "regularizado": "boolean"
+    "score_snapshot": "decimal"
+    "valor_snapshot": "currency"
+  }
+}
+
+BC-SCORE: "Scoring de Liquidez" {
+  Score: "Score (x_cbi_score)" {
+    shape: sql_table
+    "contribuinte": "reference" {constraint: [foreign_key]}
+    "valor": "decimal"
+    "faixa": "reference" {constraint: [foreign_key]}
+    "versao_modelo": "string(20)"
+    "lote": "reference" {constraint: [foreign_key]}
+    "vigente": "boolean"
+  }
+  ScoreFaixa: "ScoreFaixa (x_cbi_score_faixa)" {
+    shape: sql_table
+    "nome": "string(30)"
+    "limite_inferior": "decimal"
+    "limite_superior": "decimal"
+    "ordem": "integer"
+    "ativa": "boolean"
+  }
+}
+
+BC-REGUAS: "Réguas de Cobrança Massificada" {
+  Regua: "Regua (x_cbi_regua)" {
+    shape: sql_table
+    "nome": "string(80)"
+    "segmento_alvo": "choice"
+    "estado": "choice"
+    "versao": "integer"
+    "regua_base": "reference" {constraint: [foreign_key]}
+  }
+  ReguaEtapa: "ReguaEtapa (x_cbi_regua_etapa)" {
+    shape: sql_table
+    "regua": "reference" {constraint: [foreign_key]}
+    "ordem": "integer"
+    "offset_dias": "integer"
+    "canal": "choice"
+    "template": "reference" {constraint: [foreign_key]}
+    "encaminha_qualificada": "boolean"
+  }
+  ModeloMensagem: "ModeloMensagem (x_cbi_template)" {
+    shape: sql_table
+    "nome": "string(80)"
+    "canal": "choice"
+    "assunto": "string(150)"
+    "corpo": "string(4000)"
+    "ativo": "boolean"
+  }
+  Consentimento: "Consentimento (x_cbi_consentimento)" {
+    shape: sql_table
+    "contribuinte": "reference" {constraint: [foreign_key]}
+    "canal": "choice"
+    "opt_in": "boolean"
+    "data_opt_in": "glide_date_time"
+    "origem": "string(60)"
+    "data_opt_out": "glide_date_time"
+  }
+  Comunicacao: "Comunicacao (x_cbi_comunicacao)" {
+    shape: sql_table
+    "contribuinte": "reference" {constraint: [foreign_key]}
+    "debito": "reference" {constraint: [foreign_key]}
+    "tributo": "choice"
+    "regua": "reference" {constraint: [foreign_key]}
+    "etapa": "reference" {constraint: [foreign_key]}
+    "canal": "choice"
+    "status": "choice"
+    "data_prevista": "glide_date"
+    "data_envio": "glide_date_time"
+    "id_provedor": "string(60)"
+    "tentativas": "integer"
+    "erro": "string(500)"
+    "paga_ate_30d": "boolean"
+  }
+}
+
+BC-QUALIFICADA: "Cobrança Qualificada" {
+  Caso: "Caso (x_cbi_caso)" {
+    shape: sql_table
+    "number": "string(14)"
+    "contribuinte": "reference" {constraint: [foreign_key]}
+    "carteira_item": "reference" {constraint: [foreign_key]}
+    "origem_caso": "choice"
+    "estagio": "choice"
+    "prioridade_ordem": "integer"
+    "motivo_encerramento": "choice"
+  }
+  Interacao: "Interacao (x_cbi_interacao)" {
+    shape: sql_table
+    "caso": "reference" {constraint: [foreign_key]}
+    "tipo": "choice"
+    "resultado": "choice"
+    "anotacao": "string(4000)"
+    "autor": "reference" {constraint: [foreign_key]}
+    "data_hora": "glide_date_time"
+    "comunicacao": "reference" {constraint: [foreign_key]}
+  }
+  Followup: "Followup (x_cbi_followup)" {
+    shape: sql_table
+    "caso": "reference" {constraint: [foreign_key]}
+    "lembrete": "string(200)"
+  }
+}
+
+BC-MONITORAMENTO: "Monitoramento e KPIs" {
+  Regularizacao: "Regularizacao (x_cbi_regularizacao)" {
+    shape: sql_table
+    "debito": "reference" {constraint: [foreign_key]}
+    "contribuinte": "reference" {constraint: [foreign_key]}
+    "valor": "currency"
+    "data": "glide_date"
+    "tributo": "choice"
+    "origem": "choice"
+    "canal": "choice"
+    "instrumento": "choice"
+    "atendente": "reference" {constraint: [foreign_key]}
+    "comunicacao_origem": "reference" {constraint: [foreign_key]}
+    "interacao_origem": "reference" {constraint: [foreign_key]}
+    "carteira_item": "reference" {constraint: [foreign_key]}
+    "grupo_controle": "boolean"
+  }
+  Meta: "Meta (x_cbi_meta)" {
+    shape: sql_table
+    "tributo": "choice"
+    "ciclo": "string(7)"
+    "meta_pct": "decimal"
+  }
+}
+
+BC-GOVERNANCA: "Governança, Acesso e Auditoria" {
+  Parametro: "Parametro (x_cbi_parametro)" {
+    shape: sql_table
+    "chave": "string(60)"
+    "valor": "string(200)"
+    "grupo": "choice"
+    "descricao": "string(300)"
+    "vigente_desde": "glide_date"
+  }
+  EventoAuditoria: "EventoAuditoria (x_cbi_auditoria_evento)" {
+    shape: sql_table
+    "tabela": "string(80)"
+    "registro": "string(32)"
+    "acao": "choice"
+    "usuario": "reference" {constraint: [foreign_key]}
+    "data_hora": "glide_date_time"
+    "detalhe": "string(4000)"
+  }
+  Usuario: "Usuario (sys_user)" {
+    shape: sql_table
+  }
+}
+
+BC-INGESTAO.Fonte -> BC-GOVERNANCA.Usuario: "N:1 via usuario_integracao"
+BC-INGESTAO.Fonte -> BC-INGESTAO.LoteCarga: "N:1 via ultima_execucao"
+BC-INGESTAO.LoteCarga -> BC-INGESTAO.Fonte: "N:1 via fonte"
+BC-INGESTAO.LoteCarga -> BC-INGESTAO.LoteCarga: "N:1 via execucao_anterior"
+BC-INGESTAO.RegistroRejeitado -> BC-INGESTAO.LoteCarga: "N:1 via execucao"
+BC-INGESTAO.Contribuinte -> BC-SCORE.Score: "N:1 via score_atual"
+BC-INGESTAO.Debito -> BC-INGESTAO.Contribuinte: "N:1 via contribuinte"
+BC-INGESTAO.Debito -> BC-INGESTAO.Fonte: "N:1 via fonte"
+BC-INGESTAO.PosicaoTributo -> BC-INGESTAO.Contribuinte: "N:1 via contribuinte"
+BC-INGESTAO.Parcelamento -> BC-INGESTAO.Contribuinte: "N:1 via contribuinte"
+BC-INGESTAO.VinculoEconomico -> BC-INGESTAO.Contribuinte: "N:1 via contribuinte"
+BC-INGESTAO.VinculoEconomico -> BC-INGESTAO.Contribuinte: "N:1 via vinculado"
+BC-INGESTAO.VinculoEconomico -> BC-INGESTAO.Fonte: "N:1 via fonte"
+BC-INGESTAO.Sinalizacao -> BC-INGESTAO.Contribuinte: "N:1 via contribuinte"
+BC-INGESTAO.Sinalizacao -> BC-INGESTAO.Debito: "N:1 via debito"
+BC-INGESTAO.Sinalizacao -> BC-INGESTAO.Fonte: "N:1 via fonte"
+BC-QUALIFICACAO.CriterioVersao -> BC-QUALIFICACAO.Carteira: "N:1 via previa"
+BC-QUALIFICACAO.CriterioVersao -> BC-QUALIFICACAO.CriterioVersao: "N:1 via versao_base"
+BC-QUALIFICACAO.CriterioVersao -> BC-GOVERNANCA.Usuario: "N:1 via publicada_por"
+BC-QUALIFICACAO.Carteira -> BC-QUALIFICACAO.CriterioVersao: "N:1 via criterio_versao"
+BC-QUALIFICACAO.Carteira -> BC-GOVERNANCA.Usuario: "N:1 via confirmada_por"
+BC-QUALIFICACAO.CarteiraItem -> BC-QUALIFICACAO.Carteira: "N:1 via carteira"
+BC-QUALIFICACAO.CarteiraItem -> BC-INGESTAO.Contribuinte: "N:1 via contribuinte"
+BC-SCORE.Score -> BC-INGESTAO.Contribuinte: "N:1 via contribuinte"
+BC-SCORE.Score -> BC-SCORE.ScoreFaixa: "N:1 via faixa"
+BC-SCORE.Score -> BC-INGESTAO.LoteCarga: "N:1 via lote"
+BC-REGUAS.Regua -> BC-REGUAS.Regua: "N:1 via regua_base"
+BC-REGUAS.ReguaEtapa -> BC-REGUAS.Regua: "N:1 via regua"
+BC-REGUAS.ReguaEtapa -> BC-REGUAS.ModeloMensagem: "N:1 via template"
+BC-REGUAS.Consentimento -> BC-INGESTAO.Contribuinte: "N:1 via contribuinte"
+BC-REGUAS.Comunicacao -> BC-INGESTAO.Contribuinte: "N:1 via contribuinte"
+BC-REGUAS.Comunicacao -> BC-INGESTAO.Debito: "N:1 via debito"
+BC-REGUAS.Comunicacao -> BC-REGUAS.Regua: "N:1 via regua"
+BC-REGUAS.Comunicacao -> BC-REGUAS.ReguaEtapa: "N:1 via etapa"
+BC-QUALIFICADA.Caso -> BC-INGESTAO.Contribuinte: "N:1 via contribuinte"
+BC-QUALIFICADA.Caso -> BC-QUALIFICACAO.CarteiraItem: "N:1 via carteira_item"
+BC-QUALIFICADA.Interacao -> BC-QUALIFICADA.Caso: "N:1 via caso"
+BC-QUALIFICADA.Interacao -> BC-GOVERNANCA.Usuario: "N:1 via autor"
+BC-QUALIFICADA.Interacao -> BC-REGUAS.Comunicacao: "N:1 via comunicacao"
+BC-QUALIFICADA.Followup -> BC-QUALIFICADA.Caso: "N:1 via caso"
+BC-MONITORAMENTO.Regularizacao -> BC-INGESTAO.Debito: "N:1 via debito"
+BC-MONITORAMENTO.Regularizacao -> BC-INGESTAO.Contribuinte: "N:1 via contribuinte"
+BC-MONITORAMENTO.Regularizacao -> BC-GOVERNANCA.Usuario: "N:1 via atendente"
+BC-MONITORAMENTO.Regularizacao -> BC-REGUAS.Comunicacao: "N:1 via comunicacao_origem"
+BC-MONITORAMENTO.Regularizacao -> BC-QUALIFICADA.Interacao: "N:1 via interacao_origem"
+BC-MONITORAMENTO.Regularizacao -> BC-QUALIFICACAO.CarteiraItem: "N:1 via carteira_item"
+BC-GOVERNANCA.EventoAuditoria -> BC-GOVERNANCA.Usuario: "N:1 via usuario"

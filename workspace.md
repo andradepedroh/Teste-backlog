@@ -31,7 +31,7 @@
 <!-- codigo entra só no Deliver — descomente as três linhas abaixo quando o repositório de
      código existir, e preencha os tokens:
 - papel: codigo
-  repositorio: https://github.com/andradepedroh/servicenow-cobranca
+  repositorio: https://github.com/andradepedroh/<repo-codigo>
   branch-de-integracao: main
 -->
 - papel: prototipo

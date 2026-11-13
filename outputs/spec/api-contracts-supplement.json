@@ -1,0 +1,2129 @@
+{
+  "_comment": "Suplemento ao api-contracts.yaml — o que o OpenAPI não cobre: idempotência, semântica de cada status, limites e rastreio. Gerado por spec-api-contracts.",
+  "skillVersion": "spec-api-contracts-1.4",
+  "schemaVersion": "api-contracts/v1",
+  "generatedAt": "2026-11-13T20:16:21Z",
+  "outputLanguage": "pt-BR",
+  "conventions": {
+    "basePath": "/api/x_cbi/v1",
+    "versioning": "Versão no caminho; mudança que quebra abre v2 e mantém v1 até todos os parceiros migrarem (conventions.mdc).",
+    "errorFormat": "RFC 7807 para erro da requisição inteira; erro de registro dentro do 200 do pacote, com motivo da lista fechada (conventions.mdc, RN-NOVO-ING-004).",
+    "pagination": "Não se aplica: as APIs trabalham por lote e pacote; não há listagem exposta a parceiros.",
+    "correlation": "O identificador do lote (fonte + idLoteOrigem) é a chave de correlação dos logs (observability.mdc).",
+    "uiBinding": "As telas são nativas do ServiceNow (formulários, listas e Platform Analytics) e leem as tabelas pela própria plataforma, com ACL; nenhuma tela consome estas APIs."
+  },
+  "errorCatalog": [
+    {
+      "codigo": "CORPO_INVALIDO",
+      "status": 400,
+      "title": "Corpo da requisição inválido",
+      "detail": "O corpo não é um JSON válido, falta campo obrigatório da requisição ou um campo está fora do formato. O campo com problema vem em «campo».",
+      "x-rn-violada": null,
+      "type": "urn:x_cbi:erro:corpo-invalido"
+    },
+    {
+      "codigo": "NAO_AUTENTICADO",
+      "status": 401,
+      "title": "Não autenticado",
+      "detail": "O token OAuth está ausente, vencido ou inválido. Peça um token novo e repita a chamada.",
+      "x-rn-violada": null,
+      "type": "urn:x_cbi:erro:nao-autenticado"
+    },
+    {
+      "codigo": "ACESSO_NEGADO",
+      "status": 403,
+      "title": "Acesso negado a este endpoint",
+      "detail": "O usuário de integração não tem permissão neste endpoint: cada fonte só envia pela própria API. Nada foi gravado.",
+      "x-rn-violada": "RN-NOVO-ING-008",
+      "type": "urn:x_cbi:erro:acesso-negado"
+    },
+    {
+      "codigo": "LOTE_NAO_ENCONTRADO",
+      "status": 404,
+      "title": "Lote não encontrado",
+      "detail": "Não existe lote aberto com este identificador para esta fonte. Abra o lote antes de enviar pacotes.",
+      "x-rn-violada": null,
+      "type": "urn:x_cbi:erro:lote-nao-encontrado"
+    },
+    {
+      "codigo": "LOTE_JA_FECHADO",
+      "status": 409,
+      "title": "Lote já fechado",
+      "detail": "O lote já foi fechado. Um lote fechado não recebe pacotes nem pode ser reaberto; para corrigir dados, envie um lote novo.",
+      "x-rn-violada": "RN-NOVO-ING-005",
+      "type": "urn:x_cbi:erro:lote-ja-fechado"
+    },
+    {
+      "codigo": "FECHAMENTO_DIVERGENTE",
+      "status": 409,
+      "title": "Lote fechado com outro total de pacotes",
+      "detail": "O lote já foi fechado informando outra quantidade de pacotes. O primeiro fechamento vale.",
+      "x-rn-violada": "RN-NOVO-ING-005",
+      "type": "urn:x_cbi:erro:fechamento-divergente"
+    },
+    {
+      "codigo": "PACOTE_DIVERGENTE",
+      "status": 409,
+      "title": "Pacote já recebido com outro conteúdo",
+      "detail": "Este número de pacote já foi gravado com conteúdo diferente. Reenvio só vale com o mesmo conteúdo; para mudar dados, use o próximo número de pacote.",
+      "x-rn-violada": "RN-NOVO-ING-005",
+      "type": "urn:x_cbi:erro:pacote-divergente"
+    },
+    {
+      "codigo": "PACOTE_GRANDE_DEMAIS",
+      "status": 413,
+      "title": "Pacote acima do tamanho máximo",
+      "detail": "O pacote passou do número máximo de registros por pacote. Divida em pacotes menores; o lote continua aberto e nada deste pacote foi gravado.",
+      "x-rn-violada": null,
+      "type": "urn:x_cbi:erro:pacote-grande-demais"
+    },
+    {
+      "codigo": "SEQUENCIA_INVALIDA",
+      "status": 422,
+      "title": "Pacote fora de sequência",
+      "detail": "O número do pacote não é o esperado para este lote. A sequência esperada vem em «sequenciaEsperada»; nada deste pacote foi gravado.",
+      "x-rn-violada": "RN-NOVO-ING-005",
+      "type": "urn:x_cbi:erro:sequencia-invalida"
+    },
+    {
+      "codigo": "PACOTES_FALTANTES",
+      "status": 422,
+      "title": "Faltam pacotes para fechar o lote",
+      "detail": "A quantidade de pacotes informada no fechamento não bate com os pacotes recebidos. Os números que faltam vêm em «pacotesFaltantes»; o lote continua aberto para o reenvio.",
+      "x-rn-violada": "RN-NOVO-ING-006",
+      "type": "urn:x_cbi:erro:pacotes-faltantes"
+    },
+    {
+      "codigo": "COMUNICACAO_NAO_ENCONTRADA",
+      "status": 404,
+      "title": "Comunicação não encontrada",
+      "detail": "Não existe comunicação com este identificador do provedor. O sistema recusa o status e registra o evento para análise.",
+      "x-rn-violada": null,
+      "type": "urn:x_cbi:erro:comunicacao-nao-encontrada"
+    },
+    {
+      "codigo": "LIMITE_EXCEDIDO",
+      "status": 429,
+      "title": "Limite de requisições excedido",
+      "detail": "O usuário de integração passou do limite de requisições. Espere o tempo de «Retry-After» e repita; nada desta requisição foi gravado.",
+      "x-rn-violada": null,
+      "type": "urn:x_cbi:erro:limite-excedido"
+    },
+    {
+      "codigo": "ERRO_INTERNO",
+      "status": 500,
+      "title": "Erro interno",
+      "detail": "Erro inesperado ao processar a requisição. Nada desta requisição foi gravado; repita mais tarde. O detalhe técnico fica só no log interno, ligado ao identificador do lote.",
+      "x-rn-violada": null,
+      "type": "urn:x_cbi:erro:erro-interno"
+    },
+    {
+      "codigo": "DOC_INVALIDO",
+      "status": 200,
+      "title": "Registro rejeitado",
+      "nivel": "registro",
+      "detail": "Motivo de rejeição por registro dentro da resposta 200 do pacote.",
+      "x-rn-violada": "RN-NOVO-ING-004"
+    },
+    {
+      "codigo": "CAMPO_AUSENTE",
+      "status": 200,
+      "title": "Registro rejeitado",
+      "nivel": "registro",
+      "detail": "Motivo de rejeição por registro dentro da resposta 200 do pacote.",
+      "x-rn-violada": "RN-NOVO-ING-004"
+    },
+    {
+      "codigo": "CONTRIB_NAO_ENCONTRADO",
+      "status": 200,
+      "title": "Registro rejeitado",
+      "nivel": "registro",
+      "detail": "Motivo de rejeição por registro dentro da resposta 200 do pacote.",
+      "x-rn-violada": "RN-NOVO-ING-004"
+    },
+    {
+      "codigo": "FORMATO_INVALIDO",
+      "status": 200,
+      "title": "Registro rejeitado",
+      "nivel": "registro",
+      "detail": "Motivo de rejeição por registro dentro da resposta 200 do pacote.",
+      "x-rn-violada": "RN-NOVO-ING-004"
+    },
+    {
+      "codigo": "OUTRO",
+      "status": 200,
+      "title": "Registro rejeitado",
+      "nivel": "registro",
+      "detail": "Motivo de rejeição por registro dentro da resposta 200 do pacote.",
+      "x-rn-violada": "RN-NOVO-ING-004"
+    }
+  ],
+  "businessRuleCoverage": [
+    {
+      "rn": "RN-NOVO-ING-004",
+      "como": "Registro com documento inválido sai como REJEITADO/DOC_INVALIDO na resposta 200 do pacote — por convenção do projeto não vira 4xx (conventions.mdc)."
+    },
+    {
+      "rn": "RN-NOVO-ING-005",
+      "como": "409 LOTE_JA_FECHADO, 409 PACOTE_DIVERGENTE, 409 FECHAMENTO_DIVERGENTE e 422 SEQUENCIA_INVALIDA; repetição idêntica devolve a resposta original."
+    },
+    {
+      "rn": "RN-NOVO-ING-006",
+      "como": "422 PACOTES_FALTANTES mantém o lote aberto; o fechamento do ciclo (job, sem API) marca FALHA e mantém a última carga válida."
+    },
+    {
+      "rn": "RN-NOVO-ING-008",
+      "como": "403 ACESSO_NEGADO: só o usuário de integração da fonte grava pela API dela; nenhuma operação de escrita para usuário humano."
+    },
+    {
+      "rn": "RN-NOVO-ING-001",
+      "como": "Sem erro próprio: a consolidação roda depois do fechamento, fora da API."
+    },
+    {
+      "rn": "RN-NOVO-ING-002",
+      "como": "Sem erro próprio: débito com situacao=REGULARIZADO encerra a abordagem no job intraciclo."
+    },
+    {
+      "rn": "RN-NOVO-ING-003",
+      "como": "Sem erro próprio: débito repetido entre MPI e Big Data é aceito e consolidado como um só."
+    },
+    {
+      "rn": "RN-NOVO-ING-007",
+      "como": "Sem erro próprio: a sinalização é gravada só para leitura."
+    },
+    {
+      "rn": "RN-NOVO-REG-001",
+      "como": "O status FALHA do provedor devolve a comunicação ao reenvio até o limite; não há erro ao provedor."
+    }
+  ],
+  "asyncNotExposed": [
+    {
+      "nome": "Fechamento do ciclo diário de carga",
+      "porque": "Job agendado interno (Scheduled Flow); sem fronteira REST."
+    },
+    {
+      "nome": "Motor de réguas e envio ao provedor (INT-08)",
+      "porque": "Chamada de saída por REST Message; o contrato é do provedor, não desta aplicação (GAP-004)."
+    },
+    {
+      "nome": "Atualização intraciclo e coleta do Platform Analytics",
+      "porque": "Jobs internos."
+    }
+  ],
+  "operations": [
+    {
+      "operationId": "abrirLoteCcf",
+      "method": "POST",
+      "path": "/ingestao/ccf/lotes",
+      "integracao": "INT-01",
+      "httpSemantics": [
+        {
+          "status": 201,
+          "meaning": "Lote novo aberto; Location aponta para ele."
+        },
+        {
+          "status": 200,
+          "meaning": "Lote com o mesmo idLoteOrigem já estava aberto: devolve o existente, nada é criado (repetição segura)."
+        },
+        {
+          "status": 400,
+          "meaning": "Falta idLoteOrigem ou dataReferencia, ou campo fora do formato; o campo vem em «campo»."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte (cada fonte só usa a própria API — SEC-001)."
+        },
+        {
+          "status": 409,
+          "meaning": "Lote com este idLoteOrigem já fechado; não reabre (RN-NOVO-ING-005)."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições do usuário de integração excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; nada gravado; detalhe só no log interno com o identificador do lote."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem",
+        "keyFormat": "idLoteOrigem definido pela fonte (até 60 caracteres)",
+        "storageTtlSeconds": null,
+        "behavior": "A chave natural fonte + idLoteOrigem substitui o cabeçalho Idempotency-Key: abrir de novo um lote aberto devolve 200 com o lote existente; abrir um lote já fechado devolve 409. A chave vale para sempre (o lote fica gravado)."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-03",
+        "RF-MOD-INGESTAO-04",
+        "RF-MOD-INGESTAO-10"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008",
+        "RN-NOVO-ING-001",
+        "RN-NOVO-ING-002"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação.",
+        "Vínculo econômico (filial/controladora) não tem fonte declarada na ETF §6.3; não entrou no pacote da CCF."
+      ]
+    },
+    {
+      "operationId": "enviarPacoteCcf",
+      "method": "PUT",
+      "path": "/ingestao/ccf/lotes/{idLoteOrigem}/pacotes/{sequencia}",
+      "integracao": "INT-01",
+      "httpSemantics": [
+        {
+          "status": 200,
+          "meaning": "Pacote processado: cada registro aceito ou rejeitado com motivo. Erro de registro NÃO vira 4xx (conventions.mdc). Em reenvio do mesmo conteúdo, devolve a resposta original com reenvio=true."
+        },
+        {
+          "status": 400,
+          "meaning": "Corpo malformado, sem nenhuma lista, ou com lista que esta fonte não envia."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte; nada gravado (RF-MOD-INGESTAO-01, cenário 3)."
+        },
+        {
+          "status": 404,
+          "meaning": "Não há lote com este idLoteOrigem para esta fonte (inclui lote de outra fonte — não revela que existe)."
+        },
+        {
+          "status": 409,
+          "meaning": "LOTE_JA_FECHADO: lote fechado não recebe pacote. PACOTE_DIVERGENTE: mesma sequência já gravada com conteúdo diferente."
+        },
+        {
+          "status": 413,
+          "meaning": "Mais de 1.000 registros no pacote (somando as listas); nada gravado; o lote continua aberto."
+        },
+        {
+          "status": 422,
+          "meaning": "Sequência fora da ordem esperada; a resposta traz sequenciaEsperada (RF-MOD-INGESTAO-04, cenário 3)."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; nada do pacote gravado (gravação do pacote é tudo ou nada)."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem + sequencia; por registro, fonte + idOrigem",
+        "keyFormat": "sequência inteira a partir de 1",
+        "storageTtlSeconds": null,
+        "behavior": "PUT é idempotente: o mesmo pacote (mesma sequência e mesmo conteúdo, comparado por hash) devolve a resposta original e não grava nada; conteúdo diferente na mesma sequência devolve 409 PACOTE_DIVERGENTE. Registro com idOrigem já gravado pela mesma fonte em outro lote é atualizado, não duplicado (RN-NOVO-ING-005)."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "payloadLimits": {
+        "maxRegistrosPorPacote": 1000,
+        "provisorio": true
+      },
+      "perRecordResult": {
+        "motivos": [
+          "DOC_INVALIDO",
+          "CAMPO_AUSENTE",
+          "CONTRIB_NAO_ENCONTRADO",
+          "FORMATO_INVALIDO",
+          "OUTRO"
+        ],
+        "destino": "x_cbi_registro_rejeitado (conteúdo original guardado para reprocesso — RF-MOD-INGESTAO-08)",
+        "rnCoberta": "RN-NOVO-ING-004"
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-03",
+        "RF-MOD-INGESTAO-04",
+        "RF-MOD-INGESTAO-10"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008",
+        "RN-NOVO-ING-001",
+        "RN-NOVO-ING-002"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação.",
+        "Vínculo econômico (filial/controladora) não tem fonte declarada na ETF §6.3; não entrou no pacote da CCF."
+      ]
+    },
+    {
+      "operationId": "fecharLoteCcf",
+      "method": "PUT",
+      "path": "/ingestao/ccf/lotes/{idLoteOrigem}/fechamento",
+      "integracao": "INT-01",
+      "httpSemantics": [
+        {
+          "status": 200,
+          "meaning": "Lote fechado: OK sem rejeição, PARCIAL com rejeição. Repetir com o mesmo total devolve o mesmo resumo."
+        },
+        {
+          "status": 400,
+          "meaning": "Corpo inválido ou campo obrigatório ausente."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte."
+        },
+        {
+          "status": 404,
+          "meaning": "Não há lote com este idLoteOrigem para esta fonte."
+        },
+        {
+          "status": 409,
+          "meaning": "Lote já fechado com outro total de pacotes; vale o primeiro fechamento."
+        },
+        {
+          "status": 422,
+          "meaning": "Total informado diferente dos pacotes recebidos; lista pacotesFaltantes; lote continua EM_ANDAMENTO até o prazo da fonte."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; lote continua aberto."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem",
+        "keyFormat": "—",
+        "storageTtlSeconds": null,
+        "behavior": "PUT idempotente: fechar de novo com o mesmo pacotesEnviados devolve o mesmo resumo; com outro total, 409 FECHAMENTO_DIVERGENTE."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-03",
+        "RF-MOD-INGESTAO-04",
+        "RF-MOD-INGESTAO-10",
+        "RF-MOD-INGESTAO-05"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008",
+        "RN-NOVO-ING-001",
+        "RN-NOVO-ING-002"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação.",
+        "Vínculo econômico (filial/controladora) não tem fonte declarada na ETF §6.3; não entrou no pacote da CCF."
+      ]
+    },
+    {
+      "operationId": "abrirLoteMpi",
+      "method": "POST",
+      "path": "/ingestao/mpi/lotes",
+      "integracao": "INT-02",
+      "httpSemantics": [
+        {
+          "status": 201,
+          "meaning": "Lote novo aberto; Location aponta para ele."
+        },
+        {
+          "status": 200,
+          "meaning": "Lote com o mesmo idLoteOrigem já estava aberto: devolve o existente, nada é criado (repetição segura)."
+        },
+        {
+          "status": 400,
+          "meaning": "Falta idLoteOrigem ou dataReferencia, ou campo fora do formato; o campo vem em «campo»."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte (cada fonte só usa a própria API — SEC-001)."
+        },
+        {
+          "status": 409,
+          "meaning": "Lote com este idLoteOrigem já fechado; não reabre (RN-NOVO-ING-005)."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições do usuário de integração excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; nada gravado; detalhe só no log interno com o identificador do lote."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem",
+        "keyFormat": "idLoteOrigem definido pela fonte (até 60 caracteres)",
+        "storageTtlSeconds": null,
+        "behavior": "A chave natural fonte + idLoteOrigem substitui o cabeçalho Idempotency-Key: abrir de novo um lote aberto devolve 200 com o lote existente; abrir um lote já fechado devolve 409. A chave vale para sempre (o lote fica gravado)."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-04",
+        "RF-MOD-INGESTAO-11"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008",
+        "RN-NOVO-ING-003"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação.",
+        "As «regras de elegibilidade» que o MPI e o Big Data enviam (ETF §6.3) não têm campos definidos; o contrato cobre só os débitos."
+      ]
+    },
+    {
+      "operationId": "enviarPacoteMpi",
+      "method": "PUT",
+      "path": "/ingestao/mpi/lotes/{idLoteOrigem}/pacotes/{sequencia}",
+      "integracao": "INT-02",
+      "httpSemantics": [
+        {
+          "status": 200,
+          "meaning": "Pacote processado: cada registro aceito ou rejeitado com motivo. Erro de registro NÃO vira 4xx (conventions.mdc). Em reenvio do mesmo conteúdo, devolve a resposta original com reenvio=true."
+        },
+        {
+          "status": 400,
+          "meaning": "Corpo malformado, sem nenhuma lista, ou com lista que esta fonte não envia."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte; nada gravado (RF-MOD-INGESTAO-01, cenário 3)."
+        },
+        {
+          "status": 404,
+          "meaning": "Não há lote com este idLoteOrigem para esta fonte (inclui lote de outra fonte — não revela que existe)."
+        },
+        {
+          "status": 409,
+          "meaning": "LOTE_JA_FECHADO: lote fechado não recebe pacote. PACOTE_DIVERGENTE: mesma sequência já gravada com conteúdo diferente."
+        },
+        {
+          "status": 413,
+          "meaning": "Mais de 1.000 registros no pacote (somando as listas); nada gravado; o lote continua aberto."
+        },
+        {
+          "status": 422,
+          "meaning": "Sequência fora da ordem esperada; a resposta traz sequenciaEsperada (RF-MOD-INGESTAO-04, cenário 3)."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; nada do pacote gravado (gravação do pacote é tudo ou nada)."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem + sequencia; por registro, fonte + idOrigem",
+        "keyFormat": "sequência inteira a partir de 1",
+        "storageTtlSeconds": null,
+        "behavior": "PUT é idempotente: o mesmo pacote (mesma sequência e mesmo conteúdo, comparado por hash) devolve a resposta original e não grava nada; conteúdo diferente na mesma sequência devolve 409 PACOTE_DIVERGENTE. Registro com idOrigem já gravado pela mesma fonte em outro lote é atualizado, não duplicado (RN-NOVO-ING-005)."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "payloadLimits": {
+        "maxRegistrosPorPacote": 1000,
+        "provisorio": true
+      },
+      "perRecordResult": {
+        "motivos": [
+          "DOC_INVALIDO",
+          "CAMPO_AUSENTE",
+          "CONTRIB_NAO_ENCONTRADO",
+          "FORMATO_INVALIDO",
+          "OUTRO"
+        ],
+        "destino": "x_cbi_registro_rejeitado (conteúdo original guardado para reprocesso — RF-MOD-INGESTAO-08)",
+        "rnCoberta": "RN-NOVO-ING-004"
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-04",
+        "RF-MOD-INGESTAO-11"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008",
+        "RN-NOVO-ING-003"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação.",
+        "As «regras de elegibilidade» que o MPI e o Big Data enviam (ETF §6.3) não têm campos definidos; o contrato cobre só os débitos."
+      ]
+    },
+    {
+      "operationId": "fecharLoteMpi",
+      "method": "PUT",
+      "path": "/ingestao/mpi/lotes/{idLoteOrigem}/fechamento",
+      "integracao": "INT-02",
+      "httpSemantics": [
+        {
+          "status": 200,
+          "meaning": "Lote fechado: OK sem rejeição, PARCIAL com rejeição. Repetir com o mesmo total devolve o mesmo resumo."
+        },
+        {
+          "status": 400,
+          "meaning": "Corpo inválido ou campo obrigatório ausente."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte."
+        },
+        {
+          "status": 404,
+          "meaning": "Não há lote com este idLoteOrigem para esta fonte."
+        },
+        {
+          "status": 409,
+          "meaning": "Lote já fechado com outro total de pacotes; vale o primeiro fechamento."
+        },
+        {
+          "status": 422,
+          "meaning": "Total informado diferente dos pacotes recebidos; lista pacotesFaltantes; lote continua EM_ANDAMENTO até o prazo da fonte."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; lote continua aberto."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem",
+        "keyFormat": "—",
+        "storageTtlSeconds": null,
+        "behavior": "PUT idempotente: fechar de novo com o mesmo pacotesEnviados devolve o mesmo resumo; com outro total, 409 FECHAMENTO_DIVERGENTE."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-04",
+        "RF-MOD-INGESTAO-11",
+        "RF-MOD-INGESTAO-05"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008",
+        "RN-NOVO-ING-003"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação.",
+        "As «regras de elegibilidade» que o MPI e o Big Data enviam (ETF §6.3) não têm campos definidos; o contrato cobre só os débitos."
+      ]
+    },
+    {
+      "operationId": "abrirLoteBigData",
+      "method": "POST",
+      "path": "/ingestao/bigdata/lotes",
+      "integracao": "INT-03",
+      "httpSemantics": [
+        {
+          "status": 201,
+          "meaning": "Lote novo aberto; Location aponta para ele."
+        },
+        {
+          "status": 200,
+          "meaning": "Lote com o mesmo idLoteOrigem já estava aberto: devolve o existente, nada é criado (repetição segura)."
+        },
+        {
+          "status": 400,
+          "meaning": "Falta idLoteOrigem ou dataReferencia, ou campo fora do formato; o campo vem em «campo»."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte (cada fonte só usa a própria API — SEC-001)."
+        },
+        {
+          "status": 409,
+          "meaning": "Lote com este idLoteOrigem já fechado; não reabre (RN-NOVO-ING-005)."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições do usuário de integração excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; nada gravado; detalhe só no log interno com o identificador do lote."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem",
+        "keyFormat": "idLoteOrigem definido pela fonte (até 60 caracteres)",
+        "storageTtlSeconds": null,
+        "behavior": "A chave natural fonte + idLoteOrigem substitui o cabeçalho Idempotency-Key: abrir de novo um lote aberto devolve 200 com o lote existente; abrir um lote já fechado devolve 409. A chave vale para sempre (o lote fica gravado)."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-04",
+        "RF-MOD-INGESTAO-11"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008",
+        "RN-NOVO-ING-003"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação.",
+        "As «regras de elegibilidade» migradas (ETF §6.3) não têm campos definidos; o contrato cobre só os débitos."
+      ]
+    },
+    {
+      "operationId": "enviarPacoteBigData",
+      "method": "PUT",
+      "path": "/ingestao/bigdata/lotes/{idLoteOrigem}/pacotes/{sequencia}",
+      "integracao": "INT-03",
+      "httpSemantics": [
+        {
+          "status": 200,
+          "meaning": "Pacote processado: cada registro aceito ou rejeitado com motivo. Erro de registro NÃO vira 4xx (conventions.mdc). Em reenvio do mesmo conteúdo, devolve a resposta original com reenvio=true."
+        },
+        {
+          "status": 400,
+          "meaning": "Corpo malformado, sem nenhuma lista, ou com lista que esta fonte não envia."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte; nada gravado (RF-MOD-INGESTAO-01, cenário 3)."
+        },
+        {
+          "status": 404,
+          "meaning": "Não há lote com este idLoteOrigem para esta fonte (inclui lote de outra fonte — não revela que existe)."
+        },
+        {
+          "status": 409,
+          "meaning": "LOTE_JA_FECHADO: lote fechado não recebe pacote. PACOTE_DIVERGENTE: mesma sequência já gravada com conteúdo diferente."
+        },
+        {
+          "status": 413,
+          "meaning": "Mais de 1.000 registros no pacote (somando as listas); nada gravado; o lote continua aberto."
+        },
+        {
+          "status": 422,
+          "meaning": "Sequência fora da ordem esperada; a resposta traz sequenciaEsperada (RF-MOD-INGESTAO-04, cenário 3)."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; nada do pacote gravado (gravação do pacote é tudo ou nada)."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem + sequencia; por registro, fonte + idOrigem",
+        "keyFormat": "sequência inteira a partir de 1",
+        "storageTtlSeconds": null,
+        "behavior": "PUT é idempotente: o mesmo pacote (mesma sequência e mesmo conteúdo, comparado por hash) devolve a resposta original e não grava nada; conteúdo diferente na mesma sequência devolve 409 PACOTE_DIVERGENTE. Registro com idOrigem já gravado pela mesma fonte em outro lote é atualizado, não duplicado (RN-NOVO-ING-005)."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "payloadLimits": {
+        "maxRegistrosPorPacote": 1000,
+        "provisorio": true
+      },
+      "perRecordResult": {
+        "motivos": [
+          "DOC_INVALIDO",
+          "CAMPO_AUSENTE",
+          "CONTRIB_NAO_ENCONTRADO",
+          "FORMATO_INVALIDO",
+          "OUTRO"
+        ],
+        "destino": "x_cbi_registro_rejeitado (conteúdo original guardado para reprocesso — RF-MOD-INGESTAO-08)",
+        "rnCoberta": "RN-NOVO-ING-004"
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-04",
+        "RF-MOD-INGESTAO-11"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008",
+        "RN-NOVO-ING-003"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação.",
+        "As «regras de elegibilidade» migradas (ETF §6.3) não têm campos definidos; o contrato cobre só os débitos."
+      ]
+    },
+    {
+      "operationId": "fecharLoteBigData",
+      "method": "PUT",
+      "path": "/ingestao/bigdata/lotes/{idLoteOrigem}/fechamento",
+      "integracao": "INT-03",
+      "httpSemantics": [
+        {
+          "status": 200,
+          "meaning": "Lote fechado: OK sem rejeição, PARCIAL com rejeição. Repetir com o mesmo total devolve o mesmo resumo."
+        },
+        {
+          "status": 400,
+          "meaning": "Corpo inválido ou campo obrigatório ausente."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte."
+        },
+        {
+          "status": 404,
+          "meaning": "Não há lote com este idLoteOrigem para esta fonte."
+        },
+        {
+          "status": 409,
+          "meaning": "Lote já fechado com outro total de pacotes; vale o primeiro fechamento."
+        },
+        {
+          "status": 422,
+          "meaning": "Total informado diferente dos pacotes recebidos; lista pacotesFaltantes; lote continua EM_ANDAMENTO até o prazo da fonte."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; lote continua aberto."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem",
+        "keyFormat": "—",
+        "storageTtlSeconds": null,
+        "behavior": "PUT idempotente: fechar de novo com o mesmo pacotesEnviados devolve o mesmo resumo; com outro total, 409 FECHAMENTO_DIVERGENTE."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-04",
+        "RF-MOD-INGESTAO-11",
+        "RF-MOD-INGESTAO-05"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008",
+        "RN-NOVO-ING-003"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação.",
+        "As «regras de elegibilidade» migradas (ETF §6.3) não têm campos definidos; o contrato cobre só os débitos."
+      ]
+    },
+    {
+      "operationId": "abrirLoteIpva",
+      "method": "POST",
+      "path": "/ingestao/ipva/lotes",
+      "integracao": "INT-04",
+      "httpSemantics": [
+        {
+          "status": 201,
+          "meaning": "Lote novo aberto; Location aponta para ele."
+        },
+        {
+          "status": 200,
+          "meaning": "Lote com o mesmo idLoteOrigem já estava aberto: devolve o existente, nada é criado (repetição segura)."
+        },
+        {
+          "status": 400,
+          "meaning": "Falta idLoteOrigem ou dataReferencia, ou campo fora do formato; o campo vem em «campo»."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte (cada fonte só usa a própria API — SEC-001)."
+        },
+        {
+          "status": 409,
+          "meaning": "Lote com este idLoteOrigem já fechado; não reabre (RN-NOVO-ING-005)."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições do usuário de integração excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; nada gravado; detalhe só no log interno com o identificador do lote."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem",
+        "keyFormat": "idLoteOrigem definido pela fonte (até 60 caracteres)",
+        "storageTtlSeconds": null,
+        "behavior": "A chave natural fonte + idLoteOrigem substitui o cabeçalho Idempotency-Key: abrir de novo um lote aberto devolve 200 com o lote existente; abrir um lote já fechado devolve 409. A chave vale para sempre (o lote fica gravado)."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-04"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação."
+      ]
+    },
+    {
+      "operationId": "enviarPacoteIpva",
+      "method": "PUT",
+      "path": "/ingestao/ipva/lotes/{idLoteOrigem}/pacotes/{sequencia}",
+      "integracao": "INT-04",
+      "httpSemantics": [
+        {
+          "status": 200,
+          "meaning": "Pacote processado: cada registro aceito ou rejeitado com motivo. Erro de registro NÃO vira 4xx (conventions.mdc). Em reenvio do mesmo conteúdo, devolve a resposta original com reenvio=true."
+        },
+        {
+          "status": 400,
+          "meaning": "Corpo malformado, sem nenhuma lista, ou com lista que esta fonte não envia."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte; nada gravado (RF-MOD-INGESTAO-01, cenário 3)."
+        },
+        {
+          "status": 404,
+          "meaning": "Não há lote com este idLoteOrigem para esta fonte (inclui lote de outra fonte — não revela que existe)."
+        },
+        {
+          "status": 409,
+          "meaning": "LOTE_JA_FECHADO: lote fechado não recebe pacote. PACOTE_DIVERGENTE: mesma sequência já gravada com conteúdo diferente."
+        },
+        {
+          "status": 413,
+          "meaning": "Mais de 1.000 registros no pacote (somando as listas); nada gravado; o lote continua aberto."
+        },
+        {
+          "status": 422,
+          "meaning": "Sequência fora da ordem esperada; a resposta traz sequenciaEsperada (RF-MOD-INGESTAO-04, cenário 3)."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; nada do pacote gravado (gravação do pacote é tudo ou nada)."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem + sequencia; por registro, fonte + idOrigem",
+        "keyFormat": "sequência inteira a partir de 1",
+        "storageTtlSeconds": null,
+        "behavior": "PUT é idempotente: o mesmo pacote (mesma sequência e mesmo conteúdo, comparado por hash) devolve a resposta original e não grava nada; conteúdo diferente na mesma sequência devolve 409 PACOTE_DIVERGENTE. Registro com idOrigem já gravado pela mesma fonte em outro lote é atualizado, não duplicado (RN-NOVO-ING-005)."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "payloadLimits": {
+        "maxRegistrosPorPacote": 1000,
+        "provisorio": true
+      },
+      "perRecordResult": {
+        "motivos": [
+          "DOC_INVALIDO",
+          "CAMPO_AUSENTE",
+          "CONTRIB_NAO_ENCONTRADO",
+          "FORMATO_INVALIDO",
+          "OUTRO"
+        ],
+        "destino": "x_cbi_registro_rejeitado (conteúdo original guardado para reprocesso — RF-MOD-INGESTAO-08)",
+        "rnCoberta": "RN-NOVO-ING-004"
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-04"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação."
+      ]
+    },
+    {
+      "operationId": "fecharLoteIpva",
+      "method": "PUT",
+      "path": "/ingestao/ipva/lotes/{idLoteOrigem}/fechamento",
+      "integracao": "INT-04",
+      "httpSemantics": [
+        {
+          "status": 200,
+          "meaning": "Lote fechado: OK sem rejeição, PARCIAL com rejeição. Repetir com o mesmo total devolve o mesmo resumo."
+        },
+        {
+          "status": 400,
+          "meaning": "Corpo inválido ou campo obrigatório ausente."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte."
+        },
+        {
+          "status": 404,
+          "meaning": "Não há lote com este idLoteOrigem para esta fonte."
+        },
+        {
+          "status": 409,
+          "meaning": "Lote já fechado com outro total de pacotes; vale o primeiro fechamento."
+        },
+        {
+          "status": 422,
+          "meaning": "Total informado diferente dos pacotes recebidos; lista pacotesFaltantes; lote continua EM_ANDAMENTO até o prazo da fonte."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; lote continua aberto."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem",
+        "keyFormat": "—",
+        "storageTtlSeconds": null,
+        "behavior": "PUT idempotente: fechar de novo com o mesmo pacotesEnviados devolve o mesmo resumo; com outro total, 409 FECHAMENTO_DIVERGENTE."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-04",
+        "RF-MOD-INGESTAO-05"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação."
+      ]
+    },
+    {
+      "operationId": "abrirLoteItcd",
+      "method": "POST",
+      "path": "/ingestao/itcd/lotes",
+      "integracao": "INT-05",
+      "httpSemantics": [
+        {
+          "status": 201,
+          "meaning": "Lote novo aberto; Location aponta para ele."
+        },
+        {
+          "status": 200,
+          "meaning": "Lote com o mesmo idLoteOrigem já estava aberto: devolve o existente, nada é criado (repetição segura)."
+        },
+        {
+          "status": 400,
+          "meaning": "Falta idLoteOrigem ou dataReferencia, ou campo fora do formato; o campo vem em «campo»."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte (cada fonte só usa a própria API — SEC-001)."
+        },
+        {
+          "status": 409,
+          "meaning": "Lote com este idLoteOrigem já fechado; não reabre (RN-NOVO-ING-005)."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições do usuário de integração excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; nada gravado; detalhe só no log interno com o identificador do lote."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem",
+        "keyFormat": "idLoteOrigem definido pela fonte (até 60 caracteres)",
+        "storageTtlSeconds": null,
+        "behavior": "A chave natural fonte + idLoteOrigem substitui o cabeçalho Idempotency-Key: abrir de novo um lote aberto devolve 200 com o lote existente; abrir um lote já fechado devolve 409. A chave vale para sempre (o lote fica gravado)."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-04"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação."
+      ]
+    },
+    {
+      "operationId": "enviarPacoteItcd",
+      "method": "PUT",
+      "path": "/ingestao/itcd/lotes/{idLoteOrigem}/pacotes/{sequencia}",
+      "integracao": "INT-05",
+      "httpSemantics": [
+        {
+          "status": 200,
+          "meaning": "Pacote processado: cada registro aceito ou rejeitado com motivo. Erro de registro NÃO vira 4xx (conventions.mdc). Em reenvio do mesmo conteúdo, devolve a resposta original com reenvio=true."
+        },
+        {
+          "status": 400,
+          "meaning": "Corpo malformado, sem nenhuma lista, ou com lista que esta fonte não envia."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte; nada gravado (RF-MOD-INGESTAO-01, cenário 3)."
+        },
+        {
+          "status": 404,
+          "meaning": "Não há lote com este idLoteOrigem para esta fonte (inclui lote de outra fonte — não revela que existe)."
+        },
+        {
+          "status": 409,
+          "meaning": "LOTE_JA_FECHADO: lote fechado não recebe pacote. PACOTE_DIVERGENTE: mesma sequência já gravada com conteúdo diferente."
+        },
+        {
+          "status": 413,
+          "meaning": "Mais de 1.000 registros no pacote (somando as listas); nada gravado; o lote continua aberto."
+        },
+        {
+          "status": 422,
+          "meaning": "Sequência fora da ordem esperada; a resposta traz sequenciaEsperada (RF-MOD-INGESTAO-04, cenário 3)."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; nada do pacote gravado (gravação do pacote é tudo ou nada)."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem + sequencia; por registro, fonte + idOrigem",
+        "keyFormat": "sequência inteira a partir de 1",
+        "storageTtlSeconds": null,
+        "behavior": "PUT é idempotente: o mesmo pacote (mesma sequência e mesmo conteúdo, comparado por hash) devolve a resposta original e não grava nada; conteúdo diferente na mesma sequência devolve 409 PACOTE_DIVERGENTE. Registro com idOrigem já gravado pela mesma fonte em outro lote é atualizado, não duplicado (RN-NOVO-ING-005)."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "payloadLimits": {
+        "maxRegistrosPorPacote": 1000,
+        "provisorio": true
+      },
+      "perRecordResult": {
+        "motivos": [
+          "DOC_INVALIDO",
+          "CAMPO_AUSENTE",
+          "CONTRIB_NAO_ENCONTRADO",
+          "FORMATO_INVALIDO",
+          "OUTRO"
+        ],
+        "destino": "x_cbi_registro_rejeitado (conteúdo original guardado para reprocesso — RF-MOD-INGESTAO-08)",
+        "rnCoberta": "RN-NOVO-ING-004"
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-04"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação."
+      ]
+    },
+    {
+      "operationId": "fecharLoteItcd",
+      "method": "PUT",
+      "path": "/ingestao/itcd/lotes/{idLoteOrigem}/fechamento",
+      "integracao": "INT-05",
+      "httpSemantics": [
+        {
+          "status": 200,
+          "meaning": "Lote fechado: OK sem rejeição, PARCIAL com rejeição. Repetir com o mesmo total devolve o mesmo resumo."
+        },
+        {
+          "status": 400,
+          "meaning": "Corpo inválido ou campo obrigatório ausente."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte."
+        },
+        {
+          "status": 404,
+          "meaning": "Não há lote com este idLoteOrigem para esta fonte."
+        },
+        {
+          "status": 409,
+          "meaning": "Lote já fechado com outro total de pacotes; vale o primeiro fechamento."
+        },
+        {
+          "status": 422,
+          "meaning": "Total informado diferente dos pacotes recebidos; lista pacotesFaltantes; lote continua EM_ANDAMENTO até o prazo da fonte."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; lote continua aberto."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem",
+        "keyFormat": "—",
+        "storageTtlSeconds": null,
+        "behavior": "PUT idempotente: fechar de novo com o mesmo pacotesEnviados devolve o mesmo resumo; com outro total, 409 FECHAMENTO_DIVERGENTE."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-04",
+        "RF-MOD-INGESTAO-05"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação."
+      ]
+    },
+    {
+      "operationId": "abrirLoteSne",
+      "method": "POST",
+      "path": "/ingestao/sne/lotes",
+      "integracao": "INT-06",
+      "httpSemantics": [
+        {
+          "status": 201,
+          "meaning": "Lote novo aberto; Location aponta para ele."
+        },
+        {
+          "status": 200,
+          "meaning": "Lote com o mesmo idLoteOrigem já estava aberto: devolve o existente, nada é criado (repetição segura)."
+        },
+        {
+          "status": 400,
+          "meaning": "Falta idLoteOrigem ou dataReferencia, ou campo fora do formato; o campo vem em «campo»."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte (cada fonte só usa a própria API — SEC-001)."
+        },
+        {
+          "status": 409,
+          "meaning": "Lote com este idLoteOrigem já fechado; não reabre (RN-NOVO-ING-005)."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições do usuário de integração excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; nada gravado; detalhe só no log interno com o identificador do lote."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem",
+        "keyFormat": "idLoteOrigem definido pela fonte (até 60 caracteres)",
+        "storageTtlSeconds": null,
+        "behavior": "A chave natural fonte + idLoteOrigem substitui o cabeçalho Idempotency-Key: abrir de novo um lote aberto devolve 200 com o lote existente; abrir um lote já fechado devolve 409. A chave vale para sempre (o lote fica gravado)."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-04",
+        "RF-MOD-INGESTAO-12"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008",
+        "RN-NOVO-ING-007"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação."
+      ]
+    },
+    {
+      "operationId": "enviarPacoteSne",
+      "method": "PUT",
+      "path": "/ingestao/sne/lotes/{idLoteOrigem}/pacotes/{sequencia}",
+      "integracao": "INT-06",
+      "httpSemantics": [
+        {
+          "status": 200,
+          "meaning": "Pacote processado: cada registro aceito ou rejeitado com motivo. Erro de registro NÃO vira 4xx (conventions.mdc). Em reenvio do mesmo conteúdo, devolve a resposta original com reenvio=true."
+        },
+        {
+          "status": 400,
+          "meaning": "Corpo malformado, sem nenhuma lista, ou com lista que esta fonte não envia."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte; nada gravado (RF-MOD-INGESTAO-01, cenário 3)."
+        },
+        {
+          "status": 404,
+          "meaning": "Não há lote com este idLoteOrigem para esta fonte (inclui lote de outra fonte — não revela que existe)."
+        },
+        {
+          "status": 409,
+          "meaning": "LOTE_JA_FECHADO: lote fechado não recebe pacote. PACOTE_DIVERGENTE: mesma sequência já gravada com conteúdo diferente."
+        },
+        {
+          "status": 413,
+          "meaning": "Mais de 1.000 registros no pacote (somando as listas); nada gravado; o lote continua aberto."
+        },
+        {
+          "status": 422,
+          "meaning": "Sequência fora da ordem esperada; a resposta traz sequenciaEsperada (RF-MOD-INGESTAO-04, cenário 3)."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; nada do pacote gravado (gravação do pacote é tudo ou nada)."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem + sequencia; por registro, fonte + idOrigem",
+        "keyFormat": "sequência inteira a partir de 1",
+        "storageTtlSeconds": null,
+        "behavior": "PUT é idempotente: o mesmo pacote (mesma sequência e mesmo conteúdo, comparado por hash) devolve a resposta original e não grava nada; conteúdo diferente na mesma sequência devolve 409 PACOTE_DIVERGENTE. Registro com idOrigem já gravado pela mesma fonte em outro lote é atualizado, não duplicado (RN-NOVO-ING-005)."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "payloadLimits": {
+        "maxRegistrosPorPacote": 1000,
+        "provisorio": true
+      },
+      "perRecordResult": {
+        "motivos": [
+          "DOC_INVALIDO",
+          "CAMPO_AUSENTE",
+          "CONTRIB_NAO_ENCONTRADO",
+          "FORMATO_INVALIDO",
+          "OUTRO"
+        ],
+        "destino": "x_cbi_registro_rejeitado (conteúdo original guardado para reprocesso — RF-MOD-INGESTAO-08)",
+        "rnCoberta": "RN-NOVO-ING-004"
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-04",
+        "RF-MOD-INGESTAO-12"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008",
+        "RN-NOVO-ING-007"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação."
+      ]
+    },
+    {
+      "operationId": "fecharLoteSne",
+      "method": "PUT",
+      "path": "/ingestao/sne/lotes/{idLoteOrigem}/fechamento",
+      "integracao": "INT-06",
+      "httpSemantics": [
+        {
+          "status": 200,
+          "meaning": "Lote fechado: OK sem rejeição, PARCIAL com rejeição. Repetir com o mesmo total devolve o mesmo resumo."
+        },
+        {
+          "status": 400,
+          "meaning": "Corpo inválido ou campo obrigatório ausente."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte."
+        },
+        {
+          "status": 404,
+          "meaning": "Não há lote com este idLoteOrigem para esta fonte."
+        },
+        {
+          "status": 409,
+          "meaning": "Lote já fechado com outro total de pacotes; vale o primeiro fechamento."
+        },
+        {
+          "status": 422,
+          "meaning": "Total informado diferente dos pacotes recebidos; lista pacotesFaltantes; lote continua EM_ANDAMENTO até o prazo da fonte."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; lote continua aberto."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem",
+        "keyFormat": "—",
+        "storageTtlSeconds": null,
+        "behavior": "PUT idempotente: fechar de novo com o mesmo pacotesEnviados devolve o mesmo resumo; com outro total, 409 FECHAMENTO_DIVERGENTE."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "linkedRequirements": [
+        "RF-MOD-INGESTAO-01",
+        "RF-MOD-INGESTAO-02",
+        "RF-MOD-INGESTAO-04",
+        "RF-MOD-INGESTAO-12",
+        "RF-MOD-INGESTAO-05"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008",
+        "RN-NOVO-ING-007"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação."
+      ]
+    },
+    {
+      "operationId": "abrirLoteScore",
+      "method": "POST",
+      "path": "/ingestao/score/lotes",
+      "integracao": "INT-07",
+      "httpSemantics": [
+        {
+          "status": 201,
+          "meaning": "Lote novo aberto; Location aponta para ele."
+        },
+        {
+          "status": 200,
+          "meaning": "Lote com o mesmo idLoteOrigem já estava aberto: devolve o existente, nada é criado (repetição segura)."
+        },
+        {
+          "status": 400,
+          "meaning": "Falta idLoteOrigem ou dataReferencia, ou campo fora do formato; o campo vem em «campo»."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte (cada fonte só usa a própria API — SEC-001)."
+        },
+        {
+          "status": 409,
+          "meaning": "Lote com este idLoteOrigem já fechado; não reabre (RN-NOVO-ING-005)."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições do usuário de integração excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; nada gravado; detalhe só no log interno com o identificador do lote."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem",
+        "keyFormat": "idLoteOrigem definido pela fonte (até 60 caracteres)",
+        "storageTtlSeconds": null,
+        "behavior": "A chave natural fonte + idLoteOrigem substitui o cabeçalho Idempotency-Key: abrir de novo um lote aberto devolve 200 com o lote existente; abrir um lote já fechado devolve 409. A chave vale para sempre (o lote fica gravado)."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "linkedRequirements": [
+        "RF-MOD-SCORE-01",
+        "RF-MOD-SCORE-03",
+        "RF-MOD-INGESTAO-04"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação.",
+        "Escala do score da UFMT não informada; o contrato aceita 0 a 1.000 até a confirmação."
+      ]
+    },
+    {
+      "operationId": "enviarPacoteScore",
+      "method": "PUT",
+      "path": "/ingestao/score/lotes/{idLoteOrigem}/pacotes/{sequencia}",
+      "integracao": "INT-07",
+      "httpSemantics": [
+        {
+          "status": 200,
+          "meaning": "Pacote processado: cada registro aceito ou rejeitado com motivo. Erro de registro NÃO vira 4xx (conventions.mdc). Em reenvio do mesmo conteúdo, devolve a resposta original com reenvio=true."
+        },
+        {
+          "status": 400,
+          "meaning": "Corpo malformado, sem nenhuma lista, ou com lista que esta fonte não envia."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte; nada gravado (RF-MOD-INGESTAO-01, cenário 3)."
+        },
+        {
+          "status": 404,
+          "meaning": "Não há lote com este idLoteOrigem para esta fonte (inclui lote de outra fonte — não revela que existe)."
+        },
+        {
+          "status": 409,
+          "meaning": "LOTE_JA_FECHADO: lote fechado não recebe pacote. PACOTE_DIVERGENTE: mesma sequência já gravada com conteúdo diferente."
+        },
+        {
+          "status": 413,
+          "meaning": "Mais de 1.000 registros no pacote (somando as listas); nada gravado; o lote continua aberto."
+        },
+        {
+          "status": 422,
+          "meaning": "Sequência fora da ordem esperada; a resposta traz sequenciaEsperada (RF-MOD-INGESTAO-04, cenário 3)."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; nada do pacote gravado (gravação do pacote é tudo ou nada)."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem + sequencia; por registro, fonte + idOrigem",
+        "keyFormat": "sequência inteira a partir de 1",
+        "storageTtlSeconds": null,
+        "behavior": "PUT é idempotente: o mesmo pacote (mesma sequência e mesmo conteúdo, comparado por hash) devolve a resposta original e não grava nada; conteúdo diferente na mesma sequência devolve 409 PACOTE_DIVERGENTE. Registro com idOrigem já gravado pela mesma fonte em outro lote é atualizado, não duplicado (RN-NOVO-ING-005)."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "payloadLimits": {
+        "maxRegistrosPorPacote": 1000,
+        "provisorio": true
+      },
+      "perRecordResult": {
+        "motivos": [
+          "DOC_INVALIDO",
+          "CAMPO_AUSENTE",
+          "CONTRIB_NAO_ENCONTRADO",
+          "FORMATO_INVALIDO",
+          "OUTRO"
+        ],
+        "destino": "x_cbi_registro_rejeitado (conteúdo original guardado para reprocesso — RF-MOD-INGESTAO-08)",
+        "rnCoberta": "RN-NOVO-ING-004"
+      },
+      "linkedRequirements": [
+        "RF-MOD-SCORE-01",
+        "RF-MOD-SCORE-03",
+        "RF-MOD-INGESTAO-04"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-006",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação.",
+        "Escala do score da UFMT não informada; o contrato aceita 0 a 1.000 até a confirmação."
+      ]
+    },
+    {
+      "operationId": "fecharLoteScore",
+      "method": "PUT",
+      "path": "/ingestao/score/lotes/{idLoteOrigem}/fechamento",
+      "integracao": "INT-07",
+      "httpSemantics": [
+        {
+          "status": 200,
+          "meaning": "Lote fechado: OK sem rejeição, PARCIAL com rejeição. Repetir com o mesmo total devolve o mesmo resumo."
+        },
+        {
+          "status": 400,
+          "meaning": "Corpo inválido ou campo obrigatório ausente — no score, versaoModelo ausente na abertura e no fechamento (RF-MOD-SCORE-01, cenário 3)."
+        },
+        {
+          "status": 401,
+          "meaning": "Token OAuth ausente, vencido ou inválido."
+        },
+        {
+          "status": 403,
+          "meaning": "Usuário de integração de outra fonte."
+        },
+        {
+          "status": 404,
+          "meaning": "Não há lote com este idLoteOrigem para esta fonte."
+        },
+        {
+          "status": 409,
+          "meaning": "Lote já fechado com outro total de pacotes; vale o primeiro fechamento."
+        },
+        {
+          "status": 422,
+          "meaning": "Total informado diferente dos pacotes recebidos; lista pacotesFaltantes; lote continua EM_ANDAMENTO até o prazo da fonte."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; lote continua aberto."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "fonte + idLoteOrigem",
+        "keyFormat": "—",
+        "storageTtlSeconds": null,
+        "behavior": "PUT idempotente: fechar de novo com o mesmo pacotesEnviados devolve o mesmo resumo; com outro total, 409 FECHAMENTO_DIVERGENTE."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por usuário de integração desta fonte, configurável no parâmetro de integração; valor numérico a definir (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "linkedRequirements": [
+        "RF-MOD-SCORE-01",
+        "RF-MOD-SCORE-03",
+        "RF-MOD-INGESTAO-04",
+        "RF-MOD-INGESTAO-05"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-ING-004",
+        "RN-NOVO-ING-005",
+        "RN-NOVO-ING-006",
+        "RN-NOVO-ING-008"
+      ],
+      "securityControls": [
+        "SEC-001",
+        "SEC-005",
+        "SEC-007",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
+        "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação.",
+        "Escala do score da UFMT não informada; o contrato aceita 0 a 1.000 até a confirmação."
+      ]
+    },
+    {
+      "operationId": "registrarEventoEntrega",
+      "method": "POST",
+      "path": "/provedor/eventos-entrega",
+      "integracao": "INT-09",
+      "httpSemantics": [
+        {
+          "status": 200,
+          "meaning": "Status aplicado (alterado=true) ou ignorado por ser repetido ou mais antigo que o atual (alterado=false). Ordem de avanço: ENVIADO → ENTREGUE → LIDO; FALHA só a partir de ENVIADO."
+        },
+        {
+          "status": 400,
+          "meaning": "Campo obrigatório ausente ou situação fora da lista ENTREGUE/LIDO/FALHA."
+        },
+        {
+          "status": 401,
+          "meaning": "Credencial do provedor ausente, vencida ou inválida."
+        },
+        {
+          "status": 403,
+          "meaning": "Credencial válida, mas de outro sistema (só o provedor escreve aqui — SEC-008)."
+        },
+        {
+          "status": 404,
+          "meaning": "idProvedor desconhecido; o sistema recusa e registra o evento (RF-MOD-REGUAS-06, cenário 3)."
+        },
+        {
+          "status": 429,
+          "meaning": "Limite de requisições excedido; repetir após Retry-After."
+        },
+        {
+          "status": 500,
+          "meaning": "Erro inesperado; o provedor pode reenviar — a repetição é segura."
+        }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": null,
+        "naturalKey": "idProvedor + situacao",
+        "keyFormat": "idProvedor devolvido pelo provedor no envio",
+        "storageTtlSeconds": null,
+        "behavior": "POST naturalmente idempotente: o mesmo status para o mesmo idProvedor não muda nada e devolve 200 com alterado=false (índice único em id_provedor; RF-MOD-REGUAS-06, cenário 2). Não exige Idempotency-Key."
+      },
+      "rateLimiting": {
+        "rateLimit": "Limite por credencial do provedor, configurável; valor a definir com o provedor (SEC-005)",
+        "headers": [
+          "Retry-After"
+        ],
+        "exceededStatus": 429
+      },
+      "linkedRequirements": [
+        "RF-MOD-REGUAS-06",
+        "RF-MOD-REGUAS-07"
+      ],
+      "linkedBusinessRules": [
+        "RN-NOVO-REG-001"
+      ],
+      "securityControls": [
+        "SEC-007",
+        "SEC-008",
+        "SEC-016"
+      ],
+      "x-open-questions": [
+        "Mecanismo de autenticação do provedor no callback ainda não definido (SEC-008; provedor em aberto no GAP-004): o contrato assume OAuth 2.0 por credencial de cliente, como nas fontes."
+      ]
+    }
+  ]
+}

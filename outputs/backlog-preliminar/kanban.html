@@ -1,0 +1,632 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Backlog Cobrança 2.6</title>
+<style>
+:root {
+  --bg:#f5f4f8; --surface:#ffffff; --surface-2:#f0eef6; --text:#1d1a2b; --muted:#5f5a73;
+  --border:#dcd8e8; --accent:#4b2a8f; --accent-soft:#ece6fa; --ok:#1e6b3a; --ok-soft:#e3f3e8;
+  --warn:#8a5a00; --warn-soft:#fbf0d9; --rule:#0f5d73; --rule-soft:#e0f1f5;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg:#15131d; --surface:#1f1c2a; --surface-2:#282436; --text:#ece9f5; --muted:#a9a3bd;
+    --border:#38334a; --accent:#b9a3ff; --accent-soft:#2e2650; --ok:#7fd49c; --ok-soft:#1d3326;
+    --warn:#f0c46a; --warn-soft:#3a2f17; --rule:#7fd0e4; --rule-soft:#173039;
+  }
+}
+:root[data-theme="dark"] {
+  --bg:#15131d; --surface:#1f1c2a; --surface-2:#282436; --text:#ece9f5; --muted:#a9a3bd;
+  --border:#38334a; --accent:#b9a3ff; --accent-soft:#2e2650; --ok:#7fd49c; --ok-soft:#1d3326;
+  --warn:#f0c46a; --warn-soft:#3a2f17; --rule:#7fd0e4; --rule-soft:#173039;
+}
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+.top { padding:20px 16px 8px; max-width:1400px; margin:0 auto; }
+h1 { margin:0 0 4px; font-size:22px; }
+.sub { margin:0 0 14px; color:var(--muted); }
+.stats { display:flex; flex-wrap:wrap; gap:10px; margin-bottom:14px; }
+.stat { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 14px; min-width:120px; }
+.stat b { display:block; font-size:20px; }
+.stat span { color:var(--muted); font-size:12px; }
+details { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 14px; margin-bottom:10px; }
+summary { cursor:pointer; font-weight:600; }
+details ul { margin:8px 0 2px; padding-left:18px; }
+details li { margin:4px 0; }
+.muted { color:var(--muted); }
+.bar { display:flex; gap:10px; align-items:center; margin:12px 0 4px; flex-wrap:wrap; }
+.bar input { flex:1; min-width:200px; padding:9px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font:inherit; }
+.bar button { padding:9px 12px; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--text); font:inherit; cursor:pointer; }
+.board { display:flex; gap:12px; overflow-x:auto; padding:8px 16px 24px; align-items:flex-start; }
+.col { flex:0 0 310px; background:var(--surface-2); border:1px solid var(--border); border-radius:12px; display:flex; flex-direction:column; max-height:calc(100vh - 40px); }
+.col-h { padding:12px 12px 10px; border-bottom:1px solid var(--border); }
+.col-top { display:flex; justify-content:space-between; align-items:center; }
+.fid { font-weight:700; color:var(--accent); background:var(--accent-soft); border-radius:6px; padding:1px 8px; }
+.status { font-size:11px; font-weight:600; border-radius:999px; padding:2px 8px; }
+.status.v1 { color:var(--ok); background:var(--ok-soft); }
+.status.parcial { color:var(--warn); background:var(--warn-soft); }
+.col-h h2 { font-size:15px; margin:8px 0 4px; }
+.resumo { margin:0 0 6px; font-size:12.5px; }
+.meta { margin:2px 0; font-size:12px; color:var(--muted); }
+.cards { padding:10px; display:flex; flex-direction:column; gap:8px; overflow-y:auto; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 11px; }
+.card-top { display:flex; justify-content:space-between; font-size:11.5px; color:var(--muted); }
+.id { font-family:ui-monospace,Menlo,Consolas,monospace; }
+.h { font-weight:600; color:var(--text); }
+.card h3 { font-size:13.5px; margin:4px 0; }
+.card p { margin:0 0 8px; font-size:12.5px; }
+.tags { display:flex; flex-wrap:wrap; gap:4px; }
+.tag { font-size:11px; border-radius:6px; padding:1px 7px; }
+.tag.obj { background:var(--accent-soft); color:var(--accent); }
+.tag.regra { background:var(--rule-soft); color:var(--rule); font-family:ui-monospace,Menlo,Consolas,monospace; }
+.fonte { margin-top:6px; font-size:11px; color:var(--muted); }
+.hidden { display:none; }
+footer { max-width:1400px; margin:0 auto; padding:0 16px 24px; color:var(--muted); font-size:12px; }
+code { font-size:11.5px; }
+@media (max-width:700px) {
+  .board { flex-direction:column; overflow-x:visible; }
+  .col { flex:1 1 auto; width:100%; max-height:none; }
+}
+</style>
+</head>
+<body>
+<div class="top">
+  <h1>Backlog preliminar — Cobrança Inteligente (2.6)</h1>
+  <p class="sub">ServiceNow - 2.6 Cobrança (Cobrança Inteligente · SEFAZ-MT) · versão 0.1 · 2026-11-13 · preliminar — para avaliação; histórias, critérios de aceite e dependências vêm na próxima rodada</p>
+  <div class="stats">
+    <div class="stat"><b>6 + 1</b><span>funcionalidades + transversal</span></div>
+    <div class="stat"><b>62</b><span>tarefas</span></div>
+    <div class="stat"><b>323 h</b><span>horas nas tarefas</span></div>
+    <div class="stat"><b>408 h</b><span>total com modelagem e contingência (ETF: 408 h)</span></div>
+  </div>
+  <details>
+    <summary>Pontos de atenção (6)</summary>
+    <ul><li><strong>APIs dos parceiros sem resposta.</strong> MPI, Big Data e Score UFMT estão sem resposta da TI. As APIs serão testadas com lotes simulados; a integração ponta a ponta está fora da estimativa. <span class="muted">Fonte: PLANO slides 22-23; ETF §1.1</span></li><li><strong>Licença do Platform Analytics.</strong> Ainda não confirmada. As tarefas T-F3-03, T-F3-04 e T-F6-03 a T-F6-10 dependem dela. <span class="muted">Fonte: ETF §1.1; PLANO slides 16 e 19</span></li><li><strong>Matriz de acesso a validar.</strong> A própria ETF marca a matriz de permissões como proposta, a validar com o cliente. <span class="muted">Fonte: ETF §6.4</span></li><li><strong>Contrato do provedor de mensagens.</strong> O contrato técnico do provedor de e-mail, SMS e WhatsApp está fora da estimativa, e a contratação do WhatsApp ainda precisa ser verificada. <span class="muted">Fonte: ETF §1.1; PLANO slides 17 e 22</span></li><li><strong>Cobrança Ativa (lista de ligações).</strong> O protótipo v3 tem a tela «Cobrança Ativa — Lista de Ligações», que a ETF não cobre. Decidir se entra na v1 (geraria tarefas novas). <span class="muted">Fonte: PROTO v3; WIKI log.md (22/06); ETF §6.6</span></li><li><strong>Cronograma: ETF × plano.</strong> A ETF prevê 1 desenvolvedor sênior por 13 semanas (408 h); o plano fala em squad de dezembro de 2026 a abril de 2027. <span class="muted">Fonte: ETF §2 e §3; PLANO slide 11</span></li></ul>
+  </details>
+  <details>
+    <summary>Esforço que não está nas horas dos cartões</summary>
+    <ul><li><strong>Modelagem de dados (26 tabelas x_cbi_)</strong> — 54 h <span class="muted">(a ETF não detalha horas por tabela; as 4 tarefas de modelagem dividem este total)</span></li><li><strong>Testes e ajustes</strong> — 47 h <span class="muted">(tarefa T-TR-10)</span></li><li><strong>Documentação técnica</strong> — 16 h <span class="muted">(tarefa T-TR-11)</span></li><li><strong>Contingência</strong> — 31 h <span class="muted">(reserva; não vira tarefa)</span></li></ul>
+  </details>
+  <div class="bar">
+    <input id="q" type="search" placeholder="Filtrar tarefas (ex.: régua, CPF, RN-09, Flow Designer)" aria-label="Filtrar tarefas">
+    <button id="tema" type="button">Alternar tema</button>
+  </div>
+</div>
+<main class="board">
+    <section class="col" data-col>
+      <header class="col-h">
+        <div class="col-top"><span class="fid">F1</span><span class="status v1">Na v1</span></div>
+        <h2>Ingestão e Carteira Consolidada</h2>
+        <p class="resumo">Recebe os débitos das seis fontes (CCF, MPI, Big Data, IPVA, ITCD e SNE/DT-e) por API e consolida tudo numa visão única por contribuinte, com a posição por tributo atualizada a cada ciclo.</p>
+        <p class="meta">Gestor de Integração · Coordenador de Cobrança</p>
+        <p class="meta"><strong><span data-count>18</span> tarefas</strong> · 89 h</p>
+      </header>
+      <div class="cards">
+      <article class="card" data-busca="t-f1-01 contrato e padrão comum das apis de ingestão definir uma única forma de abrir lote, enviar pacotes, fechar lote e responder erro, reaproveitada pelas sete apis. publicar a documentação openapi que serve de contrato para os sistemas parceiros. scripted rest api + openapi ">
+        <div class="card-top"><span class="id">T-F1-01</span><span class="h">6 h</span></div>
+        <h3>Contrato e padrão comum das APIs de ingestão</h3>
+        <p>Definir uma única forma de abrir lote, enviar pacotes, fechar lote e responder erro, reaproveitada pelas sete APIs. Publicar a documentação OpenAPI que serve de contrato para os sistemas parceiros.</p>
+        <div class="tags"><span class="tag obj">Scripted REST API + OpenAPI</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f1-02 autenticação e política de acesso das apis criar um usuário de integração por fonte, autenticado por oauth 2.0, com acesso restrito ao próprio endpoint. nenhuma fonte enxerga a api de outra. oauth 2.0 inbound + rest api access policy ">
+        <div class="card-top"><span class="id">T-F1-02</span><span class="h">4 h</span></div>
+        <h3>Autenticação e política de acesso das APIs</h3>
+        <p>Criar um usuário de integração por fonte, autenticado por OAuth 2.0, com acesso restrito ao próprio endpoint. Nenhuma fonte enxerga a API de outra.</p>
+        <div class="tags"><span class="tag obj">OAuth 2.0 inbound + REST API Access Policy</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f1-03 api de ingestão — ccf receber os débitos de icms da conta corrente fiscal, a fonte de maior volume, em pacotes grandes e com carga incremental por data de alteração. validar, mapear e gravar em lote. scripted rest api ">
+        <div class="card-top"><span class="id">T-F1-03</span><span class="h">8 h</span></div>
+        <h3>API de ingestão — CCF</h3>
+        <p>Receber os débitos de ICMS da Conta Corrente Fiscal, a fonte de maior volume, em pacotes grandes e com carga incremental por data de alteração. Validar, mapear e gravar em lote.</p>
+        <div class="tags"><span class="tag obj">Scripted REST API</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f1-04 api de ingestão — mpi (legado) receber os elegíveis do mpi, fonte em descontinuação que convive com o big data. registrar o percentual de regras já migradas para o big data. scripted rest api rn-12">
+        <div class="card-top"><span class="id">T-F1-04</span><span class="h">5 h</span></div>
+        <h3>API de ingestão — MPI (legado)</h3>
+        <p>Receber os elegíveis do MPI, fonte em descontinuação que convive com o Big Data. Registrar o percentual de regras já migradas para o Big Data.</p>
+        <div class="tags"><span class="tag obj">Scripted REST API</span><span class="tag regra">RN-12</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f1-05 api de ingestão — big data (p2.2) receber os elegíveis do big data, destino das regras migradas do mpi, sem duplicar débito que já chegou pelo mpi. scripted rest api ">
+        <div class="card-top"><span class="id">T-F1-05</span><span class="h">6 h</span></div>
+        <h3>API de ingestão — Big Data (P2.2)</h3>
+        <p>Receber os elegíveis do Big Data, destino das regras migradas do MPI, sem duplicar débito que já chegou pelo MPI.</p>
+        <div class="tags"><span class="tag obj">Scripted REST API</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f1-06 api de ingestão — ipva receber os débitos de ipva, de volume alto e maioria pessoa física, com tratamento e mascaramento de cpf. scripted rest api ">
+        <div class="card-top"><span class="id">T-F1-06</span><span class="h">6 h</span></div>
+        <h3>API de ingestão — IPVA</h3>
+        <p>Receber os débitos de IPVA, de volume alto e maioria pessoa física, com tratamento e mascaramento de CPF.</p>
+        <div class="tags"><span class="tag obj">Scripted REST API</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f1-07 api de ingestão — itcd receber os débitos de itcd, de menor volume. sem score na base de exemplo, esses contribuintes seguem os critérios de fallback. scripted rest api ">
+        <div class="card-top"><span class="id">T-F1-07</span><span class="h">4 h</span></div>
+        <h3>API de ingestão — ITCD</h3>
+        <p>Receber os débitos de ITCD, de menor volume. Sem score na base de exemplo, esses contribuintes seguem os critérios de fallback.</p>
+        <div class="tags"><span class="tag obj">Scripted REST API</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f1-08 api de ingestão — sne / dt-e receber débitos e sinalizações de cobrança coercitiva feita por outra coordenadoria (por exemplo, protesto via pge). a sinalização só informa; o produto nunca age sobre ela. scripted rest api ">
+        <div class="card-top"><span class="id">T-F1-08</span><span class="h">5 h</span></div>
+        <h3>API de ingestão — SNE / DT-e</h3>
+        <p>Receber débitos e sinalizações de cobrança coercitiva feita por outra coordenadoria (por exemplo, protesto via PGE). A sinalização só informa; o produto nunca age sobre ela.</p>
+        <div class="tags"><span class="tag obj">Scripted REST API</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f1-09 validação e normalização de cpf/cnpj conferir o dígito verificador e guardar o documento só com dígitos. registro inválido é rejeitado e devolvido na resposta da api. script include rnf-t-conf-01">
+        <div class="card-top"><span class="id">T-F1-09</span><span class="h">4 h</span></div>
+        <h3>Validação e normalização de CPF/CNPJ</h3>
+        <p>Conferir o dígito verificador e guardar o documento só com dígitos. Registro inválido é rejeitado e devolvido na resposta da API.</p>
+        <div class="tags"><span class="tag obj">Script Include</span><span class="tag regra">RNF-T-CONF-01</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f1-10 consolidação por contribuinte e posição por tributo vincular débitos de fontes diferentes ao mesmo contribuinte e manter gravada a posição contribuinte × tributo, para não somar na hora da consulta. script include rn-01">
+        <div class="card-top"><span class="id">T-F1-10</span><span class="h">6 h</span></div>
+        <h3>Consolidação por contribuinte e posição por tributo</h3>
+        <p>Vincular débitos de fontes diferentes ao mesmo contribuinte e manter gravada a posição contribuinte × tributo, para não somar na hora da consulta.</p>
+        <div class="tags"><span class="tag obj">Script Include</span><span class="tag regra">RN-01</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f1-11 idempotência por lote e por chave natural garantir que reenviar o mesmo pacote ou registro não duplique débito, parcelamento nem sinalização, com controle por fonte, lote e sequência do pacote. script include ">
+        <div class="card-top"><span class="id">T-F1-11</span><span class="h">5 h</span></div>
+        <h3>Idempotência por lote e por chave natural</h3>
+        <p>Garantir que reenviar o mesmo pacote ou registro não duplique débito, parcelamento nem sinalização, com controle por fonte, lote e sequência do pacote.</p>
+        <div class="tags"><span class="tag obj">Script Include</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f1-12 fechamento do ciclo diário de carga no prazo de cada fonte, marcar como falha quem não entregou, disparar a consolidação com o que chegou e gravar a hora da última carga. scheduled job + flow designer ">
+        <div class="card-top"><span class="id">T-F1-12</span><span class="h">4 h</span></div>
+        <h3>Fechamento do ciclo diário de carga</h3>
+        <p>No prazo de cada fonte, marcar como Falha quem não entregou, disparar a consolidação com o que chegou e gravar a hora da última carga.</p>
+        <div class="tags"><span class="tag obj">Scheduled Job + Flow Designer</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f1-13 tratamento de erro e degradação segura por fonte quando uma fonte falha, marcar o lote, abrir alerta e manter a última carga válida, sem interromper as outras fontes. business rule + flow designer rnf-t-disp-01">
+        <div class="card-top"><span class="id">T-F1-13</span><span class="h">4 h</span></div>
+        <h3>Tratamento de erro e degradação segura por fonte</h3>
+        <p>Quando uma fonte falha, marcar o lote, abrir alerta e manter a última carga válida, sem interromper as outras fontes.</p>
+        <div class="tags"><span class="tag obj">Business Rule + Flow Designer</span><span class="tag regra">RNF-T-DISP-01</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f1-14 carga inicial (backfill) e reconciliação receber o histórico em pacotes pelas mesmas apis e conferir os totais por fonte e por tributo. script include ">
+        <div class="card-top"><span class="id">T-F1-14</span><span class="h">5 h</span></div>
+        <h3>Carga inicial (backfill) e reconciliação</h3>
+        <p>Receber o histórico em pacotes pelas mesmas APIs e conferir os totais por fonte e por tributo.</p>
+        <div class="tags"><span class="tag obj">Script Include</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f1-15 reprocessamento de registros rejeitados reaplicar a validação sobre o conteúdo guardado da rejeição, sem pedir novo envio à fonte. acionado por botão na lista de rejeitados. script include + ui action nativa ">
+        <div class="card-top"><span class="id">T-F1-15</span><span class="h">3 h</span></div>
+        <h3>Reprocessamento de registros rejeitados</h3>
+        <p>Reaplicar a validação sobre o conteúdo guardado da rejeição, sem pedir novo envio à fonte. Acionado por botão na lista de rejeitados.</p>
+        <div class="tags"><span class="tag obj">Script Include + UI Action nativa</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f1-16 kit de payloads simulados e testes de contrato gerar lotes simulados por fonte, inclusive inválidos e repetidos, e validar cada api contra o contrato enquanto os sistemas parceiros não podem ser consumidos. script include + coleção de testes rest ">
+        <div class="card-top"><span class="id">T-F1-16</span><span class="h">6 h</span></div>
+        <h3>Kit de payloads simulados e testes de contrato</h3>
+        <p>Gerar lotes simulados por fonte, inclusive inválidos e repetidos, e validar cada API contra o contrato enquanto os sistemas parceiros não podem ser consumidos.</p>
+        <div class="tags"><span class="tag obj">Script Include + coleção de testes REST</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f1-17 atualização de status dentro do ciclo encerrar o caso e a régua de quem regularizou durante o ciclo, para não abordar de novo o contribuinte. scheduled job + script include ">
+        <div class="card-top"><span class="id">T-F1-17</span><span class="h">5 h</span></div>
+        <h3>Atualização de status dentro do ciclo</h3>
+        <p>Encerrar o caso e a régua de quem regularizou durante o ciclo, para não abordar de novo o contribuinte.</p>
+        <div class="tags"><span class="tag obj">Scheduled Job + Script Include</span></div>
+        <div class="fonte">Fonte: ETF §2.1; PLANO slide 14</div>
+      </article>
+      <article class="card" data-busca="t-f1-18 alerta de parcelamento em risco marcar como em risco o parcelamento com parcela vencida e refletir isso na posição do contribuinte. business rule ">
+        <div class="card-top"><span class="id">T-F1-18</span><span class="h">3 h</span></div>
+        <h3>Alerta de parcelamento em risco</h3>
+        <p>Marcar como em risco o parcelamento com parcela vencida e refletir isso na posição do contribuinte.</p>
+        <div class="tags"><span class="tag obj">Business Rule</span></div>
+        <div class="fonte">Fonte: ETF §2.1; PLANO slide 14</div>
+      </article>
+      </div>
+    </section>
+    <section class="col" data-col>
+      <header class="col-h">
+        <div class="col-top"><span class="fid">F2</span><span class="status v1">Na v1</span></div>
+        <h2>Qualificação e Parametrização da Carteira</h2>
+        <p class="resumo">A Coordenação define critérios versionados (valor, tributo, atraso, instrumento, contumazes e score), simula a carteira, separa massificada de qualificada e sorteia o grupo de controle.</p>
+        <p class="meta">Coordenador de Cobrança</p>
+        <p class="meta"><strong><span data-count>6</span> tarefas</strong> · 30 h</p>
+      </header>
+      <div class="cards">
+      <article class="card" data-busca="t-f2-01 versionamento de critérios com prévia obrigatória numerar versões em sequência, criar cada nova versão a partir da última publicada e permitir um único rascunho aberto. publicar exige fundamentação e prévia vigente; mudar parâmetros invalida a prévia. business rule + flow designer rn-03">
+        <div class="card-top"><span class="id">T-F2-01</span><span class="h">6 h</span></div>
+        <h3>Versionamento de critérios com prévia obrigatória</h3>
+        <p>Numerar versões em sequência, criar cada nova versão a partir da última publicada e permitir um único rascunho aberto. Publicar exige fundamentação e prévia vigente; mudar parâmetros invalida a prévia.</p>
+        <div class="tags"><span class="tag obj">Business Rule + Flow Designer</span><span class="tag regra">RN-03</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f2-02 imutabilidade de versão publicada e de carteira confirmada bloquear alteração e exclusão de versão publicada e de carteira confirmada direto na camada de dados. business rule + acl rnf-t-aud-02">
+        <div class="card-top"><span class="id">T-F2-02</span><span class="h">3 h</span></div>
+        <h3>Imutabilidade de versão publicada e de carteira confirmada</h3>
+        <p>Bloquear alteração e exclusão de versão publicada e de carteira confirmada direto na camada de dados.</p>
+        <div class="tags"><span class="tag obj">Business Rule + ACL</span><span class="tag regra">RNF-T-AUD-02</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f2-03 motor de aplicação dos critérios aplicar valor, tributo, atraso, instrumento, exclusão de contumazes e limite de score (só para quem tem score). os critérios se combinam por e e são processados em lotes. script include ">
+        <div class="card-top"><span class="id">T-F2-03</span><span class="h">8 h</span></div>
+        <h3>Motor de aplicação dos critérios</h3>
+        <p>Aplicar valor, tributo, atraso, instrumento, exclusão de contumazes e limite de score (só para quem tem score). Os critérios se combinam por E e são processados em lotes.</p>
+        <div class="tags"><span class="tag obj">Script Include</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f2-04 segmentação massificada × qualificada classificar cada contribuinte da carteira conforme o tipo-alvo definido na versão dos critérios. script include rn-04">
+        <div class="card-top"><span class="id">T-F2-04</span><span class="h">4 h</span></div>
+        <h3>Segmentação massificada × qualificada</h3>
+        <p>Classificar cada contribuinte da carteira conforme o tipo-alvo definido na versão dos critérios.</p>
+        <div class="tags"><span class="tag obj">Script Include</span><span class="tag regra">RN-04</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f2-05 sorteio do grupo de controle reproduzível sortear 3% da carteira segmentada (percentual padrão) como grupo de controle, gravando a semente para que o sorteio possa ser refeito. script include rn-09">
+        <div class="card-top"><span class="id">T-F2-05</span><span class="h">4 h</span></div>
+        <h3>Sorteio do grupo de controle reproduzível</h3>
+        <p>Sortear 3% da carteira segmentada (percentual padrão) como grupo de controle, gravando a semente para que o sorteio possa ser refeito.</p>
+        <div class="tags"><span class="tag obj">Script Include</span><span class="tag regra">RN-09</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f2-06 simulação e confirmação da carteira gerar a prévia sem efeito colateral. a confirmação só aceita versão publicada e, ao confirmar, libera as réguas e cria os casos. flow designer ">
+        <div class="card-top"><span class="id">T-F2-06</span><span class="h">5 h</span></div>
+        <h3>Simulação e confirmação da carteira</h3>
+        <p>Gerar a prévia sem efeito colateral. A confirmação só aceita versão publicada e, ao confirmar, libera as réguas e cria os casos.</p>
+        <div class="tags"><span class="tag obj">Flow Designer</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      </div>
+    </section>
+    <section class="col" data-col>
+      <header class="col-h">
+        <div class="col-top"><span class="fid">F3</span><span class="status v1">Na v1</span></div>
+        <h2>Scoring de Liquidez (Priorização Inteligente)</h2>
+        <p class="resumo">Recebe o score de liquidez da UFMT por lote, classifica em faixas parametrizáveis e usa critérios determinísticos para quem não tem score. Inclui o Painel do Score.</p>
+        <p class="meta">Gestor de Integração · Coordenador de Cobrança</p>
+        <p class="meta"><strong><span data-count>4</span> tarefas</strong> · 17 h</p>
+      </header>
+      <div class="cards">
+      <article class="card" data-busca="t-f3-01 api de ingestão — score ufmt receber o score por lote (cerca de 1,4 milhão de linhas no exemplo), vincular ao contribuinte pelo documento e registrar a versão do modelo. scripted rest api ">
+        <div class="card-top"><span class="id">T-F3-01</span><span class="h">5 h</span></div>
+        <h3>API de ingestão — Score UFMT</h3>
+        <p>Receber o score por lote (cerca de 1,4 milhão de linhas no exemplo), vincular ao contribuinte pelo documento e registrar a versão do modelo.</p>
+        <div class="tags"><span class="tag obj">Scripted REST API</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f3-02 classificação por faixa e fallback determinístico classificar o score em faixas parametrizáveis. contribuinte sem score segue os critérios determinísticos. script include rn-ai-01">
+        <div class="card-top"><span class="id">T-F3-02</span><span class="h">4 h</span></div>
+        <h3>Classificação por faixa e fallback determinístico</h3>
+        <p>Classificar o score em faixas parametrizáveis. Contribuinte sem score segue os critérios determinísticos.</p>
+        <div class="tags"><span class="tag obj">Script Include</span><span class="tag regra">RN-AI-01</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f3-03 indicadores do score calcular a cobertura por tributo (com e sem score), o score médio e a contagem por faixa, direto das tabelas de score e de posição. indicador (platform analytics) ">
+        <div class="card-top"><span class="id">T-F3-03</span><span class="h">3 h</span></div>
+        <h3>Indicadores do score</h3>
+        <p>Calcular a cobertura por tributo (com e sem score), o score médio e a contagem por faixa, direto das tabelas de score e de posição.</p>
+        <div class="tags"><span class="tag obj">Indicador (Platform Analytics)</span></div>
+        <div class="fonte">Fonte: ETF §2.2</div>
+      </article>
+      <article class="card" data-busca="t-f3-04 painel do score de liquidez montar o dashboard com cobertura, score médio, distribuição por faixa, cobertura por tributo e os últimos lotes recebidos. visível ao gestor de integração e ao coordenador. dashboard (platform analytics) ">
+        <div class="card-top"><span class="id">T-F3-04</span><span class="h">5 h</span></div>
+        <h3>Painel do Score de Liquidez</h3>
+        <p>Montar o dashboard com cobertura, score médio, distribuição por faixa, cobertura por tributo e os últimos lotes recebidos. Visível ao Gestor de Integração e ao Coordenador.</p>
+        <div class="tags"><span class="tag obj">Dashboard (Platform Analytics)</span></div>
+        <div class="fonte">Fonte: ETF §2.2; PLANO slide 16</div>
+      </article>
+      </div>
+    </section>
+    <section class="col" data-col>
+      <header class="col-h">
+        <div class="col-top"><span class="fid">F4</span><span class="status parcial">Parcial</span></div>
+        <h2>Réguas de Cobrança Massificada Multicanal</h2>
+        <p class="resumo">Réguas com etapas, prazos e modelos por segmento. Um motor diário cria e envia as comunicações devidas por e-mail, SMS e WhatsApp, respeitando o consentimento.</p>
+        <p class="meta">Coordenador de Cobrança</p>
+        <p class="meta"><strong><span data-count>8</span> tarefas</strong> · 42 h</p>
+      </header>
+      <div class="cards">
+      <article class="card" data-busca="t-f4-01 validações de régua e etapa ordenar etapas pelo prazo, impedir etapa duplicada, validar as variáveis do modelo de mensagem e exigir uma régua ativa por segmento. business rule ">
+        <div class="card-top"><span class="id">T-F4-01</span><span class="h">5 h</span></div>
+        <h3>Validações de régua e etapa</h3>
+        <p>Ordenar etapas pelo prazo, impedir etapa duplicada, validar as variáveis do modelo de mensagem e exigir uma régua ativa por segmento.</p>
+        <div class="tags"><span class="tag obj">Business Rule</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f4-02 motor de réguas calcular diariamente a etapa devida pelo prazo, escalonar quando não há resposta, encerrar quando o contribuinte regulariza e encaminhar à cobrança qualificada quem esgotou a régua. script include + scheduled job rn-04 rn-05">
+        <div class="card-top"><span class="id">T-F4-02</span><span class="h">10 h</span></div>
+        <h3>Motor de réguas</h3>
+        <p>Calcular diariamente a etapa devida pelo prazo, escalonar quando não há resposta, encerrar quando o contribuinte regulariza e encaminhar à cobrança qualificada quem esgotou a régua.</p>
+        <div class="tags"><span class="tag obj">Script Include + Scheduled Job</span><span class="tag regra">RN-04</span><span class="tag regra">RN-05</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f4-03 verificação de consentimento (opt-in / opt-out) consultar o consentimento do contribuinte no momento do envio. o opt-out vale imediatamente. script include rn-06 rnf-t-seg-02">
+        <div class="card-top"><span class="id">T-F4-03</span><span class="h">4 h</span></div>
+        <h3>Verificação de consentimento (opt-in / opt-out)</h3>
+        <p>Consultar o consentimento do contribuinte no momento do envio. O opt-out vale imediatamente.</p>
+        <div class="tags"><span class="tag obj">Script Include</span><span class="tag regra">RN-06</span><span class="tag regra">RNF-T-SEG-02</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f4-04 renderização de modelo com variáveis preencher nome, tributo, valor e vencimento no modelo da mensagem. se uma variável não existir, falhar de forma controlada. script include ">
+        <div class="card-top"><span class="id">T-F4-04</span><span class="h">3 h</span></div>
+        <h3>Renderização de modelo com variáveis</h3>
+        <p>Preencher nome, tributo, valor e vencimento no modelo da mensagem. Se uma variável não existir, falhar de forma controlada.</p>
+        <div class="tags"><span class="tag obj">Script Include</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f4-05 camada de envio por canal e integração com o provedor isolar o envio por canal (e-mail, sms, whatsapp) para poder trocar de provedor. volume previsto da ordem de 22 mil comunicações por dia. script include + rest message ">
+        <div class="card-top"><span class="id">T-F4-05</span><span class="h">10 h</span></div>
+        <h3>Camada de envio por canal e integração com o provedor</h3>
+        <p>Isolar o envio por canal (e-mail, SMS, WhatsApp) para poder trocar de provedor. Volume previsto da ordem de 22 mil comunicações por dia.</p>
+        <div class="tags"><span class="tag obj">Script Include + REST Message</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f4-06 callback de status de entrega receber o status de entrega do provedor e atualizar a comunicação sem duplicar quando o mesmo status chega mais de uma vez. scripted rest api rnf-t-obs-01">
+        <div class="card-top"><span class="id">T-F4-06</span><span class="h">5 h</span></div>
+        <h3>Callback de status de entrega</h3>
+        <p>Receber o status de entrega do provedor e atualizar a comunicação sem duplicar quando o mesmo status chega mais de uma vez.</p>
+        <div class="tags"><span class="tag obj">Scripted REST API</span><span class="tag regra">RNF-T-OBS-01</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f4-07 reenvio de falhas com limite de tentativas reprocessar as comunicações em falha até o limite de tentativas configurado em parâmetro. flow designer ">
+        <div class="card-top"><span class="id">T-F4-07</span><span class="h">3 h</span></div>
+        <h3>Reenvio de falhas com limite de tentativas</h3>
+        <p>Reprocessar as comunicações em Falha até o limite de tentativas configurado em parâmetro.</p>
+        <div class="tags"><span class="tag obj">Flow Designer</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f4-08 pausar e retomar régua interromper a criação de novas comunicações sem cancelar as que já foram enviadas. business rule ">
+        <div class="card-top"><span class="id">T-F4-08</span><span class="h">2 h</span></div>
+        <h3>Pausar e retomar régua</h3>
+        <p>Interromper a criação de novas comunicações sem cancelar as que já foram enviadas.</p>
+        <div class="tags"><span class="tag obj">Business Rule</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      </div>
+    </section>
+    <section class="col" data-col>
+      <header class="col-h">
+        <div class="col-top"><span class="fid">F5</span><span class="status parcial">Parcial</span></div>
+        <h2>Cobrança Qualificada — Operação do Atendente</h2>
+        <p class="resumo">Casos criados pela carteira confirmada ou pelo esgotamento da régua, distribuídos automaticamente numa fila priorizada, com registro de interações e follow-ups no formulário do caso.</p>
+        <p class="meta">Coordenador de Cobrança · Atendente de Cobrança</p>
+        <p class="meta"><strong><span data-count>5</span> tarefas</strong> · 19 h</p>
+      </header>
+      <div class="cards">
+      <article class="card" data-busca="t-f5-01 criação automática de caso e numeração gerar o caso cq-aaaa-nnnn a partir da carteira confirmada ou do esgotamento da régua. flow designer + number maintenance ">
+        <div class="card-top"><span class="id">T-F5-01</span><span class="h">5 h</span></div>
+        <h3>Criação automática de caso e numeração</h3>
+        <p>Gerar o caso CQ-AAAA-NNNN a partir da carteira confirmada ou do esgotamento da régua.</p>
+        <div class="tags"><span class="tag obj">Flow Designer + Number Maintenance</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f5-02 atribuição de casos ao atendente distribuir os casos por carga de trabalho ou por grupo de atendentes. assignment rule ">
+        <div class="card-top"><span class="id">T-F5-02</span><span class="h">4 h</span></div>
+        <h3>Atribuição de casos ao atendente</h3>
+        <p>Distribuir os casos por carga de trabalho ou por grupo de atendentes.</p>
+        <div class="tags"><span class="tag obj">Assignment Rule</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f5-03 prioridade da fila calcular a prioridade por score, valor e atraso. para quem não tem score, usar os critérios determinísticos. business rule rn-ai-01">
+        <div class="card-top"><span class="id">T-F5-03</span><span class="h">3 h</span></div>
+        <h3>Prioridade da fila</h3>
+        <p>Calcular a prioridade por score, valor e atraso. Para quem não tem score, usar os critérios determinísticos.</p>
+        <div class="tags"><span class="tag obj">Business Rule</span><span class="tag regra">RN-AI-01</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f5-04 interação imutável e evento de auditoria impedir edição e exclusão de interação salva e gravar um evento de auditoria a cada registro. business rule + acl rn-10 rnf-t-aud-01">
+        <div class="card-top"><span class="id">T-F5-04</span><span class="h">4 h</span></div>
+        <h3>Interação imutável e evento de auditoria</h3>
+        <p>Impedir edição e exclusão de interação salva e gravar um evento de auditoria a cada registro.</p>
+        <div class="tags"><span class="tag obj">Business Rule + ACL</span><span class="tag regra">RN-10</span><span class="tag regra">RNF-T-AUD-01</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f5-05 follow-up e lembrete criar tarefa de follow-up com data de vencimento e notificar o atendente no dia. business rule + notification ">
+        <div class="card-top"><span class="id">T-F5-05</span><span class="h">3 h</span></div>
+        <h3>Follow-up e lembrete</h3>
+        <p>Criar tarefa de follow-up com data de vencimento e notificar o atendente no dia.</p>
+        <div class="tags"><span class="tag obj">Business Rule + Notification</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      </div>
+    </section>
+    <section class="col" data-col>
+      <header class="col-h">
+        <div class="col-top"><span class="fid">F6</span><span class="status v1">Na v1</span></div>
+        <h2>Monitoramento, KPIs e Grupo de Controle</h2>
+        <p class="resumo">Painel Institucional com funil, KPIs, tendência da carteira cobrada contra o grupo de controle e realizado × meta por tributo, calculados direto das tabelas.</p>
+        <p class="meta">Coordenador de Cobrança · Gestor de Integração</p>
+        <p class="meta"><strong><span data-count>10</span> tarefas</strong> · 38 h</p>
+      </header>
+      <div class="cards">
+      <article class="card" data-busca="t-f6-01 atribuição de origem da regularização procurar contato de cobrança na janela parametrizável (padrão de 30 dias) para marcar a regularização como espontânea ou resposta à cobrança. grupo de controle é sempre espontâneo. marcar a comunicação paga em até 30 dias. script include ">
+        <div class="card-top"><span class="id">T-F6-01</span><span class="h">7 h</span></div>
+        <h3>Atribuição de origem da regularização</h3>
+        <p>Procurar contato de cobrança na janela parametrizável (padrão de 30 dias) para marcar a regularização como espontânea ou resposta à cobrança. Grupo de controle é sempre espontâneo. Marcar a comunicação paga em até 30 dias.</p>
+        <div class="tags"><span class="tag obj">Script Include</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f6-02 marcação de notificado e regularizado marcar o item da carteira como notificado ao enviar comunicação ou registrar interação, e como regularizado ao registrar a regularização. é o que permite contar os indicadores direto das tabelas. business rule ">
+        <div class="card-top"><span class="id">T-F6-02</span><span class="h">3 h</span></div>
+        <h3>Marcação de notificado e regularizado</h3>
+        <p>Marcar o item da carteira como notificado ao enviar comunicação ou registrar interação, e como regularizado ao registrar a regularização. É o que permite contar os indicadores direto das tabelas.</p>
+        <div class="tags"><span class="tag obj">Business Rule</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-f6-03 indicadores de funil e recuperação contar identificados, notificados e regularizados e somar o crédito recuperado. indicador (platform analytics) ">
+        <div class="card-top"><span class="id">T-F6-03</span><span class="h">4 h</span></div>
+        <h3>Indicadores de funil e recuperação</h3>
+        <p>Contar identificados, notificados e regularizados e somar o crédito recuperado.</p>
+        <div class="tags"><span class="tag obj">Indicador (Platform Analytics)</span></div>
+        <div class="fonte">Fonte: ETF §2.2</div>
+      </article>
+      <article class="card" data-busca="t-f6-04 taxa de regularização e efeito incremental calcular a taxa da carteira cobrada, a do grupo de controle e a diferença entre elas em pontos percentuais. indicador + fórmula rn-09">
+        <div class="card-top"><span class="id">T-F6-04</span><span class="h">4 h</span></div>
+        <h3>Taxa de regularização e efeito incremental</h3>
+        <p>Calcular a taxa da carteira cobrada, a do grupo de controle e a diferença entre elas em pontos percentuais.</p>
+        <div class="tags"><span class="tag obj">Indicador + fórmula</span><span class="tag regra">RN-09</span></div>
+        <div class="fonte">Fonte: ETF §2.2</div>
+      </article>
+      <article class="card" data-busca="t-f6-05 retorno das réguas dividir as comunicações pagas em até 30 dias pelas enviadas, usando a marca gravada na comunicação. indicador + fórmula ">
+        <div class="card-top"><span class="id">T-F6-05</span><span class="h">2 h</span></div>
+        <h3>Retorno das réguas</h3>
+        <p>Dividir as comunicações pagas em até 30 dias pelas enviadas, usando a marca gravada na comunicação.</p>
+        <div class="tags"><span class="tag obj">Indicador + fórmula</span></div>
+        <div class="fonte">Fonte: ETF §2.2</div>
+      </article>
+      <article class="card" data-busca="t-f6-06 realizado × meta por tributo comparar a taxa realizada com a meta cadastrada e alimentar o alerta de meta não atingida. indicador + fórmula ">
+        <div class="card-top"><span class="id">T-F6-06</span><span class="h">2 h</span></div>
+        <h3>Realizado × meta por tributo</h3>
+        <p>Comparar a taxa realizada com a meta cadastrada e alimentar o alerta de meta não atingida.</p>
+        <div class="tags"><span class="tag obj">Indicador + fórmula</span></div>
+        <div class="fonte">Fonte: ETF §2.2</div>
+      </article>
+      <article class="card" data-busca="t-f6-07 recortes e coleta agendada configurar os recortes por tributo, canal, segmento, atendente e faixa de score, e a coleta diária que forma o histórico da tendência. breakdown + data collection job ">
+        <div class="card-top"><span class="id">T-F6-07</span><span class="h">4 h</span></div>
+        <h3>Recortes e coleta agendada</h3>
+        <p>Configurar os recortes por tributo, canal, segmento, atendente e faixa de score, e a coleta diária que forma o histórico da tendência.</p>
+        <div class="tags"><span class="tag obj">Breakdown + Data collection job</span></div>
+        <div class="fonte">Fonte: ETF §2.2</div>
+      </article>
+      <article class="card" data-busca="t-f6-08 acesso aos indicadores e dashboards por papel restringir o painel institucional ao coordenador e o painel do score ao gestor de integração e ao coordenador. roles + permissões de compartilhamento ">
+        <div class="card-top"><span class="id">T-F6-08</span><span class="h">2 h</span></div>
+        <h3>Acesso aos indicadores e dashboards por papel</h3>
+        <p>Restringir o Painel Institucional ao Coordenador e o Painel do Score ao Gestor de Integração e ao Coordenador.</p>
+        <div class="tags"><span class="tag obj">Roles + permissões de compartilhamento</span></div>
+        <div class="fonte">Fonte: ETF §2.2</div>
+      </article>
+      <article class="card" data-busca="t-f6-09 padrão visual e filtros compartilhados definir uma vez o layout, a formatação em português e os filtros de ciclo, tributo, canal e atendente para os dois painéis. dashboard (platform analytics) ">
+        <div class="card-top"><span class="id">T-F6-09</span><span class="h">2 h</span></div>
+        <h3>Padrão visual e filtros compartilhados</h3>
+        <p>Definir uma vez o layout, a formatação em português e os filtros de ciclo, tributo, canal e atendente para os dois painéis.</p>
+        <div class="tags"><span class="tag obj">Dashboard (Platform Analytics)</span></div>
+        <div class="fonte">Fonte: ETF §2.2</div>
+      </article>
+      <article class="card" data-busca="t-f6-10 painel institucional de cobrança montar o funil em quatro etapas, quatro kpis com variação, a tendência cobrada × controle, a tabela por tributo (realizado, meta e diferença) e o alerta de meta. dashboard (platform analytics) ">
+        <div class="card-top"><span class="id">T-F6-10</span><span class="h">8 h</span></div>
+        <h3>Painel Institucional de Cobrança</h3>
+        <p>Montar o funil em quatro etapas, quatro KPIs com variação, a tendência cobrada × controle, a tabela por tributo (realizado, meta e diferença) e o alerta de meta.</p>
+        <div class="tags"><span class="tag obj">Dashboard (Platform Analytics)</span></div>
+        <div class="fonte">Fonte: ETF §2.2</div>
+      </article>
+      </div>
+    </section>
+    <section class="col" data-col>
+      <header class="col-h">
+        <div class="col-top"><span class="fid">TR</span><span class="status v1">Na v1</span></div>
+        <h2>Transversais — dados, segurança e interface</h2>
+        <p class="resumo">Modelo de dados, controle de acesso por papel, mascaramento, auditoria, telas nativas por papel, testes e documentação.</p>
+        <p class="meta">Todos os papéis</p>
+        <p class="meta"><strong><span data-count>11</span> tarefas</strong> · 88 h</p>
+      </header>
+      <div class="cards">
+      <article class="card" data-busca="t-tr-01 modelagem — ingestão e consolidação criar as tabelas de fonte, lote, rejeição, contribuinte, débito, posição por tributo, parcelamento, vínculo econômico e sinalização, com relações e listas de opções. tabelas app engine (escopo x_cbi_) ">
+        <div class="card-top"><span class="id">T-TR-01</span><span class="h">—</span></div>
+        <h3>Modelagem — ingestão e consolidação</h3>
+        <p>Criar as tabelas de fonte, lote, rejeição, contribuinte, débito, posição por tributo, parcelamento, vínculo econômico e sinalização, com relações e listas de opções.</p>
+        <div class="tags"><span class="tag obj">Tabelas App Engine (escopo x_cbi_)</span></div>
+        <div class="fonte">Fonte: ETF §3 (semana 1) e §4</div>
+      </article>
+      <article class="card" data-busca="t-tr-02 modelagem — score, critérios e carteira criar as tabelas de score, faixas de score, versão de critérios, carteira e itens da carteira. tabelas app engine (escopo x_cbi_) ">
+        <div class="card-top"><span class="id">T-TR-02</span><span class="h">—</span></div>
+        <h3>Modelagem — score, critérios e carteira</h3>
+        <p>Criar as tabelas de score, faixas de score, versão de critérios, carteira e itens da carteira.</p>
+        <div class="tags"><span class="tag obj">Tabelas App Engine (escopo x_cbi_)</span></div>
+        <div class="fonte">Fonte: ETF §3 (semana 1) e §4</div>
+      </article>
+      <article class="card" data-busca="t-tr-03 modelagem — régua, comunicação, caso e regularização criar as tabelas de régua, etapa, modelo de mensagem, consentimento, comunicação, caso (estendendo task), interação, follow-up e regularização. tabelas app engine (escopo x_cbi_) ">
+        <div class="card-top"><span class="id">T-TR-03</span><span class="h">—</span></div>
+        <h3>Modelagem — régua, comunicação, caso e regularização</h3>
+        <p>Criar as tabelas de régua, etapa, modelo de mensagem, consentimento, comunicação, caso (estendendo task), interação, follow-up e regularização.</p>
+        <div class="tags"><span class="tag obj">Tabelas App Engine (escopo x_cbi_)</span></div>
+        <div class="fonte">Fonte: ETF §3 (semana 2) e §4</div>
+      </article>
+      <article class="card" data-busca="t-tr-04 modelagem — parâmetros, metas, auditoria e dicionário de dados criar as tabelas de parâmetros, metas e eventos de auditoria, e validar o dicionário de dados das 26 tabelas. tabelas app engine (escopo x_cbi_) ">
+        <div class="card-top"><span class="id">T-TR-04</span><span class="h">—</span></div>
+        <h3>Modelagem — parâmetros, metas, auditoria e dicionário de dados</h3>
+        <p>Criar as tabelas de parâmetros, metas e eventos de auditoria, e validar o dicionário de dados das 26 tabelas.</p>
+        <div class="tags"><span class="tag obj">Tabelas App Engine (escopo x_cbi_)</span></div>
+        <div class="fonte">Fonte: ETF §3 (semana 2) e §4</div>
+      </article>
+      <article class="card" data-busca="t-tr-05 matriz de acesso — 5 papéis × grupos de tabelas implementar as permissões de gestor de integração, coordenador, atendente, auditor e admin, avaliadas na camada de dados a cada consulta e nunca só escondendo menu. acl ">
+        <div class="card-top"><span class="id">T-TR-05</span><span class="h">8 h</span></div>
+        <h3>Matriz de acesso — 5 papéis × grupos de tabelas</h3>
+        <p>Implementar as permissões de Gestor de Integração, Coordenador, Atendente, Auditor e Admin, avaliadas na camada de dados a cada consulta e nunca só escondendo menu.</p>
+        <div class="tags"><span class="tag obj">ACL</span></div>
+        <div class="fonte">Fonte: ETF §2.1 e §6.4</div>
+      </article>
+      <article class="card" data-busca="t-tr-06 isolamento da visão do atendente garantir que o atendente só leia os casos atribuídos a ele e os dados do contribuinte desses casos. query business rule + acl rn-11">
+        <div class="card-top"><span class="id">T-TR-06</span><span class="h">4 h</span></div>
+        <h3>Isolamento da visão do atendente</h3>
+        <p>Garantir que o atendente só leia os casos atribuídos a ele e os dados do contribuinte desses casos.</p>
+        <div class="tags"><span class="tag obj">Query Business Rule + ACL</span><span class="tag regra">RN-11</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-tr-07 mascaramento de cpf e restrição de exportação mascarar por padrão o cpf de pessoa física e restringir a exportação por papel, registrando cada exportação. acl de campo + business rule ">
+        <div class="card-top"><span class="id">T-TR-07</span><span class="h">4 h</span></div>
+        <h3>Mascaramento de CPF e restrição de exportação</h3>
+        <p>Mascarar por padrão o CPF de pessoa física e restringir a exportação por papel, registrando cada exportação.</p>
+        <div class="tags"><span class="tag obj">ACL de campo + Business Rule</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-tr-08 auditoria de alteração de parâmetros gravar valor anterior, valor novo, usuário e vigência quando mudarem metas, faixas de score ou parâmetros. business rule ">
+        <div class="card-top"><span class="id">T-TR-08</span><span class="h">3 h</span></div>
+        <h3>Auditoria de alteração de parâmetros</h3>
+        <p>Gravar valor anterior, valor novo, usuário e vigência quando mudarem metas, faixas de score ou parâmetros.</p>
+        <div class="tags"><span class="tag obj">Business Rule</span></div>
+        <div class="fonte">Fonte: ETF §2.1</div>
+      </article>
+      <article class="card" data-busca="t-tr-09 módulos, filtros salvos e layouts nativos por papel transformar as dez telas do protótipo que não são dashboards em módulos de lista e formulário nativos, com filtros salvos, listas relacionadas e layout por papel. nenhuma tela customizada. app engine (menus, módulos, listas e formulários) ">
+        <div class="card-top"><span class="id">T-TR-09</span><span class="h">6 h</span></div>
+        <h3>Módulos, filtros salvos e layouts nativos por papel</h3>
+        <p>Transformar as dez telas do protótipo que não são dashboards em módulos de lista e formulário nativos, com filtros salvos, listas relacionadas e layout por papel. Nenhuma tela customizada.</p>
+        <div class="tags"><span class="tag obj">App Engine (menus, módulos, listas e formulários)</span></div>
+        <div class="fonte">Fonte: ETF §2.1 e §6.6</div>
+      </article>
+      <article class="card" data-busca="t-tr-10 testes ponta a ponta e ajustes testar com lotes simulados as apis, a segmentação, as réguas, as permissões, os indicadores e os dashboards, e ajustar as regras de negócio. testes ">
+        <div class="card-top"><span class="id">T-TR-10</span><span class="h">47 h</span></div>
+        <h3>Testes ponta a ponta e ajustes</h3>
+        <p>Testar com lotes simulados as APIs, a segmentação, as réguas, as permissões, os indicadores e os dashboards, e ajustar as regras de negócio.</p>
+        <div class="tags"><span class="tag obj">Testes</span></div>
+        <div class="fonte">Fonte: ETF §2 e §3 (semanas 10 a 12)</div>
+      </article>
+      <article class="card" data-busca="t-tr-11 documentação técnica finalizar o dicionário de dados, os contratos das apis, as regras e as permissões. documentação ">
+        <div class="card-top"><span class="id">T-TR-11</span><span class="h">16 h</span></div>
+        <h3>Documentação técnica</h3>
+        <p>Finalizar o dicionário de dados, os contratos das APIs, as regras e as permissões.</p>
+        <div class="tags"><span class="tag obj">Documentação</span></div>
+        <div class="fonte">Fonte: ETF §2 e §3 (semana 12)</div>
+      </article>
+      </div>
+    </section>
+</main>
+<footer>Fontes: <code>ETF</code> inputs/especificacoes/etf-cobranca-inteligente.pdf · <code>PLANO</code> inputs/briefing/plano-de-implementacao-2.6-cobranca-v3.pptx · <code>WIKI</code> inputs/especificacoes/wiki-cobranca-refined/ · <code>PROTO</code> inputs/prototipo/prototipo-cobranca-v3.html. Gerado a partir de <code>backlog.json</code> por <code>gerar-kanban.py</code>.</footer>
+<script>
+const q = document.getElementById('q');
+q.addEventListener('input', () => {
+  const termo = q.value.trim().toLowerCase();
+  document.querySelectorAll('[data-col]').forEach(col => {
+    let n = 0;
+    col.querySelectorAll('.card').forEach(c => {
+      const ok = !termo || c.dataset.busca.includes(termo);
+      c.classList.toggle('hidden', !ok);
+      if (ok) n++;
+    });
+    col.querySelector('[data-count]').textContent = n;
+  });
+});
+document.getElementById('tema').addEventListener('click', () => {
+  const r = document.documentElement;
+  const escuro = r.dataset.theme ? r.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+  r.dataset.theme = escuro ? 'light' : 'dark';
+});
+</script>
+</body>
+</html>

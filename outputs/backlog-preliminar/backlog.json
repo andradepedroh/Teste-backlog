@@ -1,0 +1,146 @@
+{
+  "projeto": "ServiceNow - 2.6 Cobrança (Cobrança Inteligente · SEFAZ-MT)",
+  "versao": "0.1",
+  "data": "2026-11-13",
+  "status": "preliminar — para avaliação; histórias, critérios de aceite e dependências vêm na próxima rodada",
+  "fontes": {
+    "ETF": "inputs/especificacoes/etf-cobranca-inteligente.pdf",
+    "PLANO": "inputs/briefing/plano-de-implementacao-2.6-cobranca-v3.pptx",
+    "WIKI": "inputs/especificacoes/wiki-cobranca-refined/",
+    "PROTO": "inputs/prototipo/prototipo-cobranca-v3.html"
+  },
+  "esforco_fora_das_tarefas": [
+    {"etapa": "Modelagem de dados (26 tabelas x_cbi_)", "horas": 54, "obs": "a ETF não detalha horas por tabela; as 4 tarefas de modelagem dividem este total"},
+    {"etapa": "Testes e ajustes", "horas": 47, "obs": "tarefa T-TR-10"},
+    {"etapa": "Documentação técnica", "horas": 16, "obs": "tarefa T-TR-11"},
+    {"etapa": "Contingência", "horas": 31, "obs": "reserva; não vira tarefa"}
+  ],
+  "funcionalidades": [
+    {
+      "id": "F1", "nome": "Ingestão e Carteira Consolidada", "epico": "1. Ingestão e Fonte de Dados",
+      "perfis": "Gestor de Integração · Coordenador de Cobrança",
+      "resumo": "Recebe os débitos das seis fontes (CCF, MPI, Big Data, IPVA, ITCD e SNE/DT-e) por API e consolida tudo numa visão única por contribuinte, com a posição por tributo atualizada a cada ciclo.",
+      "status_v1": "Na v1",
+      "tarefas": [
+        {"id": "T-F1-01", "titulo": "Contrato e padrão comum das APIs de ingestão", "descricao": "Definir uma única forma de abrir lote, enviar pacotes, fechar lote e responder erro, reaproveitada pelas sete APIs. Publicar a documentação OpenAPI que serve de contrato para os sistemas parceiros.", "objeto": "Scripted REST API + OpenAPI", "horas": 6, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F1-02", "titulo": "Autenticação e política de acesso das APIs", "descricao": "Criar um usuário de integração por fonte, autenticado por OAuth 2.0, com acesso restrito ao próprio endpoint. Nenhuma fonte enxerga a API de outra.", "objeto": "OAuth 2.0 inbound + REST API Access Policy", "horas": 4, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F1-03", "titulo": "API de ingestão — CCF", "descricao": "Receber os débitos de ICMS da Conta Corrente Fiscal, a fonte de maior volume, em pacotes grandes e com carga incremental por data de alteração. Validar, mapear e gravar em lote.", "objeto": "Scripted REST API", "horas": 8, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F1-04", "titulo": "API de ingestão — MPI (legado)", "descricao": "Receber os elegíveis do MPI, fonte em descontinuação que convive com o Big Data. Registrar o percentual de regras já migradas para o Big Data.", "objeto": "Scripted REST API", "horas": 5, "regras": ["RN-12"], "fonte": "ETF §2.1"},
+        {"id": "T-F1-05", "titulo": "API de ingestão — Big Data (P2.2)", "descricao": "Receber os elegíveis do Big Data, destino das regras migradas do MPI, sem duplicar débito que já chegou pelo MPI.", "objeto": "Scripted REST API", "horas": 6, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F1-06", "titulo": "API de ingestão — IPVA", "descricao": "Receber os débitos de IPVA, de volume alto e maioria pessoa física, com tratamento e mascaramento de CPF.", "objeto": "Scripted REST API", "horas": 6, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F1-07", "titulo": "API de ingestão — ITCD", "descricao": "Receber os débitos de ITCD, de menor volume. Sem score na base de exemplo, esses contribuintes seguem os critérios de fallback.", "objeto": "Scripted REST API", "horas": 4, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F1-08", "titulo": "API de ingestão — SNE / DT-e", "descricao": "Receber débitos e sinalizações de cobrança coercitiva feita por outra coordenadoria (por exemplo, protesto via PGE). A sinalização só informa; o produto nunca age sobre ela.", "objeto": "Scripted REST API", "horas": 5, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F1-09", "titulo": "Validação e normalização de CPF/CNPJ", "descricao": "Conferir o dígito verificador e guardar o documento só com dígitos. Registro inválido é rejeitado e devolvido na resposta da API.", "objeto": "Script Include", "horas": 4, "regras": ["RNF-T-CONF-01"], "fonte": "ETF §2.1"},
+        {"id": "T-F1-10", "titulo": "Consolidação por contribuinte e posição por tributo", "descricao": "Vincular débitos de fontes diferentes ao mesmo contribuinte e manter gravada a posição contribuinte × tributo, para não somar na hora da consulta.", "objeto": "Script Include", "horas": 6, "regras": ["RN-01"], "fonte": "ETF §2.1"},
+        {"id": "T-F1-11", "titulo": "Idempotência por lote e por chave natural", "descricao": "Garantir que reenviar o mesmo pacote ou registro não duplique débito, parcelamento nem sinalização, com controle por fonte, lote e sequência do pacote.", "objeto": "Script Include", "horas": 5, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F1-12", "titulo": "Fechamento do ciclo diário de carga", "descricao": "No prazo de cada fonte, marcar como Falha quem não entregou, disparar a consolidação com o que chegou e gravar a hora da última carga.", "objeto": "Scheduled Job + Flow Designer", "horas": 4, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F1-13", "titulo": "Tratamento de erro e degradação segura por fonte", "descricao": "Quando uma fonte falha, marcar o lote, abrir alerta e manter a última carga válida, sem interromper as outras fontes.", "objeto": "Business Rule + Flow Designer", "horas": 4, "regras": ["RNF-T-DISP-01"], "fonte": "ETF §2.1"},
+        {"id": "T-F1-14", "titulo": "Carga inicial (backfill) e reconciliação", "descricao": "Receber o histórico em pacotes pelas mesmas APIs e conferir os totais por fonte e por tributo.", "objeto": "Script Include", "horas": 5, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F1-15", "titulo": "Reprocessamento de registros rejeitados", "descricao": "Reaplicar a validação sobre o conteúdo guardado da rejeição, sem pedir novo envio à fonte. Acionado por botão na lista de rejeitados.", "objeto": "Script Include + UI Action nativa", "horas": 3, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F1-16", "titulo": "Kit de payloads simulados e testes de contrato", "descricao": "Gerar lotes simulados por fonte, inclusive inválidos e repetidos, e validar cada API contra o contrato enquanto os sistemas parceiros não podem ser consumidos.", "objeto": "Script Include + coleção de testes REST", "horas": 6, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F1-17", "titulo": "Atualização de status dentro do ciclo", "descricao": "Encerrar o caso e a régua de quem regularizou durante o ciclo, para não abordar de novo o contribuinte.", "objeto": "Scheduled Job + Script Include", "horas": 5, "regras": [], "fonte": "ETF §2.1; PLANO slide 14"},
+        {"id": "T-F1-18", "titulo": "Alerta de parcelamento em risco", "descricao": "Marcar como em risco o parcelamento com parcela vencida e refletir isso na posição do contribuinte.", "objeto": "Business Rule", "horas": 3, "regras": [], "fonte": "ETF §2.1; PLANO slide 14"}
+      ]
+    },
+    {
+      "id": "F2", "nome": "Qualificação e Parametrização da Carteira", "epico": "2. Qualificação e Parametrização da Carteira",
+      "perfis": "Coordenador de Cobrança",
+      "resumo": "A Coordenação define critérios versionados (valor, tributo, atraso, instrumento, contumazes e score), simula a carteira, separa massificada de qualificada e sorteia o grupo de controle.",
+      "status_v1": "Na v1",
+      "tarefas": [
+        {"id": "T-F2-01", "titulo": "Versionamento de critérios com prévia obrigatória", "descricao": "Numerar versões em sequência, criar cada nova versão a partir da última publicada e permitir um único rascunho aberto. Publicar exige fundamentação e prévia vigente; mudar parâmetros invalida a prévia.", "objeto": "Business Rule + Flow Designer", "horas": 6, "regras": ["RN-03"], "fonte": "ETF §2.1"},
+        {"id": "T-F2-02", "titulo": "Imutabilidade de versão publicada e de carteira confirmada", "descricao": "Bloquear alteração e exclusão de versão publicada e de carteira confirmada direto na camada de dados.", "objeto": "Business Rule + ACL", "horas": 3, "regras": ["RNF-T-AUD-02"], "fonte": "ETF §2.1"},
+        {"id": "T-F2-03", "titulo": "Motor de aplicação dos critérios", "descricao": "Aplicar valor, tributo, atraso, instrumento, exclusão de contumazes e limite de score (só para quem tem score). Os critérios se combinam por E e são processados em lotes.", "objeto": "Script Include", "horas": 8, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F2-04", "titulo": "Segmentação massificada × qualificada", "descricao": "Classificar cada contribuinte da carteira conforme o tipo-alvo definido na versão dos critérios.", "objeto": "Script Include", "horas": 4, "regras": ["RN-04"], "fonte": "ETF §2.1"},
+        {"id": "T-F2-05", "titulo": "Sorteio do grupo de controle reproduzível", "descricao": "Sortear 3% da carteira segmentada (percentual padrão) como grupo de controle, gravando a semente para que o sorteio possa ser refeito.", "objeto": "Script Include", "horas": 4, "regras": ["RN-09"], "fonte": "ETF §2.1"},
+        {"id": "T-F2-06", "titulo": "Simulação e confirmação da carteira", "descricao": "Gerar a prévia sem efeito colateral. A confirmação só aceita versão publicada e, ao confirmar, libera as réguas e cria os casos.", "objeto": "Flow Designer", "horas": 5, "regras": [], "fonte": "ETF §2.1"}
+      ]
+    },
+    {
+      "id": "F3", "nome": "Scoring de Liquidez (Priorização Inteligente)", "epico": "2. Qualificação e Parametrização da Carteira",
+      "perfis": "Gestor de Integração · Coordenador de Cobrança",
+      "resumo": "Recebe o score de liquidez da UFMT por lote, classifica em faixas parametrizáveis e usa critérios determinísticos para quem não tem score. Inclui o Painel do Score.",
+      "status_v1": "Na v1",
+      "tarefas": [
+        {"id": "T-F3-01", "titulo": "API de ingestão — Score UFMT", "descricao": "Receber o score por lote (cerca de 1,4 milhão de linhas no exemplo), vincular ao contribuinte pelo documento e registrar a versão do modelo.", "objeto": "Scripted REST API", "horas": 5, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F3-02", "titulo": "Classificação por faixa e fallback determinístico", "descricao": "Classificar o score em faixas parametrizáveis. Contribuinte sem score segue os critérios determinísticos.", "objeto": "Script Include", "horas": 4, "regras": ["RN-AI-01"], "fonte": "ETF §2.1"},
+        {"id": "T-F3-03", "titulo": "Indicadores do score", "descricao": "Calcular a cobertura por tributo (com e sem score), o score médio e a contagem por faixa, direto das tabelas de score e de posição.", "objeto": "Indicador (Platform Analytics)", "horas": 3, "regras": [], "fonte": "ETF §2.2"},
+        {"id": "T-F3-04", "titulo": "Painel do Score de Liquidez", "descricao": "Montar o dashboard com cobertura, score médio, distribuição por faixa, cobertura por tributo e os últimos lotes recebidos. Visível ao Gestor de Integração e ao Coordenador.", "objeto": "Dashboard (Platform Analytics)", "horas": 5, "regras": [], "fonte": "ETF §2.2; PLANO slide 16"}
+      ]
+    },
+    {
+      "id": "F4", "nome": "Réguas de Cobrança Massificada Multicanal", "epico": "3. Cobrança Automatizada Multicanal",
+      "perfis": "Coordenador de Cobrança",
+      "resumo": "Réguas com etapas, prazos e modelos por segmento. Um motor diário cria e envia as comunicações devidas por e-mail, SMS e WhatsApp, respeitando o consentimento.",
+      "status_v1": "Parcial",
+      "tarefas": [
+        {"id": "T-F4-01", "titulo": "Validações de régua e etapa", "descricao": "Ordenar etapas pelo prazo, impedir etapa duplicada, validar as variáveis do modelo de mensagem e exigir uma régua ativa por segmento.", "objeto": "Business Rule", "horas": 5, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F4-02", "titulo": "Motor de réguas", "descricao": "Calcular diariamente a etapa devida pelo prazo, escalonar quando não há resposta, encerrar quando o contribuinte regulariza e encaminhar à cobrança qualificada quem esgotou a régua.", "objeto": "Script Include + Scheduled Job", "horas": 10, "regras": ["RN-04", "RN-05"], "fonte": "ETF §2.1"},
+        {"id": "T-F4-03", "titulo": "Verificação de consentimento (opt-in / opt-out)", "descricao": "Consultar o consentimento do contribuinte no momento do envio. O opt-out vale imediatamente.", "objeto": "Script Include", "horas": 4, "regras": ["RN-06", "RNF-T-SEG-02"], "fonte": "ETF §2.1"},
+        {"id": "T-F4-04", "titulo": "Renderização de modelo com variáveis", "descricao": "Preencher nome, tributo, valor e vencimento no modelo da mensagem. Se uma variável não existir, falhar de forma controlada.", "objeto": "Script Include", "horas": 3, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F4-05", "titulo": "Camada de envio por canal e integração com o provedor", "descricao": "Isolar o envio por canal (e-mail, SMS, WhatsApp) para poder trocar de provedor. Volume previsto da ordem de 22 mil comunicações por dia.", "objeto": "Script Include + REST Message", "horas": 10, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F4-06", "titulo": "Callback de status de entrega", "descricao": "Receber o status de entrega do provedor e atualizar a comunicação sem duplicar quando o mesmo status chega mais de uma vez.", "objeto": "Scripted REST API", "horas": 5, "regras": ["RNF-T-OBS-01"], "fonte": "ETF §2.1"},
+        {"id": "T-F4-07", "titulo": "Reenvio de falhas com limite de tentativas", "descricao": "Reprocessar as comunicações em Falha até o limite de tentativas configurado em parâmetro.", "objeto": "Flow Designer", "horas": 3, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F4-08", "titulo": "Pausar e retomar régua", "descricao": "Interromper a criação de novas comunicações sem cancelar as que já foram enviadas.", "objeto": "Business Rule", "horas": 2, "regras": [], "fonte": "ETF §2.1"}
+      ]
+    },
+    {
+      "id": "F5", "nome": "Cobrança Qualificada — Operação do Atendente", "epico": "4. Operação do Atendente",
+      "perfis": "Coordenador de Cobrança · Atendente de Cobrança",
+      "resumo": "Casos criados pela carteira confirmada ou pelo esgotamento da régua, distribuídos automaticamente numa fila priorizada, com registro de interações e follow-ups no formulário do caso.",
+      "status_v1": "Parcial",
+      "tarefas": [
+        {"id": "T-F5-01", "titulo": "Criação automática de caso e numeração", "descricao": "Gerar o caso CQ-AAAA-NNNN a partir da carteira confirmada ou do esgotamento da régua.", "objeto": "Flow Designer + Number Maintenance", "horas": 5, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F5-02", "titulo": "Atribuição de casos ao atendente", "descricao": "Distribuir os casos por carga de trabalho ou por grupo de atendentes.", "objeto": "Assignment Rule", "horas": 4, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F5-03", "titulo": "Prioridade da fila", "descricao": "Calcular a prioridade por score, valor e atraso. Para quem não tem score, usar os critérios determinísticos.", "objeto": "Business Rule", "horas": 3, "regras": ["RN-AI-01"], "fonte": "ETF §2.1"},
+        {"id": "T-F5-04", "titulo": "Interação imutável e evento de auditoria", "descricao": "Impedir edição e exclusão de interação salva e gravar um evento de auditoria a cada registro.", "objeto": "Business Rule + ACL", "horas": 4, "regras": ["RN-10", "RNF-T-AUD-01"], "fonte": "ETF §2.1"},
+        {"id": "T-F5-05", "titulo": "Follow-up e lembrete", "descricao": "Criar tarefa de follow-up com data de vencimento e notificar o atendente no dia.", "objeto": "Business Rule + Notification", "horas": 3, "regras": [], "fonte": "ETF §2.1"}
+      ]
+    },
+    {
+      "id": "F6", "nome": "Monitoramento, KPIs e Grupo de Controle", "epico": "5. Monitoramento e KPIs",
+      "perfis": "Coordenador de Cobrança · Gestor de Integração",
+      "resumo": "Painel Institucional com funil, KPIs, tendência da carteira cobrada contra o grupo de controle e realizado × meta por tributo, calculados direto das tabelas.",
+      "status_v1": "Na v1",
+      "tarefas": [
+        {"id": "T-F6-01", "titulo": "Atribuição de origem da regularização", "descricao": "Procurar contato de cobrança na janela parametrizável (padrão de 30 dias) para marcar a regularização como espontânea ou resposta à cobrança. Grupo de controle é sempre espontâneo. Marcar a comunicação paga em até 30 dias.", "objeto": "Script Include", "horas": 7, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F6-02", "titulo": "Marcação de notificado e regularizado", "descricao": "Marcar o item da carteira como notificado ao enviar comunicação ou registrar interação, e como regularizado ao registrar a regularização. É o que permite contar os indicadores direto das tabelas.", "objeto": "Business Rule", "horas": 3, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-F6-03", "titulo": "Indicadores de funil e recuperação", "descricao": "Contar identificados, notificados e regularizados e somar o crédito recuperado.", "objeto": "Indicador (Platform Analytics)", "horas": 4, "regras": [], "fonte": "ETF §2.2"},
+        {"id": "T-F6-04", "titulo": "Taxa de regularização e efeito incremental", "descricao": "Calcular a taxa da carteira cobrada, a do grupo de controle e a diferença entre elas em pontos percentuais.", "objeto": "Indicador + fórmula", "horas": 4, "regras": ["RN-09"], "fonte": "ETF §2.2"},
+        {"id": "T-F6-05", "titulo": "Retorno das réguas", "descricao": "Dividir as comunicações pagas em até 30 dias pelas enviadas, usando a marca gravada na comunicação.", "objeto": "Indicador + fórmula", "horas": 2, "regras": [], "fonte": "ETF §2.2"},
+        {"id": "T-F6-06", "titulo": "Realizado × meta por tributo", "descricao": "Comparar a taxa realizada com a meta cadastrada e alimentar o alerta de meta não atingida.", "objeto": "Indicador + fórmula", "horas": 2, "regras": [], "fonte": "ETF §2.2"},
+        {"id": "T-F6-07", "titulo": "Recortes e coleta agendada", "descricao": "Configurar os recortes por tributo, canal, segmento, atendente e faixa de score, e a coleta diária que forma o histórico da tendência.", "objeto": "Breakdown + Data collection job", "horas": 4, "regras": [], "fonte": "ETF §2.2"},
+        {"id": "T-F6-08", "titulo": "Acesso aos indicadores e dashboards por papel", "descricao": "Restringir o Painel Institucional ao Coordenador e o Painel do Score ao Gestor de Integração e ao Coordenador.", "objeto": "Roles + permissões de compartilhamento", "horas": 2, "regras": [], "fonte": "ETF §2.2"},
+        {"id": "T-F6-09", "titulo": "Padrão visual e filtros compartilhados", "descricao": "Definir uma vez o layout, a formatação em português e os filtros de ciclo, tributo, canal e atendente para os dois painéis.", "objeto": "Dashboard (Platform Analytics)", "horas": 2, "regras": [], "fonte": "ETF §2.2"},
+        {"id": "T-F6-10", "titulo": "Painel Institucional de Cobrança", "descricao": "Montar o funil em quatro etapas, quatro KPIs com variação, a tendência cobrada × controle, a tabela por tributo (realizado, meta e diferença) e o alerta de meta.", "objeto": "Dashboard (Platform Analytics)", "horas": 8, "regras": [], "fonte": "ETF §2.2"}
+      ]
+    },
+    {
+      "id": "TR", "nome": "Transversais — dados, segurança e interface", "epico": "Transversal a todas as funcionalidades",
+      "perfis": "Todos os papéis",
+      "resumo": "Modelo de dados, controle de acesso por papel, mascaramento, auditoria, telas nativas por papel, testes e documentação.",
+      "status_v1": "Na v1",
+      "tarefas": [
+        {"id": "T-TR-01", "titulo": "Modelagem — ingestão e consolidação", "descricao": "Criar as tabelas de fonte, lote, rejeição, contribuinte, débito, posição por tributo, parcelamento, vínculo econômico e sinalização, com relações e listas de opções.", "objeto": "Tabelas App Engine (escopo x_cbi_)", "horas": null, "regras": [], "fonte": "ETF §3 (semana 1) e §4"},
+        {"id": "T-TR-02", "titulo": "Modelagem — score, critérios e carteira", "descricao": "Criar as tabelas de score, faixas de score, versão de critérios, carteira e itens da carteira.", "objeto": "Tabelas App Engine (escopo x_cbi_)", "horas": null, "regras": [], "fonte": "ETF §3 (semana 1) e §4"},
+        {"id": "T-TR-03", "titulo": "Modelagem — régua, comunicação, caso e regularização", "descricao": "Criar as tabelas de régua, etapa, modelo de mensagem, consentimento, comunicação, caso (estendendo task), interação, follow-up e regularização.", "objeto": "Tabelas App Engine (escopo x_cbi_)", "horas": null, "regras": [], "fonte": "ETF §3 (semana 2) e §4"},
+        {"id": "T-TR-04", "titulo": "Modelagem — parâmetros, metas, auditoria e dicionário de dados", "descricao": "Criar as tabelas de parâmetros, metas e eventos de auditoria, e validar o dicionário de dados das 26 tabelas.", "objeto": "Tabelas App Engine (escopo x_cbi_)", "horas": null, "regras": [], "fonte": "ETF §3 (semana 2) e §4"},
+        {"id": "T-TR-05", "titulo": "Matriz de acesso — 5 papéis × grupos de tabelas", "descricao": "Implementar as permissões de Gestor de Integração, Coordenador, Atendente, Auditor e Admin, avaliadas na camada de dados a cada consulta e nunca só escondendo menu.", "objeto": "ACL", "horas": 8, "regras": [], "fonte": "ETF §2.1 e §6.4"},
+        {"id": "T-TR-06", "titulo": "Isolamento da visão do atendente", "descricao": "Garantir que o atendente só leia os casos atribuídos a ele e os dados do contribuinte desses casos.", "objeto": "Query Business Rule + ACL", "horas": 4, "regras": ["RN-11"], "fonte": "ETF §2.1"},
+        {"id": "T-TR-07", "titulo": "Mascaramento de CPF e restrição de exportação", "descricao": "Mascarar por padrão o CPF de pessoa física e restringir a exportação por papel, registrando cada exportação.", "objeto": "ACL de campo + Business Rule", "horas": 4, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-TR-08", "titulo": "Auditoria de alteração de parâmetros", "descricao": "Gravar valor anterior, valor novo, usuário e vigência quando mudarem metas, faixas de score ou parâmetros.", "objeto": "Business Rule", "horas": 3, "regras": [], "fonte": "ETF §2.1"},
+        {"id": "T-TR-09", "titulo": "Módulos, filtros salvos e layouts nativos por papel", "descricao": "Transformar as dez telas do protótipo que não são dashboards em módulos de lista e formulário nativos, com filtros salvos, listas relacionadas e layout por papel. Nenhuma tela customizada.", "objeto": "App Engine (menus, módulos, listas e formulários)", "horas": 6, "regras": [], "fonte": "ETF §2.1 e §6.6"},
+        {"id": "T-TR-10", "titulo": "Testes ponta a ponta e ajustes", "descricao": "Testar com lotes simulados as APIs, a segmentação, as réguas, as permissões, os indicadores e os dashboards, e ajustar as regras de negócio.", "objeto": "Testes", "horas": 47, "regras": [], "fonte": "ETF §2 e §3 (semanas 10 a 12)"},
+        {"id": "T-TR-11", "titulo": "Documentação técnica", "descricao": "Finalizar o dicionário de dados, os contratos das APIs, as regras e as permissões.", "objeto": "Documentação", "horas": 16, "regras": [], "fonte": "ETF §2 e §3 (semana 12)"}
+      ]
+    }
+  ],
+  "pontos_de_atencao": [
+    {"titulo": "APIs dos parceiros sem resposta", "texto": "MPI, Big Data e Score UFMT estão sem resposta da TI. As APIs serão testadas com lotes simulados; a integração ponta a ponta está fora da estimativa.", "fonte": "PLANO slides 22-23; ETF §1.1"},
+    {"titulo": "Licença do Platform Analytics", "texto": "Ainda não confirmada. As tarefas T-F3-03, T-F3-04 e T-F6-03 a T-F6-10 dependem dela.", "fonte": "ETF §1.1; PLANO slides 16 e 19"},
+    {"titulo": "Matriz de acesso a validar", "texto": "A própria ETF marca a matriz de permissões como proposta, a validar com o cliente.", "fonte": "ETF §6.4"},
+    {"titulo": "Contrato do provedor de mensagens", "texto": "O contrato técnico do provedor de e-mail, SMS e WhatsApp está fora da estimativa, e a contratação do WhatsApp ainda precisa ser verificada.", "fonte": "ETF §1.1; PLANO slides 17 e 22"},
+    {"titulo": "Cobrança Ativa (lista de ligações)", "texto": "O protótipo v3 tem a tela «Cobrança Ativa — Lista de Ligações», que a ETF não cobre. Decidir se entra na v1 (geraria tarefas novas).", "fonte": "PROTO v3; WIKI log.md (22/06); ETF §6.6"},
+    {"titulo": "Cronograma: ETF × plano", "texto": "A ETF prevê 1 desenvolvedor sênior por 13 semanas (408 h); o plano fala em squad de dezembro de 2026 a abril de 2027.", "fonte": "ETF §2 e §3; PLANO slide 11"}
+  ]
+}

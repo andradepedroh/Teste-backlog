@@ -1,3 +1,13 @@
+---
+titulo: Visão — Cobrança Inteligente
+tipo: intencao
+atualizado_em: 2026-06-15
+status: ativo
+fontes:
+  - trusted/transversal/execucao (docs "Cobran"/"2.6")
+  - trusted/transversal/gestao-projeto (docs "2.6"/"Cobran")
+  - trusted/ref-spec-prioridade (Executivo Soluções, Planning_Poker_dados)
+---
 # Visão — Cobrança Inteligente
 > Camada de Intenção · Spec-Driven Development
 > Pergunta-mãe: *Quem somos, para quem, com que vocabulário e sob quais leis?*

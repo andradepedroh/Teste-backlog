@@ -1,3 +1,15 @@
+---
+titulo: Monitoramento, KPIs e Grupo de Controle — Contrato
+tipo: contract
+eixo: processo
+status: ativo
+atualizado_em: 2026-06-15
+fontes:
+  - Levantamento de Necessidades 2.6 (N1.6, N1.9, N2.6, N2.7)
+  - Planning_Poker (Produto 6 — US 8, 9, 10, 11)
+  - Executivo Soluções (épico 5 — Monitoramento e KPIs)
+---
+
 # Monitoramento, KPIs e Grupo de Controle — Contrato
 
 > Documento único da Camada de Requisitos desta feature (3 capítulos).

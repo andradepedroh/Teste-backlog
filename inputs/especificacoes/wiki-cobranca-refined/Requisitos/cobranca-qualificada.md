@@ -1,3 +1,15 @@
+---
+titulo: Cobrança Qualificada — Operação do Atendente — Contrato
+tipo: contract
+eixo: processo
+status: ativo
+atualizado_em: 2026-06-15
+fontes:
+  - Levantamento de Necessidades 2.6 (N1.5, N2.5)
+  - Planning_Poker (Produto 6 — US 6, 7)
+  - DECK Cobrança Inteligente (dossiê, cobrança qualificada)
+---
+
 # Cobrança Qualificada — Operação do Atendente — Contrato
 
 > Documento único da Camada de Requisitos desta feature (3 capítulos).

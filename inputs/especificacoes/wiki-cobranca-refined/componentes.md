@@ -1,3 +1,10 @@
+---
+titulo: Componentes — Cobrança Inteligente
+tipo: contract
+atualizado_em: 2026-06-15
+status: ativo
+---
+
 # Componentes
 
 O vocabulário de componentes é **genérico de front-end** — os componentes comuns que se repetem em qualquer UI (button, input, select, table, list, card, tabs, dialog, toolbar, chart…), **agnóstico de framework**. As telas (Cap. 1.2 de cada `Requisitos/<feature>.md`) referenciam o componente pelo **nome genérico** (campo **Componentes:**) e esboçam o layout no bloco ` ```wireframe `. Cada projeto **mapeia** esse vocabulário para a sua lib concreta — aqui o alvo provável é o catálogo de UI do **ServiceNow (Now Experience / componentes nativos)** *(inferência)*; Material Angular, MUI, shadcn/ui e HTML nativo são equivalências possíveis. Este arquivo é só a **referência canônica de vocabulário**.

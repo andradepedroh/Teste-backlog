@@ -1,3 +1,15 @@
+---
+titulo: Réguas de Cobrança Massificada Multicanal — Contrato
+tipo: contract
+eixo: processo
+status: ativo
+atualizado_em: 2026-06-15
+fontes:
+  - Levantamento de Necessidades 2.6 (N1.3, N2.2, N2.3, N2.6, N2.8)
+  - Planning_Poker (Produto 6 — US 2, 4, 13)
+  - DECK Cobrança Inteligente (réguas, exemplo ICMS, opt-in WhatsApp)
+---
+
 # Réguas de Cobrança Massificada Multicanal — Contrato
 
 > Documento único da Camada de Requisitos desta feature (3 capítulos).

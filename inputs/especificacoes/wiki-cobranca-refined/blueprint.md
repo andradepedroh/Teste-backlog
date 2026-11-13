@@ -1,3 +1,9 @@
+---
+titulo: Blueprint — Cobrança Inteligente
+tipo: blueprint
+atualizado_em: 2026-06-15
+status: ativo
+---
 # Blueprint — Cobrança Inteligente
 
 Visão geral da solução organizada pela **cadeia de valor da cobrança administrativa**: do dado bruto de débitos à recuperação mensurada do crédito. Cada etapa agrupa as features que a compõem. Marcadores: `[ator:<ator>]` = persona principal; `[ia]` = feature com componente de IA.

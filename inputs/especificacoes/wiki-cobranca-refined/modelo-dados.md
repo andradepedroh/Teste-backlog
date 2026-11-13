@@ -1,3 +1,9 @@
+---
+titulo: Modelo de Dados (transversal) — Cobrança Inteligente
+tipo: contract
+atualizado_em: 2026-06-15
+status: ativo
+---
 # Modelo de Dados (transversal)
 
 Modelo de dados canônico de **Cobrança Inteligente**, compartilhado por todas as features. Cada feature **referencia** estas entidades; no seu Cap. 3 (Dados) descreve apenas os campos e entidades **próprios** dela (configurações, logs, instâncias de execução), apontando para a entidade canônica de origem aqui. A terminologia segue o [Glossário](visao.md) (Visão §2); valores numéricos são parâmetros de instância (`RN-NN`, Visão §3). Inferências marcadas com `*(inferência)*`.

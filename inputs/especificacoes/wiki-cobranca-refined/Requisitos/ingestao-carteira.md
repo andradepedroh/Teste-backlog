@@ -1,3 +1,15 @@
+---
+titulo: Ingestão e Carteira Consolidada — Contrato
+tipo: contract
+eixo: processo
+status: ativo
+atualizado_em: 2026-06-15
+fontes:
+  - Levantamento de Necessidades 2.6 (N1.1, N1.7, N1.8)
+  - Planning_Poker (Produto 6 — US 1, 5, 12)
+  - Potenciais oportunidades P2.6 (Plataforma para gestão de carteiras)
+---
+
 # Ingestão e Carteira Consolidada — Contrato
 
 > Documento único da Camada de Requisitos desta feature (3 capítulos). Responde: *como o usuário interage* (Cap. 1), *o que cumpre, para quem e como provar* (Cap. 2) e *que informação manipula* (Cap. 3).

@@ -1,3 +1,10 @@
+---
+titulo: Overview — Wiki Cobrança Inteligente
+tipo: overview
+atualizado_em: 2026-06-15
+status: ativo
+---
+
 # Wiki Cobrança Inteligente
 
 A **Cobrança Inteligente** (P2.6 — *Sistema de Cobrança Implantado*, SEFAZ-MT / Profisco II) é a plataforma única de gestão da cobrança administrativa do crédito tributário. Este wiki destila o conhecimento de produto — visão, vocabulário, regras, telas e requisitos — necessário para especificar e prototipar a solução, que substitui a operação fragmentada atual (CCF, MPI, IPVA, ITCD, SNE, planilhas) por consolidação, qualificação parametrizável, réguas automatizadas, dossiê e mensuração causal.

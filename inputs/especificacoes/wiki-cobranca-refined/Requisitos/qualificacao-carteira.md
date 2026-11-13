@@ -1,3 +1,15 @@
+---
+titulo: Qualificação e Parametrização da Carteira — Contrato
+tipo: contract
+eixo: processo
+status: ativo
+atualizado_em: 2026-06-15
+fontes:
+  - Levantamento de Necessidades 2.6 (N1.2, N1.4, N2.1, N2.4)
+  - Planning_Poker (Produto 6 — US 3, 11, 14)
+  - Diagnóstico de Situação Atual (qualificação, grupo de controle)
+---
+
 # Qualificação e Parametrização da Carteira — Contrato
 
 > Documento único da Camada de Requisitos desta feature (3 capítulos).

@@ -1,3 +1,10 @@
+---
+titulo: Telas Comuns (arquétipos transversais) — Cobrança Inteligente
+tipo: contract
+atualizado_em: 2026-06-15
+status: ativo
+---
+
 # Telas Comuns (arquétipos transversais)
 
 Arquétipos de tela reutilizáveis de **Cobrança Inteligente**: padrões de layout/comportamento que se repetem nas features. Uma tela de feature que segue um arquétipo **referencia-o e descreve só o que muda** (colunas, filtros, ações, estados). Objetivo: **minimizar o número de telas** — pensar telas transversalmente e **fundir** vistas (abas, drawers, painéis laterais). Cada `#### T-NN` declara seu `**Arquétipo:** A-NN`. Componentes citados seguem [componentes.md](componentes.md).

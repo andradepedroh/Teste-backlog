@@ -1,3 +1,10 @@
+---
+titulo: Índice — Wiki Cobrança Inteligente
+tipo: indice
+atualizado_em: 2026-06-15
+status: ativo
+---
+
 # Índice do Wiki
 
 Catálogo de todas as páginas do wiki, por categoria. Ler PRIMEIRO ao responder uma query.

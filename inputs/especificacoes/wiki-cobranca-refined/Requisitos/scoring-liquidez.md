@@ -1,3 +1,15 @@
+---
+titulo: Scoring de Liquidez (Priorização Inteligente) — Contrato
+tipo: contract
+eixo: processo
+status: ativo
+atualizado_em: 2026-06-15
+fontes:
+  - Potenciais oportunidades P2.6 (Plataforma de priorização Inteligente — Scoring de Liquidez [UFMT])
+  - Planning_Poker (Produto 6 — US 14)
+  - DECK Cobrança Inteligente (Rating / uso na cobrança)
+---
+
 # Scoring de Liquidez (Priorização Inteligente) — Contrato
 
 > Documento único da Camada de Requisitos desta feature (3 capítulos).

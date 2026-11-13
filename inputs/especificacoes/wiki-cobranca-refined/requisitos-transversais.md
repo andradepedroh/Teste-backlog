@@ -1,3 +1,9 @@
+---
+titulo: Requisitos Transversais — Cobrança Inteligente
+tipo: contract
+atualizado_em: 2026-06-15
+status: ativo
+---
 # Requisitos Transversais
 
 > Camada de Requisitos · Requisitos cross-cutting · Spec-Driven Development

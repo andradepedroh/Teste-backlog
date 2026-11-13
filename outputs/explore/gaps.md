@@ -36,4 +36,4 @@
 
 | Artefato dispensado | Motivo | Quem decidiu | Data |
 |---|---|---|---|
-| protótipo de alta fidelidade (spec-prototype) | simulação do fluxo do harness focada em gerar o backlog; a solução usa telas nativas do ServiceNow, e o protótipo v3 existente fica como insumo (`inputs/prototipo/`). Isenção formal em `outputs/spec/auditorias/_isencoes/` | responsável do projeto | 2026-11-13 |
+| protótipo de alta fidelidade (spec-prototype) | simulação do fluxo do harness focada em gerar o backlog; a solução usa telas nativas do ServiceNow, e o protótipo v3 existente fica como insumo (`inputs/prototipo/`). Isenção formal em `outputs/spec/auditorias/_isencoes/` | Pedro | 2026-11-13 |

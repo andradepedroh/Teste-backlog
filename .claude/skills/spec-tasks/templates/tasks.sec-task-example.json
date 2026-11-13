@@ -1,0 +1,113 @@
+{
+  "_comment": "Exemplo de task class=security injetada por spec-security-review. Task v5.3 valida contra #/definitions/Task. type = tipo da task da story (nao literal 'task'); metadados de seguranca no sub-objeto security{}; sumario dentro de agentExecutionContext.",
+  "id": "SEC-001",
+  "storyId": "STORY-001",
+  "type": "backend",
+  "class": "security",
+  "effortEstimate": "M",
+  "durationEstimatedDays": 1,
+  "title": "SEC-001 - Filtrar consulta de pedido pelo dono (prevencao de IDOR)",
+  "description": "Implementar verificacao de propriedade em GET /pedidos/{id}, retornando 404 quando o pedido nao pertence ao cliente autenticado.",
+  "security": {
+    "severity": "ALTO",
+    "cvss": 8.1,
+    "owasp": ["A01", "API1"],
+    "stride": "I",
+    "mustCompleteBeforeStoryClose": true
+  },
+  "agentExecutionContext": {
+    "selfContainedSummary": "CONTROLE DE SEGURANCA (IDOR/BOLA): a story expoe GET /pedidos/{id} sem verificar se o pedido pertence ao cliente autenticado, permitindo que um atacante enumere IDs e leia pedidos de terceiros (dados pessoais, valores, enderecos). VULNERABILIDADE: Broken Object Level Authorization (OWASP A01 / API1). RISCO CONCRETO: qualquer usuario autenticado consegue ler o pedido de qualquer outro cliente trocando o id na URL, expondo PII e dados financeiros. CONTROLE A IMPLEMENTAR: toda consulta de recurso deve filtrar pelo dono - WHERE pedido.cliente_id = clienteAtual - e retornar 404 (nao 403) mesmo quando o recurso existe, para nao vazar a existencia do id. FLUXO: (1) extrair clienteId do JWT; (2) buscar o pedido filtrando por id E cliente_id; (3) se nao encontrado, retornar 404 generico; (4) registrar tentativa de acesso negado no log de auditoria. VERIFICACAO: teste que autentica o cliente A e tenta ler um pedido do cliente B deve receber 404; teste que le o proprio pedido deve receber 200. Este controle e pre-requisito para fechar a story.",
+    "criticalWarnings": [
+      "Retornar 404 (nao 403) para nao revelar a existencia do recurso.",
+      "A verificacao de dono e autoritativa no backend - nunca confiar no frontend."
+    ],
+    "doNotDo": [
+      "Nao confiar em filtro de dono aplicado apenas na camada de apresentacao.",
+      "Nao retornar 403 revelando que o id existe."
+    ],
+    "minimumOutputToDeliver": [
+      "Consulta de pedido filtrando por id e cliente_id do JWT",
+      "Resposta 404 generica para recurso de outro dono",
+      "Teste RED/GREEN de IDOR",
+      "Log de auditoria de acesso negado"
+    ]
+  },
+  "implementationGuidance": {
+    "architecturalDecisions": [
+      "Controle: verificacao de owner em toda query de recurso (filtro WHERE cliente_id = clienteAtual).",
+      "Padrao: repositorio recebe clienteId e nunca busca por id isolado em endpoints de recurso do cliente.",
+      "Anti-padrao: buscar por id e comparar o dono em memoria (abre janela de vazamento por mensagem/latencia)."
+    ],
+    "dataFlow": [
+      "1. Controller: receber GET /pedidos/{id}.",
+      "2. Controller: extrair clienteId do JWT via contexto de seguranca.",
+      "3. Service: chamar repositorio com id e clienteId.",
+      "4. Repository: SELECT ... WHERE id = :id AND cliente_id = :clienteId.",
+      "5. Service: se vazio, lancar NotFound (404).",
+      "6. Service: se encontrado, montar a resposta do pedido.",
+      "7. Auditoria: registrar acesso negado quando 404 por dono divergente.",
+      "8. Controller: retornar 200 com o pedido do proprio cliente.",
+      "9. Controller: retornar 404 generico caso contrario.",
+      "10. Observabilidade: emitir metrica de tentativas de acesso negado."
+    ],
+    "errorHandling": {
+      "RECURSO_DE_OUTRO_DONO": {
+        "scenario": "Cliente autenticado solicita um pedido que pertence a outro cliente.",
+        "action": "Retornar 404 generico e registrar a tentativa no log de auditoria.",
+        "userImpact": "O atacante nao distingue 'nao existe' de 'nao e seu'."
+      },
+      "RECURSO_INEXISTENTE": {
+        "scenario": "Id de pedido nao existe.",
+        "action": "Retornar 404 generico identico ao caso anterior.",
+        "userImpact": "Resposta uniforme evita enumeracao."
+      },
+      "SEM_AUTENTICACAO": {
+        "scenario": "Requisicao sem JWT valido.",
+        "action": "Retornar 401.",
+        "userImpact": "Acesso negado antes de qualquer consulta."
+      }
+    },
+    "observability": {
+      "structuredLogging": [
+        "Log de acesso negado por dono (WARN): correlationId, clienteId, pedidoIdSolicitado.",
+        "Log de consulta bem-sucedida (INFO): correlationId, clienteId, pedidoId.",
+        "Log de requisicao sem auth (WARN): correlationId, ip."
+      ],
+      "metrics": [
+        "Counter idor_access_denied_total por endpoint.",
+        "Counter pedido_consulta_total por resultado.",
+        "Histogram pedido_consulta_duration_seconds."
+      ],
+      "tracing": [
+        "Span GET /pedidos/{id} com atributo de resultado de autorizacao."
+      ]
+    },
+    "securityConsiderations": [
+      "Verificacao de owner autoritativa no backend.",
+      "Resposta 404 uniforme para nao vazar existencia de id.",
+      "Auditoria de tentativas de acesso negado."
+    ],
+    "testingStrategy": {
+      "unitTests": [
+        "consultarPedido_deOutroCliente_deveRetornar404 (RED sem o filtro, GREEN com o filtro).",
+        "consultarPedido_proprio_deveRetornar200."
+      ],
+      "integrationTests": [
+        "GET /pedidos/{id} de outro dono retorna 404.",
+        "GET /pedidos/{id} proprio retorna 200 com o pedido."
+      ]
+    }
+  },
+  "acceptanceCriteria": [
+    { "id": "AC-SEC-001-01", "statement": "Consultar pedido de outro cliente retorna 404 sem vazar existencia do recurso." },
+    { "id": "AC-SEC-001-02", "statement": "Consultar pedido proprio retorna 200 com os dados corretos." }
+  ],
+  "tddTests": {
+    "red": "Cliente A autenticado le pedido do cliente B via id na URL e recebe 200 - prova o IDOR.",
+    "green": "Com o filtro por dono, o mesmo request recebe 404."
+  },
+  "validation": {
+    "businessCriteria": ["Cliente so acessa os proprios pedidos."],
+    "technicalCriteria": ["404 para recurso de outro dono", "200 para recurso proprio"]
+  }
+}

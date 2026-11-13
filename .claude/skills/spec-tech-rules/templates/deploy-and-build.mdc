@@ -1,0 +1,102 @@
+---
+description: "{{DEPLOY_DESCRIPTION}}"
+globs: "**/Dockerfile*,**/.env*,**/docker-compose*"
+alwaysApply: false
+---
+
+# Deploy e Build — {{PROJECT_NAME}}
+
+> **Modelo de entrega:** repositório entrega `Dockerfile` + `docker-compose.yml` para dev local.
+> Build de imagem, registry e deploy em produção são **responsabilidade do cliente**.
+
+---
+
+## Dockerfile
+
+**MUST:** Multi-stage — imagem final sem ferramentas de build.
+
+**MUST:** Usuário não-root no container — ver **security.mdc**.
+
+```dockerfile
+{{DOCKERFILE_CONTENT}}
+```
+
+---
+
+## Docker Compose (dev local)
+
+```yaml
+{{DOCKER_COMPOSE_CONTENT}}
+```
+
+**MUST:** Rede `{{DOCKER_NETWORK}}` como `external: true` — nunca redefinir serviços de infra compartilhada.
+
+**MUST:** `depends_on` com `condition: service_healthy` para dependências críticas.
+
+---
+
+## Secrets e Configuração
+
+**MUST:** `.env.example` commitado com placeholders e comentários por variável.
+
+**MUST:** `.env` real no `.gitignore` — nunca commitado.
+
+**MUST NOT:** Credenciais em `application.yml`, `docker-compose.yml` ou código.
+
+```bash
+# .env.example
+{{ENV_EXAMPLE_CONTENT}}
+```
+
+---
+
+## Ambientes e Profiles
+
+| Ambiente | Propósito | DB | Integrações |
+|---------|-----------|-----|------------|
+{{ENVIRONMENTS_TABLE}}
+
+```{{CONFIG_FORMAT}}
+{{PROFILES_CONFIG}}
+```
+
+**MUST:** `{{PROFILE_ENV_VAR}}` via variável de ambiente — nunca hardcoded.
+
+---
+
+## Branching — {{BRANCHING_STRATEGY}}
+
+| Branch | Propósito | Protegida |
+|--------|-----------|-----------|
+{{BRANCHES_TABLE}}
+
+**MUST:** Branches em `kebab-case` com ID de work item: `{{BRANCH_NAMING_EXAMPLE}}`
+
+---
+
+## Pipeline (referência para o cliente)
+
+```
+{{PIPELINE_STAGES}}
+```
+
+**MUST:** Healthcheck passa antes de E2E iniciar.
+
+**MUST:** Gate de aprovação humana antes de `{{GATE_ENVIRONMENTS}}`.
+
+---
+
+## Rollback
+
+**MUST:** Tags de imagem imutáveis — rollback = redeploy da tag anterior.
+
+**MUST:** Rollback de banco via nova migration forward-only — ver **database.mdc**.
+
+---
+
+## Anti-patterns
+
+- Imagem com `{{BUILD_TOOL_IMAGE}}` em runtime — usar imagem de runtime mínima
+- Tag `latest` em produção — usar `{{TAG_STRATEGY}}`
+- Secrets em variáveis de ambiente da imagem Docker (expostos via `docker inspect`)
+- Debug port (`{{DEBUG_PORT}}`) exposto fora do ambiente local

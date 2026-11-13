@@ -1,0 +1,14 @@
+{
+  "name": "spec-kit-vendored-ajv",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Manifesto do ajv vendorizado do kit. node_modules/ e gitignored, entao ESTE arquivo + package-lock.json sao o unico jeito de reproduzir o vendor em clone limpo: rode `npm ci` NESTE diretorio. Consumido por spec-tasks/templates/validate-examples.mjs e por spec-data-model/scripts/validate-data-model.mjs (gate DATAMODEL_VALID). Sem o vendor os validadores nao abortam: caem na rota efemera (npx) ou no validador estrutural reduzido embutido.",
+  "scripts": {
+    "vendor": "npm ci",
+    "validate-examples": "node validate-examples.mjs"
+  },
+  "dependencies": {
+    "ajv": "8.20.0",
+    "ajv-formats": "3.0.1"
+  }
+}

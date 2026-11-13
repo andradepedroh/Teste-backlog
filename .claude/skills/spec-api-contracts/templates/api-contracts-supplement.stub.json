@@ -1,0 +1,33 @@
+{
+  "_comment": "Suplemento ao api-contracts.yaml — campos não cobertos pelo padrão OpenAPI. Gerado por spec-api-contracts. Ao preencher, substituir generatedAt pelo timestamp ISO-8601 real da geração.",
+  "skillVersion": "spec-api-contracts-1.4",
+  "schemaVersion": "api-contracts/v1",
+  "generatedAt": "2026-01-15T09:30:00Z",
+  "outputLanguage": "pt-BR",
+  "operations": [
+    {
+      "operationId": "criarRecursoExemplo",
+      "httpSemantics": [
+        { "status": 201, "meaning": "Recurso criado; Location header aponta para o novo recurso. Mesma Idempotency-Key com o MESMO payload devolve este mesmo 201 sem reprocessar." },
+        { "status": 400, "meaning": "Campos obrigatórios ausentes ou formato inválido." },
+        { "status": 409, "meaning": "Idempotency-Key já processada com payload DIFERENTE — conflito; o cliente deve gerar nova chave." },
+        { "status": 422, "meaning": "Dados válidos mas violam regra de negócio." }
+      ],
+      "idempotency": {
+        "supported": true,
+        "keyHeader": "Idempotency-Key",
+        "keyFormat": "UUID v4 gerado pelo cliente",
+        "storageTtlSeconds": 86400,
+        "behavior": "Mesma chave + mesmo payload → retornar o mesmo 201 com o recurso original, sem reprocessar. Mesma chave + payload diferente → 409 (ver httpSemantics)."
+      },
+      "rateLimiting": {
+        "rateLimit": "100 req/min por cliente autenticado",
+        "headers": ["X-RateLimit-Limit", "X-RateLimit-Remaining", "X-RateLimit-Reset"],
+        "exceededStatus": 429
+      },
+      "linkedRequirements": ["RF-MOD-EXEMPLO-001"],
+      "linkedBusinessRules": ["RN-XXX-001"],
+      "x-open-questions": []
+    }
+  ]
+}

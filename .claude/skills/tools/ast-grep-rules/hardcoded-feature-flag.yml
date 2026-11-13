@@ -1,0 +1,28 @@
+# Regra 12 — flags / feature toggles hardcoded
+id: hardcoded-feature-flag-js
+language: javascript
+severity: hint
+message: "Flag/toggle booleana hardcoded — comportamento de negócio ligado/desligado em código. Registrar como RN condicional e candidata a parametrização."
+rule:
+  any:
+    - pattern: const $NAME = true
+    - pattern: const $NAME = false
+    - pattern: let $NAME = true
+    - pattern: let $NAME = false
+    - pattern: var $NAME = true
+    - pattern: var $NAME = false
+constraints:
+  NAME:
+    regex: "(?i)(feature|flag|toggle|enable|disable|habilitad|ativo|ativa|permite|allow)"
+---
+id: hardcoded-feature-flag-py
+language: python
+severity: hint
+message: "Flag/toggle booleana hardcoded — comportamento de negócio ligado/desligado em código. Registrar como RN condicional e candidata a parametrização."
+rule:
+  any:
+    - pattern: $NAME = True
+    - pattern: $NAME = False
+constraints:
+  NAME:
+    regex: "(?i)(feature|flag|toggle|enable|disable|habilitad|ativo|ativa|permite|allow)"

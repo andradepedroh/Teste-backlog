@@ -1,0 +1,20 @@
+# Regra 10 — regras de elegibilidade (if idade/valor/perfil)
+id: eligibility-rule-js
+language: javascript
+severity: hint
+message: "Condicional sobre idade/valor/perfil/renda — candidato a regra de elegibilidade (quem pode, a partir de quanto). Redigir RN com critério e fonte."
+rule:
+  kind: if_statement
+  has:
+    field: condition
+    regex: "(?i)(idade|age|valor|amount|limite|limit|perfil|profile|renda|income|score|saldo|balance|elegiv|eligib)"
+---
+id: eligibility-rule-py
+language: python
+severity: hint
+message: "Condicional sobre idade/valor/perfil/renda — candidato a regra de elegibilidade (quem pode, a partir de quanto). Redigir RN com critério e fonte."
+rule:
+  kind: if_statement
+  has:
+    field: condition
+    regex: "(?i)(idade|age|valor|amount|limite|limit|perfil|profile|renda|income|score|saldo|balance|elegiv|eligib)"

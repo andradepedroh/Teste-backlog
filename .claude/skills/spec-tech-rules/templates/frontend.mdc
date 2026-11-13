@@ -1,0 +1,68 @@
+---
+description: "{{FRONTEND_DESCRIPTION}}"
+globs: "**/*.ts,**/*.tsx,**/*.js,**/*.jsx,**/*.mjs,**/*.html,**/*.css"
+alwaysApply: false
+---
+
+# Frontend — {{PROJECT_NAME}}
+
+{{#if CUSTOM_STACK}}
+> Stack customizada pelo cliente: {{CUSTOM_STACK_DESCRIPTION}}
+> Ver decisões específicas abaixo.
+{{else}}
+> Baseado no padrão empresa (Next.js App Router). Ver `frontend-default.mdc` para regras completas — num projeto com o harness Elo, a constituição `.claude/rules/harness/frontend.md`, de mesmo corpo.
+{{/if}}
+
+---
+
+## Decisões deste Projeto
+
+| Decisão | Valor |
+|---------|-------|
+| Acessibilidade | {{A11Y_LEVEL}} |
+| Internacionalização | {{I18N}} |
+{{EXTRA_DECISIONS_TABLE}}
+
+---
+
+{{#if CUSTOM_STACK}}
+
+## Stack
+
+| Camada | Escolha |
+|--------|---------|
+{{CUSTOM_STACK_TABLE}}
+
+---
+
+## Estrutura
+
+```
+{{CUSTOM_FOLDER_STRUCTURE}}
+```
+
+---
+
+## Regras Específicas
+
+{{CUSTOM_RULES}}
+
+---
+
+## Anti-patterns
+
+{{CUSTOM_ANTIPATTERNS}}
+
+{{else}}
+
+Todas as regras do padrão empresa se aplicam integralmente — ver `frontend-default.mdc` (num projeto com o harness Elo, a constituição `.claude/rules/harness/frontend.md`, de mesmo corpo).
+
+As seções abaixo registram apenas os overrides e adições específicas deste projeto.
+
+{{#if PROJECT_OVERRIDES}}
+## Overrides e Adições
+
+{{PROJECT_OVERRIDES}}
+{{/if}}
+
+{{/if}}

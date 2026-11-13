@@ -1,0 +1,57 @@
+{
+  "_comment": "Exemplo greenfield — projeto sem estruturas existentes. Substitua placeholders pelo conteúdo real.",
+  "skillVersion": "spec-data-model-1.4",
+  "schemaVersion": "data-model/v1",
+  "generatedAt": "2026-01-01T00:00:00Z",
+  "outputLanguage": "pt-BR",
+  "projectName": "Projeto Exemplo Greenfield",
+  "changelog": [
+    { "version": "1.0", "date": "2026-01-01", "summary": "Versão inicial do modelo greenfield, sem estruturas existentes", "structural": true }
+  ],
+  "boundedContexts": [
+    {
+      "id": "BC-CADASTRO",
+      "name": "Cadastro",
+      "description": "Domínio responsável pelo ciclo de vida de cadastros de usuários e organizações",
+      "moduleIds": ["MOD-CADASTRO"],
+      "entities": [
+        {
+          "name": "Usuario",
+          "operationType": "NEW",
+          "purpose": "Representa um usuário autenticado do sistema",
+          "dataOwnership": { "mode": "OWNED", "source": "—", "notes": "—" },
+          "tableName": "tb_usuario",
+          "identifierStrategy": "UUID",
+          "columns": [
+            { "name": "id", "type": "UUID", "nullable": false, "unique": true, "operationType": "NEW", "notes": "PK" },
+            { "name": "email", "type": "VARCHAR(255)", "nullable": false, "unique": true, "operationType": "NEW", "notes": "Login único", "businessRuleRef": "RN-CADASTRO-001" },
+            { "name": "nome_completo", "type": "VARCHAR(500)", "nullable": false, "unique": false, "operationType": "NEW", "notes": null },
+            { "name": "status", "type": "VARCHAR(30)", "nullable": false, "unique": false, "operationType": "NEW", "notes": "Ver enumeração StatusUsuario" },
+            { "name": "criado_em", "type": "TIMESTAMP WITH TIME ZONE", "nullable": false, "unique": false, "operationType": "NEW", "notes": null }
+          ],
+          "primaryKey": ["id"],
+          "indexes": [
+            { "name": "idx_usuario_email", "columns": ["email"], "unique": true, "purpose": "Login por e-mail" }
+          ],
+          "relationships": [],
+          "traceability": [{ "section": "§ Módulo MOD-CADASTRO", "itemId": "RF-CADASTRO-001", "excerpt": "O sistema deve permitir o cadastro de usuários com e-mail único" }]
+        }
+      ],
+      "enumerations": [
+        {
+          "name": "StatusUsuario",
+          "values": [
+            { "value": "PENDENTE_VERIFICACAO", "label": "Pendente de verificação" },
+            { "value": "ATIVO", "label": "Ativo" },
+            { "value": "SUSPENSO", "label": "Suspenso" },
+            { "value": "ENCERRADO", "label": "Encerrado" }
+          ],
+          "usedIn": ["Usuario.status"]
+        }
+      ],
+      "asyncChannels": []
+    }
+  ],
+  "migrationsState": [],
+  "openQuestions": []
+}

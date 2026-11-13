@@ -1,0 +1,89 @@
+{
+  "_comment": [
+    "Análise item a item do que falta testar — alimenta a aba «O que falta testar» (#lacunas-teste).",
+    "Quem escreve é o AGENTE, depois da coleta (passo «Analisar o que falta testar» do SKILL.md).",
+    "O CLI só lê este arquivo: grave em outputs/spec/status/test-gaps.json e rode node cli.mjs --render-only.",
+    "",
+    "Regras de junção com a matriz de rastreabilidade:",
+    "  · 'id' tem de existir na matriz — id desconhecido vira aviso TEST_GAPS_UNKNOWN_ID e não entra na aba;",
+    "  · cada item SEM teste deve aparecer exatamente uma vez; repetido vira TEST_GAPS_DUPLICATE_ID;",
+    "  · item da matriz sem entrada aqui sai com o selo «análise detalhada pendente»;",
+    "  · 'generatedAt' mais antigo que a coleta, ou 'traceTotal' diferente do total da matriz, vira TEST_GAPS_STALE.",
+    "",
+    "Não invente comportamento que não está na especificação. Cenário é uma frase «quando X, o sistema Y»",
+    "com os valores concretos da regra. Divergência entre especificação e código vai em 'poQuestions'.",
+    "Chaves em português também são aceitas (itens, regra, implementacao, testesACriar, prioridade, ...).",
+    "",
+    "Vocabulários:",
+    "  implementation.state: implemented | partial | absent | backlog-only",
+    "  existingTest.action:  mark-id (o teste existe; falta pôr o código no nome) | none",
+    "  testsToCreate.layer:  unitario | integracao | contrato | e2e-api | e2e-tela",
+    "  priority:             alta | media | baixa",
+    "",
+    "Opcionais: 'traceTotal' (total da matriz sobre a qual a análise foi feita — habilita o aviso de",
+    "desatualização por total), 'areas' (agrupamento de módulos em áreas, os lotes da análise) e 'area'",
+    "por item. Sem área declarada, a área é o próprio módulo do item."
+  ],
+  "generatedAt": "2026-10-14",
+  "basis": "relatório de 2026-10-14, branch main de 2026-10-14",
+  "traceTotal": 120,
+  "areas": [
+    { "name": "Pedidos e simulação", "modules": ["MOD-PEDIDOS", "MOD-SIMULACAO"] }
+  ],
+  "items": [
+    {
+      "id": "RN-PED-003",
+      "rule": "O pedido do tipo atacado exige quantidade com até 3 casas decimais; acima disso, o sistema recusa o pedido.",
+      "implementation": {
+        "state": "implemented",
+        "where": [
+          { "file": "pedidos-api/src/main/java/com/exemplo/pedidos/domain/Quantidade.java", "role": "valida a quantidade informada antes de gravar o pedido" }
+        ]
+      },
+      "existingTest": {
+        "file": "pedidos-api/src/test/java/com/exemplo/pedidos/domain/QuantidadeTest.java",
+        "test": "QuantidadeTest::recusaMaisDeTresCasas",
+        "action": "mark-id"
+      },
+      "testsToCreate": [
+        {
+          "layer": "unitario",
+          "repo": "pedidos-api",
+          "file": "src/test/java/com/exemplo/pedidos/domain/QuantidadeTest.java",
+          "scenarios": [
+            "quando a quantidade tem 3 casas decimais (1,234), o sistema aceita",
+            "quando a quantidade tem 4 casas decimais (1,2345), o sistema recusa e informa o limite"
+          ]
+        }
+      ],
+      "priority": "media",
+      "priorityReason": "já existe teste que confere o comportamento; falta o código no nome e o cenário do limite",
+      "poQuestions": [],
+      "doneWithoutCode": []
+    },
+    {
+      "id": "RF-MOD-SIMULACAO-010",
+      "rule": "O cliente baixa o resumo da simulação em PDF.",
+      "implementation": { "state": "backlog-only", "where": [] },
+      "existingTest": null,
+      "testsToCreate": [
+        {
+          "layer": "e2e-tela",
+          "repo": "pedidos-e2e",
+          "file": "e2e/simulacao/resumo-pdf.spec.ts",
+          "scenarios": ["quando a simulação está concluída, o sistema oferece o PDF do resumo com os dados informados"]
+        }
+      ],
+      "priority": "baixa",
+      "priorityReason": "não implementado; o teste nasce no mesmo card da implementação",
+      "poQuestions": ["A especificação pede PDF; o protótipo mostra só a impressão da página. Qual vale?"],
+      "doneWithoutCode": []
+    }
+  ],
+  "poQuestions": [
+    { "area": "Pedidos e simulação", "text": "O limite de casas decimais vale também para o pedido do tipo varejo?" }
+  ],
+  "contradictingTests": [
+    { "test": "CadastroTest::aceitaSemDocumento", "rule": "RN-CAD-001", "text": "o teste aceita o cadastro sem documento; a regra diz que o documento é obrigatório" }
+  ]
+}

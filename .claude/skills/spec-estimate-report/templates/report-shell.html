@@ -1,0 +1,1581 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__REPORT_TITLE__</title>
+<style>
+/* ============================================================
+   PALETA — porto: água profunda, aço, livrea de guindaste
+   Neutros com viés ciano-esverdeado (escolhidos, não herdados)
+   ============================================================ */
+:root{
+  color-scheme: light;
+  --ground:#eef1f0; --surface:#ffffff; --surface-2:#f7f9f8; --surface-3:#e7ecea;
+  --ink:#0d1b21; --ink-2:#3d5158; --ink-3:#6b7f86; --ink-4:#93a4a9;
+  --line:#dae1df; --line-2:#c3ceca;
+  --accent:#b4661a; --accent-ink:#8d4f12; --accent-soft:#fbf0e2;
+  --deep:#17575e; --deep-soft:#e4efef;
+
+  /* série categórica validada (CVD-safe, modo claro) */
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+  --s5:#e87ba4; --s6:#008300; --s7:#4a3aa7; --s8:#e34948;
+  /* status */
+  --good:#0ca30c; --warn:#fab219; --serious:#ec835a; --crit:#d03b3b; --warn-ink:#8a5f08;
+
+  --mono: ui-monospace, "SFMono-Regular", "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --rail: 250px;
+  --r:6px;
+}
+@media (prefers-color-scheme: dark){
+  :root:where(:not([data-theme="light"])){
+    color-scheme: dark;
+    --ground:#0a1418; --surface:#12242b; --surface-2:#152a32; --surface-3:#1c343d;
+    --ink:#f2f6f5; --ink-2:#b5c6c9; --ink-3:#8a9da0; --ink-4:#67797e;
+    --line:#223d46; --line-2:#2e4f59;
+    --accent:#dc9440; --accent-ink:#e8a95c; --accent-soft:#2a1d10;
+    --deep:#5fb3ba; --deep-soft:#102b2e;
+    --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+    --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767; --warn-ink:#fab219;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --ground:#0a1418; --surface:#12242b; --surface-2:#152a32; --surface-3:#1c343d;
+  --ink:#f2f6f5; --ink-2:#b5c6c9; --ink-3:#8a9da0; --ink-4:#67797e;
+  --line:#223d46; --line-2:#2e4f59;
+  --accent:#dc9440; --accent-ink:#e8a95c; --accent-soft:#2a1d10;
+  --deep:#5fb3ba; --deep-soft:#102b2e;
+  --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500;
+  --s5:#d55181; --s6:#008300; --s7:#9085e9; --s8:#e66767; --warn-ink:#fab219;
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion: reduce){ html{scroll-behavior:auto} *{animation:none!important;transition:none!important} }
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--sans);
+  font-size:15px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* ---------- ESTRUTURA ---------- */
+.app{display:grid;grid-template-columns:var(--rail) minmax(0,1fr);min-height:100vh}
+.rail{position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--surface);
+  border-right:1px solid var(--line);padding:22px 0 32px;display:flex;flex-direction:column;gap:4px}
+.brand{padding:0 20px 18px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.brand .mark{display:flex;align-items:baseline;gap:7px}
+.brand .bars{display:inline-flex;gap:2px;align-items:flex-end;height:16px}
+.brand .bars i{display:block;width:3px;background:var(--accent);border-radius:1px}
+.brand h1{margin:0;font-size:15px;font-weight:700;letter-spacing:-.01em}
+.brand .sub{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--ink-3);margin-top:7px}
+.nav{display:flex;flex-direction:column;gap:1px;padding:0 10px}
+.nav a{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:var(--r);
+  color:var(--ink-2);text-decoration:none;font-size:13.5px;font-weight:500;border-left:2px solid transparent}
+.nav a .n{font-family:var(--mono);font-size:10px;color:var(--ink-4);min-width:16px}
+.nav a:hover{background:var(--surface-2);color:var(--ink)}
+.nav a.on{background:var(--accent-soft);color:var(--accent-ink);border-left-color:var(--accent);font-weight:650}
+.nav a.on .n{color:var(--accent)}
+.nav a:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.railfoot{margin-top:auto;padding:16px 20px 0;border-top:1px solid var(--line);
+  font-family:var(--mono);font-size:10px;color:var(--ink-4);line-height:1.7}
+.themebtn{margin:14px 20px 0;padding:7px 10px;background:var(--surface-2);border:1px solid var(--line);
+  border-radius:var(--r);color:var(--ink-2);font-family:var(--mono);font-size:10.5px;cursor:pointer;
+  text-transform:uppercase;letter-spacing:.08em}
+.themebtn:hover{background:var(--surface-3);color:var(--ink)}
+
+main{min-width:0;padding:0 0 90px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 40px}
+section.pane{display:none;padding-top:34px}
+section.pane.on{display:block}
+
+/* ---------- CABEÇALHOS ---------- */
+.eyebrow{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.14em;
+  color:var(--accent-ink);font-weight:600}
+.pane > .wrap > .eyebrow{display:block;margin-bottom:9px}
+h2.big{margin:0 0 12px;font-size:clamp(26px,3.3vw,38px);line-height:1.12;font-weight:700;
+  letter-spacing:-.025em;text-wrap:balance;max-width:22ch}
+.lede{font-size:16.5px;color:var(--ink-2);max-width:68ch;margin:0 0 26px}
+h3{margin:38px 0 14px;font-size:19px;font-weight:670;letter-spacing:-.015em;text-wrap:balance}
+h3:first-of-type{margin-top:30px}
+h4{margin:22px 0 9px;font-size:14.5px;font-weight:650}
+.note{font-size:13px;color:var(--ink-3);max-width:74ch;margin:8px 0 0}
+p{max-width:74ch}
+
+/* ---------- FAIXA DE MÉTRICAS ---------- */
+.band{display:grid;grid-template-columns:repeat(auto-fit,minmax(146px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin:0 0 8px}
+.band .k{background:var(--surface);padding:15px 16px}
+.band .k .v{font-size:27px;font-weight:700;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.band .k .l{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;
+  color:var(--ink-3);margin-top:7px}
+.band .k .d{font-size:11.5px;color:var(--ink-4);margin-top:3px}
+
+/* ---------- CARDS ---------- */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px 22px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:14px}
+
+/* ---------- CÓDIGO / ID (a voz do estêncil) ---------- */
+code,.id{font-family:var(--mono);font-size:11.5px;letter-spacing:-.01em}
+.id{background:var(--surface-3);color:var(--ink-2);padding:2px 6px;border-radius:3px;white-space:nowrap}
+.id.a{background:var(--accent-soft);color:var(--accent-ink)}
+.id.d{background:var(--deep-soft);color:var(--deep)}
+
+/* ---------- PÍLULAS DE ESTADO ---------- */
+.pill{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:10px;
+  text-transform:uppercase;letter-spacing:.06em;padding:2.5px 7px;border-radius:20px;
+  border:1px solid var(--line-2);color:var(--ink-2);white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--ink-4)}
+.pill.crit{border-color:var(--crit);color:var(--crit)} .pill.crit::before{background:var(--crit)}
+.pill.high{border-color:var(--serious);color:var(--serious)} .pill.high::before{background:var(--serious)}
+.pill.med{border-color:var(--warn);color:var(--warn-ink)} .pill.med::before{background:var(--warn)}
+.pill.low{border-color:var(--ink-4)}
+.pill.ok{border-color:var(--good);color:var(--good)} .pill.ok::before{background:var(--good)}
+.pill.blk{border-color:var(--s7);color:var(--s7)} .pill.blk::before{background:var(--s7)}
+
+/* ---------- TABELAS ---------- */
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r);background:var(--surface)}
+table{width:100%;border-collapse:collapse;font-size:13.5px;min-width:520px}
+th{text-align:left;font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;
+  color:var(--ink-3);font-weight:600;padding:10px 14px;border-bottom:1px solid var(--line);
+  background:var(--surface-2);position:sticky;top:0;z-index:1}
+td{padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover{background:var(--surface-2)}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:12px}
+.tw.tall{max-height:520px;overflow-y:auto}
+
+/* ---------- GRÁFICOS ---------- */
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:17px 19px}
+.chart .ct{font-size:13.5px;font-weight:650;margin-bottom:2px}
+.chart .cs{font-size:11.5px;color:var(--ink-3);margin-bottom:13px}
+.chart svg{display:block;width:100%;overflow:visible}
+.legend{display:flex;flex-wrap:wrap;gap:9px 15px;margin-top:12px;font-size:11.5px;color:var(--ink-2)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.tip{position:fixed;pointer-events:none;background:var(--ink);color:var(--ground);padding:6px 9px;
+  border-radius:4px;font-size:11.5px;line-height:1.45;z-index:99;opacity:0;transition:opacity .1s;max-width:280px}
+.tip.on{opacity:1}
+.tip b{font-family:var(--mono);font-size:11px}
+
+/* ---------- ÁRVORE DO BACKLOG ---------- */
+.tree{display:flex;flex-direction:column;gap:8px}
+details.node{border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden}
+details.node > summary{list-style:none;cursor:pointer;padding:12px 15px;display:flex;gap:11px;
+  align-items:flex-start;font-size:14px}
+details.node > summary::-webkit-details-marker{display:none}
+details.node > summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+details.node > summary:hover{background:var(--surface-2)}
+.tw-arrow{flex:none;width:9px;height:9px;margin-top:5px;border-right:1.8px solid var(--ink-4);
+  border-bottom:1.8px solid var(--ink-4);transform:rotate(-45deg);transition:transform .14s}
+details.node[open] > summary .tw-arrow{transform:rotate(45deg)}
+.nb{flex:1;min-width:0}
+.nt{font-weight:600;line-height:1.35}
+.nm{display:flex;flex-wrap:wrap;gap:6px 10px;margin-top:5px;font-size:11.5px;color:var(--ink-3);align-items:center}
+.kids{padding:2px 13px 13px 30px;display:flex;flex-direction:column;gap:7px}
+.doc{padding:0 15px 15px 30px;font-size:13px;color:var(--ink-2)}
+.doc .row{margin-top:11px}
+.doc .lab{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;
+  color:var(--ink-4);margin-bottom:4px}
+.doc ul{margin:0;padding-left:17px} .doc li{margin:2px 0}
+.gk{background:var(--surface-2);border-left:2px solid var(--deep);padding:8px 12px;border-radius:0 4px 4px 0;margin-top:6px}
+.gk .gkn{font-weight:600;font-size:12.5px;margin-bottom:4px}
+.gk ol{margin:0;padding-left:16px;font-family:var(--mono);font-size:11.5px;color:var(--ink-2)}
+/* nível: barra de severidade à esquerda */
+details.lv1 > summary{border-left:3px solid var(--accent)}
+details.lv2 > summary{border-left:3px solid var(--deep)}
+details.lv3 > summary{border-left:3px solid var(--s1)}
+details.lv3.enabler > summary{border-left-color:var(--s7)}
+details.lv3.uat > summary{border-left-color:var(--s3)}
+details.lv4 > summary{border-left:3px solid var(--line-2)}
+details.lv4.sec > summary{border-left-color:var(--crit)}
+.filter{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin:0 0 15px}
+.filter input{flex:1;min-width:210px;padding:9px 12px;border:1px solid var(--line-2);border-radius:var(--r);
+  background:var(--surface);color:var(--ink);font-family:var(--sans);font-size:13.5px}
+.filter input:focus-visible{outline:2px solid var(--accent);outline-offset:-1px;border-color:var(--accent)}
+.filter button{padding:8px 13px;border:1px solid var(--line-2);border-radius:var(--r);background:var(--surface);
+  color:var(--ink-2);font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;cursor:pointer}
+.filter button:hover{background:var(--surface-3);color:var(--ink)}
+.hide{display:none!important}
+
+/* ---------- PAINÉIS DE MODO (tradicional × IA) ---------- */
+.modes{display:grid;grid-template-columns:repeat(auto-fit,minmax(238px,1fr));gap:14px;margin:0 0 20px}
+.mode{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;
+  border-top:3px solid var(--ink-4)}
+.mode.trad{border-top-color:var(--s1)}
+.mode.ia{border-top-color:var(--accent)}
+.mode.delta{border-top-color:var(--good);background:var(--surface-2)}
+.mhd{display:flex;flex-direction:column;gap:3px;padding-bottom:11px;margin-bottom:5px;border-bottom:1px solid var(--line)}
+.mtag{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.11em;font-weight:600}
+.mode.trad .mtag{color:var(--s1)} .mode.ia .mtag{color:var(--accent-ink)} .mode.delta .mtag{color:var(--good)}
+.msub{font-size:11.5px;color:var(--ink-3)}
+.mrow{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline;padding:7px 0;
+  border-bottom:1px solid var(--line)}
+.mrow:last-child{border-bottom:0}
+.mrow > span{font-size:12px;color:var(--ink-3)}
+.mrow > b{font-size:17px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;text-align:right}
+.mrow > i{grid-column:2;font-style:normal;font-size:11px;color:var(--ink-4);font-family:var(--mono);text-align:right}
+.mrow.hi > b{font-size:21px}
+.mode.ia .mrow.hi > b{color:var(--accent-ink)}
+.mode.delta .mrow.hi > b{color:var(--good)}
+
+/* ---------- DIVERSOS ---------- */
+.kv{display:grid;grid-template-columns:auto 1fr;gap:7px 15px;font-size:13.5px;align-items:baseline}
+.kv dt{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);white-space:nowrap}
+.kv dd{margin:0;color:var(--ink-2)}
+.callout{border:1px solid var(--line);border-left:3px solid var(--accent);background:var(--accent-soft);
+  padding:14px 17px;border-radius:0 var(--r) var(--r) 0;font-size:13.5px;color:var(--ink-2)}
+.callout.d{border-left-color:var(--deep);background:var(--deep-soft)}
+.callout.c{border-left-color:var(--crit);background:var(--surface-2)}
+.callout b{color:var(--ink)}
+.tag{display:inline-block;font-family:var(--mono);font-size:10px;padding:2px 6px;border-radius:3px;
+  background:var(--surface-3);color:var(--ink-2);margin:2px 3px 2px 0}
+.steps{display:flex;gap:0;overflow-x:auto;padding-bottom:5px}
+.step{flex:none;min-width:172px;padding:13px 15px;background:var(--surface);border:1px solid var(--line);
+  border-right:0;position:relative}
+.step:last-child{border-right:1px solid var(--line);border-radius:0 var(--r) var(--r) 0}
+.step:first-child{border-radius:var(--r) 0 0 var(--r)}
+.step .sn{font-family:var(--mono);font-size:9.5px;letter-spacing:.09em;color:var(--accent-ink);text-transform:uppercase}
+.step .st{font-weight:640;font-size:13.5px;margin-top:5px}
+.step .sd{font-size:11.5px;color:var(--ink-3);margin-top:4px;line-height:1.45}
+hr.sep{border:0;border-top:1px solid var(--line);margin:34px 0}
+
+@media (max-width:960px){
+  .app{grid-template-columns:1fr}
+  .rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--line);padding:16px 0}
+  .nav{flex-direction:row;overflow-x:auto;padding:0 16px 4px}
+  .nav a{flex:none;border-left:0;border-bottom:2px solid transparent;border-radius:var(--r) var(--r) 0 0}
+  .nav a.on{border-left:0;border-bottom-color:var(--accent)}
+  .railfoot{display:none} .themebtn{margin:12px 16px 0}
+  .wrap{padding:0 18px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <div class="mark">
+        <span class="bars"><i style="height:7px"></i><i style="height:12px"></i><i style="height:16px"></i></span>
+        <h1>__BRAND_NAME__</h1>
+      </div>
+      <div class="sub">__BRAND_SUB__</div>
+    </div>
+    <nav class="nav" id="nav">
+      <a href="#negocio"    data-p="negocio"><span class="n">01</span>Negócio</a>
+      <a href="#tecnica"    data-p="tecnica"><span class="n">02</span>Técnica</a>
+      <a href="#testes"     data-p="testes"><span class="n">03</span>Testes</a>
+      <a href="#seguranca"  data-p="seguranca"><span class="n">04</span>Segurança</a>
+      <a href="#gaps"       data-p="gaps"><span class="n">05</span>Lacunas</a>
+      <a href="#backlog"    data-p="backlog"><span class="n">06</span>Backlog</a>
+      <a href="#estimativa" data-p="estimativa"><span class="n">07</span>Estimativa</a>
+    </nav>
+    <button class="themebtn" id="themebtn" type="button">Alternar tema</button>
+    <div class="railfoot" id="railfoot"></div>
+  </aside>
+  <main>
+    <section class="pane on" id="p-negocio"></section>
+    <section class="pane" id="p-tecnica"></section>
+    <section class="pane" id="p-testes"></section>
+    <section class="pane" id="p-seguranca"></section>
+    <section class="pane" id="p-gaps"></section>
+    <section class="pane" id="p-backlog"></section>
+    <section class="pane" id="p-estimativa"></section>
+  </main>
+</div>
+<div class="tip" id="tip"></div>
+
+<script id="payload" type="application/json">__PAYLOAD__</script>
+<script>
+"use strict";
+const D = JSON.parse(document.getElementById('payload').textContent);
+const $ = (s,r)=> (r||document).querySelector(s);
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const nf  = n => (n==null||isNaN(n))?'—':Number(n).toLocaleString('pt-BR');
+const nf1 = n => (n==null||isNaN(n))?'—':Number(n).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1});
+const brl = n => n==null?'—':'R$ '+(n/1e6).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2})+' mi';
+const SER = ['--s1','--s2','--s3','--s4','--s5','--s6','--s7','--s8'];
+const cvar = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+
+/* ---------------- tooltip ---------------- */
+const tip = $('#tip');
+function bindTip(el, html){
+  el.addEventListener('mouseenter', e=>{ tip.innerHTML=html; tip.classList.add('on'); });
+  el.addEventListener('mousemove', e=>{
+    const pad=14; let x=e.clientX+pad, y=e.clientY+pad;
+    const r=tip.getBoundingClientRect();
+    if(x+r.width>innerWidth-8) x=e.clientX-r.width-pad;
+    if(y+r.height>innerHeight-8) y=e.clientY-r.height-pad;
+    tip.style.left=x+'px'; tip.style.top=y+'px';
+  });
+  el.addEventListener('mouseleave', ()=> tip.classList.remove('on'));
+}
+
+/* ---------------- barra horizontal ---------------- */
+function hbar(items,opt){
+  opt = opt||{};
+  const H=opt.rowH||26, LW=opt.labelW||162, PAD=opt.valW||58;
+  const W=760, plot=W-LW-PAD;
+  const max=Math.max(...items.map(d=>d.v),1);
+  const h=items.length*H+6;
+  let s=`<svg viewBox="0 0 ${W} ${h}" role="img" aria-label="${esc(opt.aria||'gráfico de barras')}">`;
+  items.forEach((d,i)=>{
+    const y=i*H+3, bw=Math.max(2,(d.v/max)*plot);
+    const col = d.c || `var(${SER[i%8]})`;
+    s+=`<text x="${LW-9}" y="${y+H/2}" text-anchor="end" dominant-baseline="central" font-size="11.5" fill="var(--ink-2)" font-family="var(--sans)">${esc(d.l.length>28?d.l.slice(0,27)+'…':d.l)}</text>`;
+    s+=`<rect class="bx" data-i="${i}" x="${LW}" y="${y+4}" width="${bw}" height="${H-11}" rx="3" fill="${col}"></rect>`;
+    s+=`<text x="${LW+bw+8}" y="${y+H/2}" dominant-baseline="central" font-size="11" fill="var(--ink-3)" font-family="var(--mono)">${esc(d.t!=null?d.t:nf(d.v))}</text>`;
+  });
+  s+='</svg>';
+  return {html:s, items};
+}
+function mountChart(host, title, sub, chart, legend){
+  const el=document.createElement('div'); el.className='chart';
+  el.innerHTML=`<div class="ct">${esc(title)}</div>${sub?`<div class="cs">${esc(sub)}</div>`:''}${chart.html}${legend?`<div class="legend">${legend}</div>`:''}`;
+  host.appendChild(el);
+  el.querySelectorAll('.bx').forEach(r=>{
+    const d=chart.items[+r.dataset.i];
+    bindTip(r, `<b>${esc(d.l)}</b><br>${esc(d.tip||((d.t!=null?d.t:nf(d.v))))}`);
+  });
+  return el;
+}
+/* ---------------- barra empilhada ---------------- */
+function stackChart(host,title,sub,rows,keys,labels){
+  const H=27, LW=170, W=760, PAD=52, plot=W-LW-PAD;
+  const max=Math.max(...rows.map(r=>keys.reduce((a,k)=>a+(r[k]||0),0)),1);
+  let s=`<svg viewBox="0 0 ${W} ${rows.length*H+6}" role="img">`;
+  const store=[];
+  rows.forEach((r,i)=>{
+    const y=i*H+3; let x=LW;
+    s+=`<text x="${LW-9}" y="${y+H/2}" text-anchor="end" dominant-baseline="central" font-size="11.5" fill="var(--ink-2)">${esc(r.l.length>30?r.l.slice(0,29)+'…':r.l)}</text>`;
+    keys.forEach((k,j)=>{
+      const v=r[k]||0; if(!v) return;
+      const bw=(v/max)*plot;
+      store.push({l:r.l+' · '+labels[j],v});
+      s+=`<rect class="bx" data-i="${store.length-1}" x="${x}" y="${y+4}" width="${Math.max(1,bw-2)}" height="${H-11}" rx="2" fill="var(${SER[j%8]})"></rect>`;
+      x+=bw;
+    });
+    const tot=keys.reduce((a,k)=>a+(r[k]||0),0);
+    s+=`<text x="${x+7}" y="${y+H/2}" dominant-baseline="central" font-size="11" fill="var(--ink-3)" font-family="var(--mono)">${nf(tot)}</text>`;
+  });
+  s+='</svg>';
+  const leg=keys.map((k,j)=>`<span><i style="background:var(${SER[j%8]})"></i>${esc(labels[j])}</span>`).join('');
+  return mountChart(host,title,sub,{html:s,items:store},leg);
+}
+/* ---------------- faixa de previsão ---------------- */
+function forecastChart(host,f){
+  const ia=f.iaAssistida||null;
+  const W=760, L=52, R=46, plot=W-L-R;
+  const rows=[{k:'Tradicional',src:f,y:70,col:'var(--s1)'}];
+  if(ia) rows.push({k:'Assistido por IA',src:ia,y:170,col:'var(--accent)'});
+  const h=ia?236:136;
+  const hi=f.p95.dias, span=hi||1;              /* eixo único: 0 → P95 tradicional */
+  const x=d=>L+(d/span)*plot;
+  let s=`<svg viewBox="0 0 ${W} ${h}" role="img" aria-label="Previsão nos dois modos de execução">`;
+  s+=`<defs>
+    <linearGradient id="fgT" x1="0" x2="1"><stop offset="0" stop-color="var(--s3)" stop-opacity=".8"/><stop offset=".5" stop-color="var(--s4)" stop-opacity=".8"/><stop offset="1" stop-color="var(--s8)" stop-opacity=".8"/></linearGradient>
+    <linearGradient id="fgI" x1="0" x2="1"><stop offset="0" stop-color="var(--s3)" stop-opacity=".8"/><stop offset=".5" stop-color="var(--s4)" stop-opacity=".8"/><stop offset="1" stop-color="var(--s8)" stop-opacity=".8"/></linearGradient>
+  </defs>`;
+  const store=[];
+  rows.forEach((row,ri)=>{
+    const p=row.src, y=row.y;
+    const lo=(p.p15&&p.p15.dias)||Math.round(p.p50.dias*0.79), h2=p.p95.dias;
+    s+=`<text x="${L}" y="${y-26}" font-size="11.5" font-family="var(--mono)" font-weight="700" fill="${row.col}">${esc(row.k)}</text>`;
+    s+=`<rect x="${x(lo)}" y="${y}" width="${Math.max(4,x(h2)-x(lo))}" height="14" rx="7" fill="url(#${ri?'fgI':'fgT'})"></rect>`;
+    const marks=[['P15',p.p15],['P50',p.p50],['P85',p.p85],['P95',p.p95]].filter(m=>m[1]&&m[1].dias!=null);
+    marks.forEach((m,i)=>{
+      const xx=x(m[1].dias), last=i===marks.length-1;
+      s+=`<line x1="${xx}" y1="${y-7}" x2="${xx}" y2="${y+21}" stroke="var(--ink)" stroke-width="1.8"></line>`;
+      store.push({l:row.k+' · '+m[0],v:m[1].dias,
+        tip:`<b>${esc(row.k)} — ${m[0]}</b><br>${m[1].dias} dias úteis · ${esc(m[1].data||'')}<br>${brl(m[1].custoBRL)}${m[1].derivado?'<br><i>derivado por proporção</i>':''}`});
+      s+=`<circle class="bx" data-i="${store.length-1}" cx="${xx}" cy="${y+7}" r="${m[0]==='P85'?7.5:6}" fill="var(--surface)" stroke="${row.col}" stroke-width="2.4"></circle>`;
+      /* rótulo seletivo: só P50 e P85 recebem texto — P15 e P95 ficam só como marca */
+      const key = m[0]==='P50'||m[0]==='P85';
+      const anch = m[0]==='P50'?'end':'start';
+      const dx   = m[0]==='P50'?-11:11;
+      s+=`<text x="${xx}" y="${y-11}" text-anchor="${key?anch:'middle'}" ${key?`dx="${dx}"`:''} font-size="9.5" font-family="var(--mono)" fill="var(--ink-4)">${m[0]}</text>`;
+      if(key){
+        s+=`<text x="${xx}" y="${y+38}" dx="${dx}" text-anchor="${anch}" font-size="${m[0]==='P85'?13:12}" font-weight="700" fill="var(--ink)" font-family="var(--mono)">${m[1].dias} d</text>`;
+        s+=`<text x="${xx}" y="${y+53}" dx="${dx}" text-anchor="${anch}" font-size="10.5" fill="var(--ink-3)">${esc(m[1].data||'')}</text>`;
+      }
+    });
+  });
+  const pe=x(D.estimativa.forecast.pisoEstrutural);
+  if(pe>L+30&&pe<W-R){
+    s+=`<line x1="${pe}" y1="26" x2="${pe}" y2="${rows[0].y+22}" stroke="var(--ink-4)" stroke-width="1.4" stroke-dasharray="3 3"></line>`;
+    s+=`<text x="${pe}" y="18" text-anchor="middle" font-size="9.5" font-family="var(--mono)" fill="var(--ink-4)">piso ${D.estimativa.forecast.pisoEstrutural} d</text>`;
+  }
+  s+='</svg>';
+  const leg=`<span><i style="background:var(--s1)"></i>Tradicional — ${D.estimativa.equipe.pessoas} pessoas implementam</span>`+
+    (ia?`<span><i style="background:var(--accent)"></i>Assistido por IA — as mesmas ${ia.pessoas||D.estimativa.equipe.pessoas} orquestram e revisam</span>`:'');
+  return mountChart(host,'Previsão Monte Carlo — '+nf(f.iteracoesMonteCarlo||10000)+' iterações por modo',
+    'Dias úteis de calendário a partir de '+String(f.inicio||'').split('-').reverse().join('/')+'. Os dois modos partilham o mesmo eixo e a mesma equipe de '+D.estimativa.equipe.pessoas+' pessoas — muda o papel delas, não o tamanho.',
+    {html:s,items:store},leg);
+}
+/* ---------------- linha (curva de Brooks) ---------------- */
+function lineChart(host,title,sub,pts,xk,yk,xlab,ylab){
+  const W=760,h=190,L=48,R=18,T=14,B=34, pw=W-L-R, ph=h-T-B;
+  const xs=pts.map(p=>p[xk]), ys=pts.map(p=>p[yk]);
+  const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  const X=v=>L+((v-x0)/((x1-x0)||1))*pw, Y=v=>T+ph-((v-y0)/((y1-y0)||1))*ph;
+  let s=`<svg viewBox="0 0 ${W} ${h}" role="img">`;
+  for(let i=0;i<=3;i++){ const yy=T+ (ph/3)*i; s+=`<line x1="${L}" y1="${yy}" x2="${W-R}" y2="${yy}" stroke="var(--line)" stroke-width="1"></line>`;
+    s+=`<text x="${L-8}" y="${yy}" text-anchor="end" dominant-baseline="central" font-size="10" font-family="var(--mono)" fill="var(--ink-4)">${nf(Math.round(y1-((y1-y0)/3)*i))}</text>`; }
+  const dpath=pts.map((p,i)=>(i?'L':'M')+X(p[xk])+' '+Y(p[yk])).join(' ');
+  s+=`<path d="${dpath}" fill="none" stroke="var(--s1)" stroke-width="2" stroke-linejoin="round"></path>`;
+  const best=pts.reduce((a,b)=>b[yk]<a[yk]?b:a);
+  pts.forEach((p,i)=>{
+    const isb=p===best;
+    s+=`<circle class="bx" data-i="${i}" cx="${X(p[xk])}" cy="${Y(p[yk])}" r="${isb?6:4}" fill="${isb?'var(--s4)':'var(--surface)'}" stroke="var(--s1)" stroke-width="2"></circle>`;
+    if(i%2===0||isb) s+=`<text x="${X(p[xk])}" y="${h-16}" text-anchor="middle" font-size="10" font-family="var(--mono)" fill="var(--ink-4)">${p[xk]}</text>`;
+  });
+  s+=`<text x="${X(best[xk])}" y="${Y(best[yk])-13}" text-anchor="middle" font-size="10.5" font-weight="600" fill="var(--accent-ink)">ótimo</text>`;
+  s+=`<text x="${L}" y="${h-2}" font-size="10" font-family="var(--mono)" fill="var(--ink-4)">${esc(xlab)}</text>`;
+  s+='</svg>';
+  return mountChart(host,title,sub,{html:s,items:pts.map(p=>({l:p[xk]+' pessoas',v:p[yk],tip:`${p[yk]} dias · overhead ${p.overheadPct}%`}))},'');
+}
+/* ---------------- diagrama de containers (HLD, aba Técnica) ----------------
+   Desenha o C4 nível 2 a partir de tecnica.hld.containers/integracoes. Sem CDN e sem
+   Mermaid: o shell não carrega nada de fora. Duas colunas — containers dentro da fronteira
+   do sistema, sistemas externos à direita — e uma aresta por integração (traço cheio =
+   síncrono, tracejado = assíncrono). O detalhe completo vive no hld.md. */
+const semAcento = s => String(s==null?'':s).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+function hldDiagram(H){
+  const cut=(s,n)=>{s=String(s==null?'':s); return s.length>n?s.slice(0,n-1)+'…':s;};
+  const cs=(H.containers||[]).slice(0,14);
+  const mods={};
+  (H.decomposicao||[]).forEach(d=>{ if(d.container&&d.container!=='N/A') mods[d.container]=(mods[d.container]||0)+1; });
+
+  const map=new Map();
+  (H.integracoes||[]).forEach(i=>{
+    const k=i.sistema||i.id;
+    if(!map.has(k)) map.set(k,{nome:k,ids:[],estilos:[],protocolos:[],cons:[]});
+    const e=map.get(k);
+    if(i.id) e.ids.push(i.id);
+    if(i.estilo&&e.estilos.indexOf(i.estilo)<0) e.estilos.push(i.estilo);
+    if(i.protocolo&&i.protocolo!=='—'&&e.protocolos.indexOf(i.protocolo)<0) e.protocolos.push(i.protocolo);
+    (i.containers||[]).forEach(c=>{ if(e.cons.indexOf(c)<0) e.cons.push(c); });
+  });
+  const ex=Array.from(map.values()).slice(0,14);
+
+  const W=760, CX=12, CW=326, CH=56, CGAP=13, FX=2, FW=346;
+  const EX=486, EW=268, EH=48, EGAP=12, TOP=26, HEAD=26;
+  const cy=i=>TOP+HEAD+i*(CH+CGAP), ey=i=>TOP+HEAD+i*(EH+EGAP);
+  const frameH=HEAD+(cs.length?cs.length*CH+(cs.length-1)*CGAP:0)+12;
+  const exH=HEAD+(ex.length?ex.length*EH+(ex.length-1)*EGAP:0);
+  const h=TOP+Math.max(frameH,exH)+10;
+  const store=[];
+  let s=`<svg viewBox="0 0 ${W} ${h}" role="img" aria-label="Diagrama de containers do desenho de alto nível">`;
+
+  /* arestas primeiro, para ficarem atrás das caixas */
+  ex.forEach((e,j)=>{
+    const assinc=e.estilos.length>0&&e.estilos.every(v=>semAcento(v).indexOf('assincron')===0);
+    e.cons.forEach(cid=>{
+      const i=cs.findIndex(c=>c.id===cid); if(i<0) return;
+      const x1=CX+CW, y1=cy(i)+CH/2, x2=EX, y2=ey(j)+EH/2;
+      s+=`<path d="M${x1} ${y1} C${x1+48} ${y1}, ${x2-48} ${y2}, ${x2} ${y2}" fill="none" `+
+         `stroke="var(${assinc?'--s2':'--s1'})" stroke-width="1.6" opacity=".75"`+
+         (assinc?' stroke-dasharray="5 4"':'')+`></path>`;
+    });
+  });
+
+  /* fronteira do sistema */
+  s+=`<rect x="${FX}" y="${TOP}" width="${FW}" height="${frameH}" rx="8" fill="var(--surface-2)" stroke="var(--line-2)" stroke-width="1.2" stroke-dasharray="4 4"></rect>`;
+  s+=`<text x="${FX+13}" y="${TOP+17}" font-size="9.5" font-family="var(--mono)" letter-spacing=".09em" fill="var(--ink-4)">SISTEMA TO-BE — CONTAINERS</text>`;
+  if(ex.length) s+=`<text x="${EX}" y="${TOP+17}" font-size="9.5" font-family="var(--mono)" letter-spacing=".09em" fill="var(--ink-4)">SISTEMAS EXTERNOS</text>`;
+
+  cs.forEach((c,i)=>{
+    const y=cy(i), n=mods[c.id]||0;
+    store.push({l:(c.id||'')+' · '+(c.nome||''),v:n,
+      tip:`<b>${esc(c.id||'')} — ${esc(c.nome||'')}</b><br>${esc(c.responsabilidade||'')}<br>${esc(c.tecnologia||'—')}${n?`<br>${n} módulo(s) do produto`:''}`});
+    s+=`<rect class="bx" data-i="${store.length-1}" x="${CX}" y="${y}" width="${CW}" height="${CH}" rx="6" fill="var(--surface)" stroke="var(--deep)" stroke-width="1.4"></rect>`;
+    s+=`<text x="${CX+13}" y="${y+17}" font-size="9.5" font-family="var(--mono)" fill="var(--deep)">${esc(c.id||'')}</text>`;
+    s+=`<text x="${CX+13}" y="${y+34}" font-size="13.5" font-weight="650" fill="var(--ink)">${esc(cut(c.nome,34))}</text>`;
+    s+=`<text x="${CX+13}" y="${y+48}" font-size="10.5" fill="var(--ink-3)" font-family="var(--mono)">${esc(cut(c.tecnologia,40))}</text>`;
+    if(n) s+=`<text x="${CX+CW-13}" y="${y+17}" text-anchor="end" font-size="9.5" font-family="var(--mono)" fill="var(--ink-4)">${n} MÓD.</text>`;
+  });
+
+  ex.forEach((e,j)=>{
+    const y=ey(j);
+    store.push({l:e.nome,v:e.cons.length,
+      tip:`<b>${esc(e.ids.join(', ')||'—')} — ${esc(e.nome)}</b><br>${esc(e.estilos.join(' + ')||'—')} · ${esc(e.protocolos.join(', ')||'—')}<br>fala com ${esc(e.cons.join(', ')||'—')}`});
+    s+=`<rect class="bx" data-i="${store.length-1}" x="${EX}" y="${y}" width="${EW}" height="${EH}" rx="6" fill="var(--surface)" stroke="var(--line-2)" stroke-width="1.4"></rect>`;
+    s+=`<text x="${EX+12}" y="${y+16}" font-size="9.5" font-family="var(--mono)" fill="var(--ink-4)">${esc(e.ids.join(', ')||'—')}</text>`;
+    s+=`<text x="${EX+12}" y="${y+31}" font-size="12.5" font-weight="600" fill="var(--ink)">${esc(cut(e.nome,28))}</text>`;
+    s+=`<text x="${EX+12}" y="${y+43}" font-size="10.5" fill="var(--ink-3)" font-family="var(--mono)">${esc(cut((e.estilos.join(' + ')||'—')+' · '+(e.protocolos.join(', ')||'—'),34))}</text>`;
+  });
+  s+='</svg>';
+  return {html:s,items:store};
+}
+
+/* ---------------- helpers de bloco ---------------- */
+function band(items){ return `<div class="band">`+items.map(i=>
+  `<div class="k"><div class="v">${i.v}</div><div class="l">${esc(i.l)}</div>${i.d?`<div class="d">${esc(i.d)}</div>`:''}</div>`).join('')+`</div>`; }
+function tbl(head,rows,cls){ return `<div class="tw ${cls||''}"><table><thead><tr>${head.map(h=>
+  `<th${/^#/.test(h)?' class="num"':''}>${esc(h.replace(/^#/,''))}</th>`).join('')}</tr></thead><tbody>${rows.join('')}</tbody></table></div>`; }
+const sevCls = s => ({'CRÍTICO':'crit','CRITICA':'crit','CRÍTICA':'crit','ALTO':'high','ALTA':'high','MÉDIO':'med','MEDIA':'med','MÉDIA':'med','BAIXO':'low','BAIXA':'low'}[String(s).toUpperCase()]||'low');
+
+/* ==========================================================
+   01 — NEGÓCIO
+   ========================================================== */
+function paneNegocio(){
+  const n=D.negocio, t=D.meta.totais;
+  let h=`<div class="wrap">
+  <span class="eyebrow">01 — Documentação de negócio</span>
+  <h2 class="big">O que o Hub Integrador resolve</h2>
+  <p class="lede">${esc(n.visao.elevatorPitch)}</p>
+  ${band([
+    {v:t.dominios,l:'Domínios de negócio'},{v:t.modulos,l:'Módulos',d:'19 ativos · 2 futuros'},
+    {v:t.rf,l:'Requisitos funcionais'},{v:t.rn,l:'Regras de negócio'},
+    {v:t.telas,l:'Telas mapeadas'},{v:t.fluxos,l:'Fluxos de ponta a ponta'}
+  ])}
+  <p class="note">Fonte: <code>product-vision.md</code>, <code>modules.md</code>, <code>business-rules.md</code>, <code>requirements.md</code> e <code>flow-map.md</code>, gerados pelas fases 1 a 5b do pipeline.</p>
+
+  <h3>O problema, em números da própria operação</h3>
+  <div class="grid3">`;
+  n.doresQuantificadas.slice(0,9).forEach(d=>{
+    h+=`<div class="card"><div style="font-size:23px;font-weight:700;letter-spacing:-.02em;color:var(--accent-ink)">${esc(d.numero||'—')}</div>
+    <div style="font-size:13.5px;margin-top:7px;color:var(--ink-2)">${esc(d.dor)}</div>
+    <div style="margin-top:9px"><span class="id">${esc(d.id)}</span></div></div>`;
+  });
+  h+=`</div>
+  <p class="note">${n.doresQuantificadas.length} dores foram catalogadas e rastreadas até o documento de origem; as nove acima são as que carregam número.</p>
+
+  <h3>Objetivos e resultados-chave</h3>`;
+  n.objetivos.forEach(o=>{
+    h+=`<div class="card" style="margin-bottom:13px"><div style="display:flex;justify-content:space-between;gap:13px;flex-wrap:wrap;align-items:baseline">
+      <div><span class="id a">${esc(o.id)}</span> <b style="margin-left:7px">${esc(o.titulo)}</b></div>
+      <span class="pill">${esc(o.dono||'sem dono')}</span></div>
+      <div class="tw" style="margin-top:12px"><table><thead><tr><th>Resultado-chave</th><th>Linha de base</th><th>Meta</th><th>Fonte</th></tr></thead><tbody>`;
+    (o.krs||[]).forEach(k=>{ h+=`<tr><td>${esc(k.kr)}</td><td>${esc(k.baseline||'—')}</td><td><b>${esc(k.meta||'—')}</b></td><td><code>${esc(k.fonte||'—')}</code></td></tr>`; });
+    h+=`</tbody></table></div></div>`;
+  });
+
+  h+=`<h3>Quem usa</h3><div class="grid2">`;
+  n.personas.forEach(p=>{
+    h+=`<div class="card"><div style="display:flex;gap:9px;align-items:baseline;flex-wrap:wrap">
+      <b>${esc(p.nome)}</b><span class="pill ${p.tipo==='externo'?'':'ok'}">${esc(p.tipo)}</span></div>
+      <div style="font-size:13px;color:var(--ink-2);margin-top:8px"><b>Precisa:</b> ${esc(p.jtbd||'—')}</div>
+      ${(p.dores&&p.dores.length)?`<div style="font-size:12.5px;color:var(--ink-3);margin-top:7px"><b>Dores:</b> ${esc(p.dores.slice(0,2).join(' · '))}</div>`:''}</div>`;
+  });
+  h+=`</div>
+
+  <h3>Os oito domínios</h3>
+  ${tbl(['Domínio','Escopo','Sistema de registro','#RF','#RN','#Telas','#Ops'],
+    n.dominios.map(d=>`<tr><td><b>${esc(d.nome)}</b></td><td style="max-width:330px">${esc(d.escopo)}</td>
+    <td><code>${esc(d.sistemaRegistro||'—')}</code></td><td class="num">${nf(d.rf)}</td><td class="num">${nf(d.rn)}</td>
+    <td class="num">${nf(d.telas)}</td><td class="num">${nf(d.operacoes)}</td></tr>`))}
+
+  <h3>Os 22 módulos</h3>
+  <div id="chart-mod"></div>
+  <div style="height:14px"></div>
+  ${tbl(['Módulo','Domínio','Superfície','Sistema de registro','Papel do Hub','#RF','#RN','#Ent'],
+    n.modulos.map(m=>`<tr><td><span class="id ${m.status==='futuro'?'':'a'}">${esc(m.id)}</span><div style="margin-top:4px;font-weight:600">${esc(m.nome)}</div>
+    ${m.status==='futuro'?'<span class="pill blk" style="margin-top:5px">futuro</span>':''}</td>
+    <td>${esc(m.dominio)}</td><td>${esc(m.superficie||'—')}</td><td><code>${esc(m.sistemaDeRegistro||'Hub')}</code></td>
+    <td style="max-width:250px;font-size:12.5px;color:var(--ink-3)">${esc(m.papelDoHub||m.responsabilidade||'')}</td>
+    <td class="num">${nf(m.rf)}</td><td class="num">${nf(m.rn)}</td><td class="num">${nf(m.entidades)}</td></tr>`),'tall')}
+
+  <h3>Regras de negócio em destaque</h3>
+  ${tbl(['Regra','Módulo','Enunciado','Origem'],
+    n.regrasDestaque.map(r=>`<tr><td><span class="id">${esc(r.id)}</span></td><td style="font-size:12.5px">${esc(r.modulo||'—')}</td>
+    <td style="max-width:520px">${esc(r.enunciado)}</td><td><span class="pill ${r.tipo==='novo'?'ok':''}">${esc(r.tipo||'—')}</span></td></tr>`),'tall')}
+  ${n.regrasDestaqueNota?`<p class="note">${n.regrasDestaqueNota}</p>`:''}
+
+  <h3>Implantação por unidade</h3>
+  <div class="steps">`;
+  n.rollout.forEach(r=>{
+    h+=`<div class="step"><div class="sn">Onda ${esc(r.onda)}</div><div class="st">${esc(r.unidade)}</div>
+    <div class="sd">${esc(r.regime||'')}${r.porque?' · '+esc(r.porque.slice(0,90)):''}</div></div>`;
+  });
+  h+=`</div>
+  ${n.rolloutNota?`<p class="note">${n.rolloutNota}</p>`:''}
+
+  <h3>Escopo</h3>
+  <div class="grid2">
+    <div class="card"><h4 style="margin-top:0">Incluído</h4><ul style="margin:0;padding-left:18px;font-size:13.5px;color:var(--ink-2)">
+    ${n.escopo.incluido.map(i=>`<li style="margin:5px 0">${esc(i)}</li>`).join('')}</ul></div>
+    <div class="card"><h4 style="margin-top:0">Fora de escopo — ${n.escopo.foraDeEscopo.length} itens</h4>
+    <div style="font-size:13px;color:var(--ink-2)">${n.escopo.foraDeEscopo.slice(0,10).map(f=>
+      `<div style="margin:8px 0;padding-bottom:8px;border-bottom:1px solid var(--line)"><b>${esc(f.item)}</b><br><span style="color:var(--ink-3);font-size:12.5px">${esc(f.razao)}</span></div>`).join('')}</div></div>
+  </div>
+
+  <h3>As ${n.gaps.lista.length} decisões que destravaram a especificação</h3>
+  ${n.gaps.nota?`<p class="note" style="margin-bottom:14px">${n.gaps.nota}</p>`:''}
+  <div id="chart-gaps"></div><div style="height:14px"></div>
+  ${tbl(['GAP','Severidade','Natureza','Título','Decisão'],
+    n.gaps.lista.map(g=>`<tr><td><span class="id">${esc(g.id)}</span></td>
+    <td><span class="pill ${sevCls(g.severidade)}">${esc(g.severidade)}</span></td>
+    <td><span class="pill ${g.natureza==='PENDENTE'?'med':(g.natureza==='DERIVADA'?'ok':'')}">${esc(g.natureza)}</span></td>
+    <td style="max-width:260px"><b>${esc(g.titulo)}</b></td>
+    <td style="max-width:520px;font-size:12.5px;color:var(--ink-2)">${esc(g.decisao)}</td></tr>`),'tall')}
+  </div>`;
+  $('#p-negocio').innerHTML=h;
+
+  const mods=n.modulos.filter(m=>m.rf>0).sort((a,b)=>b.rf-a.rf);
+  stackChart($('#chart-mod'),'Peso de especificação por módulo','Requisitos funcionais, regras de negócio e entidades de dados por módulo',
+    mods.map(m=>({l:m.nome,rf:m.rf,rn:m.rn,e:m.entidades})),['rf','rn','e'],['Requisitos','Regras','Entidades']);
+  const gs=n.gaps.porSeveridade;
+  mountChart($('#chart-gaps'),'Lacunas por severidade e natureza da resposta','',
+    hbar([
+      {l:'Crítica',v:gs.CRITICA||gs['CRÍTICA']||0,c:'var(--crit)'},
+      {l:'Alta',v:gs.ALTA||0,c:'var(--serious)'},
+      {l:'Média',v:gs.MEDIA||gs['MÉDIA']||0,c:'var(--warn)'},
+      {l:'Baixa',v:gs.BAIXA||0,c:'var(--ink-4)'}
+    ],{labelW:92}),'');
+}
+
+/* ==========================================================
+   02 — TÉCNICA
+   ========================================================== */
+/* Bloco «Arquitetura (HLD)» da aba Técnica. Vem do artefato hld.md (Fase 6.6), lido pela IA
+   via `check-hld.py --json` e remapeado para tecnica.hld. Nível executivo: containers,
+   integrações, onde cada módulo mora, o que sustenta cada RNF e as decisões registradas.
+   Sem tecnica.hld (ou sem containers), devolve string vazia — a seção some inteira, sem
+   título nem âncora órfã. */
+function hldSection(H){
+  if(!H||!(H.containers&&H.containers.length)) return '';
+  const na=(H.decomposicao||[]).filter(d=>d.container==='N/A').length;
+  const risco=(H.taticas||[]).filter(t=>t.riscoAceito||/^risco aceito/i.test(String(t.tatica||''))).length;
+  let h=`<h3>Arquitetura (HLD)</h3>
+  ${H.resumo?`<p class="note" style="max-width:74ch;margin:0 0 14px">${H.resumo}</p>`:''}
+  <div id="chart-hld"></div>`;
+
+  if(H.decomposicao&&H.decomposicao.length){
+    h+=`<h4>Onde cada módulo do produto mora</h4>
+    ${tbl(['Módulo','Container','Papel no módulo'],
+      H.decomposicao.map(d=>`<tr><td><span class="id">${esc(d.modulo)}</span></td>
+      <td>${d.container==='N/A'?`<span class="pill med">fora desta entrega</span>`:`<code>${esc(d.container)}</code>`}</td>
+      <td style="max-width:520px;font-size:12.5px;color:var(--ink-3)">${esc(d.papel||'—')}</td></tr>`),'tall')}
+    ${na?`<p class="note">${na} módulo(s) marcado(s) como fora desta entrega — a justificativa de cada um está na coluna «Papel no módulo».</p>`:''}`;
+  }
+  if(H.taticas&&H.taticas.length){
+    h+=`<h4>O que sustenta cada requisito de qualidade</h4>
+    ${H.taticasNota?`<p class="note" style="margin-bottom:12px">${H.taticasNota}</p>`:''}
+    ${tbl(['RNF','Métrica','Tática ou risco aceito','Containers'],
+      H.taticas.map(t=>{const ra=t.riscoAceito||/^risco aceito/i.test(String(t.tatica||''));
+      return `<tr><td><span class="id ${ra?'a':'d'}">${esc(t.rnf)}</span></td>
+      <td style="font-size:12.5px">${esc(t.metrica||'—')}</td>
+      <td style="max-width:420px;font-size:12.5px">${ra?`<span class="pill med">risco aceito</span> `:''}${esc(t.tatica||'—')}</td>
+      <td style="font-size:11.5px;font-family:var(--mono);color:var(--ink-3)">${esc((t.containers||[]).join(', ')||'—')}</td></tr>`;}),'tall')}
+    ${risco?`<p class="note">${risco} requisito(s) sem tática: o risco foi aceito de propósito e a justificativa está no <code>hld.md</code>. Revisar antes da próxima onda.</p>`:''}`;
+  }
+  if(H.adrs&&H.adrs.length){
+    h+=`<h4>As ${H.adrs.length} decisões de arquitetura registradas</h4>
+    ${H.adrsNota?`<p class="note" style="margin-bottom:12px">${H.adrsNota}</p>`:''}
+    ${tbl(['ID','Decisão','Alternativas rejeitadas','Consequências','Origem'],
+      H.adrs.map(a=>`<tr><td><span class="id d">${esc(a.id)}</span></td>
+      <td style="max-width:280px;font-size:12.5px"><b>${esc(a.decisao)}</b></td>
+      <td style="max-width:240px;font-size:12.5px;color:var(--ink-3)">${esc(a.alternativas||'—')}</td>
+      <td style="max-width:260px;font-size:12.5px;color:var(--ink-3)">${esc(a.consequencias||'—')}</td>
+      <td style="font-size:11px;font-family:var(--mono);color:var(--ink-4)">${esc((a.origem||[]).join(', ')||'—')}</td></tr>`),'tall')}`;
+  }
+  h+=`<p class="note">Fonte: <code>hld.md</code> (Fase 6.6), validado por <code>check-hld.py</code>. Aqui está o nível executivo${H.modo==='compacto'?' — o desenho foi gerado em modo compacto':''}; fluxos ponta a ponta, topologia de implantação, fronteiras de confiança, riscos e spikes ficam no documento completo.</p>`;
+  return h;
+}
+function paneTecnica(){
+  const T=D.tecnica, t=D.meta.totais;
+  let h=`<div class="wrap">
+  <span class="eyebrow">02 — Documentação técnica</span>
+  <h2 class="big">Regras, modelo de dados e contratos</h2>
+  <p class="lede">${esc(T.arquitetura.resumo)}</p>
+  ${band([
+    {v:t.rules,l:'Regras técnicas',d:nf(t.linhasRules)+' linhas'},
+    {v:t.entidades,l:'Entidades',d:nf(t.atributos)+' atributos'},
+    {v:t.operacoesApi,l:'Operações de API',d:nf(t.pathsApi)+' paths'},
+    {v:t.schemasApi,l:'Schemas'},{v:t.indices,l:'Índices'},{v:t.canaisAssincronos,l:'Canais assíncronos'}
+  ])}
+
+  ${hldSection(T.hld)}
+  <h3>Stack</h3>
+  <div class="grid3">${T.stack.map(s=>`<div class="card"><div class="eyebrow">${esc(s.camada)}</div>
+    <div style="font-weight:650;margin-top:6px;font-size:14.5px">${esc(s.escolha)}</div>
+    <div style="font-size:12.5px;color:var(--ink-3);margin-top:5px">${esc(s.detalhe||'')}</div></div>`).join('')}</div>
+
+  <h3>Arquitetura — ${esc(T.arquitetura.estilo)}</h3>
+  <div class="card">
+    <div class="lab" style="font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-4)">Fluxo de dependência</div>
+    <div style="margin-top:9px">${T.arquitetura.camadas.map(c=>`<span class="tag">${esc(c)}</span>`).join(' ')}</div>
+    ${(T.arquitetura.fronteiras&&T.arquitetura.fronteiras.length)?`<div class="row" style="margin-top:15px">
+      <div style="font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-4);margin-bottom:6px">Fronteiras</div>
+      <ul style="margin:0;padding-left:18px;font-size:13.5px;color:var(--ink-2)">${T.arquitetura.fronteiras.map(f=>`<li style="margin:4px 0">${esc(f)}</li>`).join('')}</ul></div>`:''}
+  </div>
+
+  <h3>As ${T.rules.length} regras técnicas</h3>
+  ${T.rulesNota?`<p class="note" style="margin-bottom:14px">${T.rulesNota}</p>`:''}
+  <div class="tree">`;
+  T.rules.forEach(r=>{
+    h+=`<details class="node lv2"><summary><span class="tw-arrow"></span><div class="nb">
+      <div class="nt"><code>${esc(r.arquivo)}</code></div>
+      <div class="nm"><span class="pill ${r.escopo==='sempre'?'ok':''}">${esc(r.escopo)}</span>
+      <span>${nf(r.linhas)} linhas</span>${r.paths?`<span style="font-family:var(--mono);font-size:10.5px;color:var(--ink-4)">${esc(String(r.paths).slice(0,72))}</span>`:''}</div></div></summary>
+      <div class="doc"><p style="margin-top:4px">${esc(r.normatiza)}</p>
+      ${(r.destaques&&r.destaques.length)?`<div class="row"><div class="lab">Decisões normativas</div><ul>${r.destaques.map(d=>`<li>${esc(d)}</li>`).join('')}</ul></div>`:''}</div></details>`;
+  });
+  h+=`</div>
+
+  <h3>Modelo de dados</h3>
+  <div id="chart-ctx"></div><div style="height:14px"></div>
+  <h4>Entidades centrais</h4>
+  ${tbl(['Entidade','Tabela','Módulo','Sistema de registro','#Attr','#Idx','Descrição'],
+    T.dataModel.entidades.filter(e=>e.central).map(e=>`<tr><td><b>${esc(e.nome)}</b></td><td><code>${esc(e.tabela)}</code></td>
+    <td style="font-size:12px">${esc(e.modulo||'—')}</td><td><code>${esc(e.sistemaDeRegistro||'Hub')}</code></td>
+    <td class="num">${nf(e.atributos)}</td><td class="num">${nf(e.indices)}</td>
+    <td style="max-width:340px;font-size:12.5px;color:var(--ink-3)">${esc(e.descricao||'')}</td></tr>`))}
+  <h4>Todas as ${T.dataModel.entidades.length} entidades</h4>
+  ${tbl(['Entidade','Tabela','Contexto','Sistema de registro','#Attr'],
+    T.dataModel.entidades.map(e=>`<tr><td>${e.central?'<b>':''}${esc(e.nome)}${e.central?'</b>':''}</td><td><code>${esc(e.tabela)}</code></td>
+    <td style="font-size:12px">${esc(e.contexto||'—')}</td><td><code>${esc(e.sistemaDeRegistro||'Hub')}</code></td><td class="num">${nf(e.atributos)}</td></tr>`),'tall')}
+
+  <h4>Enumerações de domínio</h4>
+  <div class="grid2">${T.dataModel.enums.slice(0,14).map(e=>`<div class="card" style="padding:14px 16px">
+    <div style="font-family:var(--mono);font-size:12px;font-weight:600;color:var(--deep)">${esc(e.nome)}</div>
+    <div style="margin-top:7px">${(e.valores||[]).slice(0,14).map(v=>`<span class="tag">${esc(v)}</span>`).join('')}
+    ${(e.valores||[]).length>14?`<span class="tag">+${e.valores.length-14}</span>`:''}</div></div>`).join('')}</div>
+
+  <h4>Índices que a volumetria exigiu</h4>
+  ${tbl(['Índice','Tabela','Justificativa'],
+    T.dataModel.indicesDestaque.map(i=>`<tr><td><code>${esc(i.nome)}</code></td><td><code>${esc(i.tabela)}</code></td>
+    <td style="max-width:560px;font-size:12.5px">${esc(i.justificativa)}</td></tr>`))}
+
+  <h4>Canais assíncronos</h4>
+  ${tbl(['Canal','Evento','Política','DLQ'],
+    T.dataModel.canaisAssincronos.map(c=>`<tr><td><code>${esc(c.canal)}</code></td><td style="font-size:12.5px">${esc(c.evento||'—')}</td>
+    <td><span class="pill ${c.politica==='BLOQUEIA'?'crit':(c.politica==='ENFILEIRA'?'med':'')}">${esc(c.politica||'—')}</span></td>
+    <td style="font-size:12px;font-family:var(--mono);color:var(--ink-3)">${esc(c.dlq||'—')}</td></tr>`),'tall')}
+
+  <h3>Contratos de API</h3>
+  <div id="chart-api"></div><div style="height:14px"></div>
+  <div class="grid2">
+    <div class="chart"><div class="ct">Operações por verbo</div><div id="chart-verb" style="margin-top:12px"></div></div>
+    <div class="chart"><div class="ct">Respostas de erro por status</div><div id="chart-err" style="margin-top:12px"></div></div>
+  </div>
+
+  <h4>Endpoints críticos</h4>
+  ${tbl(['Método','Path','Módulo','O que faz','Papéis'],
+    T.api.endpointsCriticos.map(e=>`<tr><td><span class="pill ${e.metodo==='POST'?'ok':(e.metodo==='DELETE'?'crit':'')}">${esc(e.metodo)}</span></td>
+    <td><code>${esc(e.path)}</code>${e.degradacao?`<div style="margin-top:4px"><span class="pill ${e.degradacao==='BLOQUEIA'?'crit':'med'}">${esc(e.degradacao)}</span></div>`:''}</td>
+    <td style="font-size:12px">${esc(e.modulo||'')}</td>
+    <td style="max-width:340px;font-size:12.5px">${esc(e.descricao||'')}</td>
+    <td style="max-width:180px;font-size:11.5px;color:var(--ink-3)">${esc((e.papeis||[]).slice(0,3).join(', '))}</td></tr>`),'tall')}
+
+  <h4>Catálogo de erros</h4>
+  ${T.api.catalogoErrosNota?`<p class="note" style="margin-bottom:12px">${T.api.catalogoErrosNota}</p>`:''}
+  ${tbl(['Código','#Status','Significado'],
+    T.api.catalogoErros.map(c=>`<tr><td><code>${esc(c.code)}</code></td><td class="num">${esc(c.status)}</td>
+    <td style="max-width:620px;font-size:12.5px">${esc(c.significado||c.titulo||'')}</td></tr>`),'tall')}
+
+  ${(T.api.bloqueadosFMS&&T.api.bloqueadosFMS.length)?`<div class="callout c" style="margin-top:20px">
+    ${T.api.bloqueadosNota||''}
+    <div style="margin-top:9px">${T.api.bloqueadosFMS.map(b=>`<code style="display:block;margin:3px 0">${esc(b.metodo)} ${esc(b.path)}</code>`).join('')}</div></div>`:''}
+  </div>`;
+  $('#p-tecnica').innerHTML=h;
+
+  if($('#chart-hld')){
+    const HH=T.hld, nEx=new Set((HH.integracoes||[]).map(i=>i.sistema||i.id)).size;
+    const nAs=(HH.integracoes||[]).filter(i=>semAcento(i.estilo).indexOf('assincron')===0).length;
+    mountChart($('#chart-hld'),'Containers e integrações externas',
+      nf(HH.containers.length)+' peça(s) que rodam e são implantadas separadamente · '+nf(nEx)+
+      ' sistema(s) externo(s)'+(nAs?' · '+nf(nAs)+' integração(ões) assíncrona(s)':''),
+      hldDiagram(HH),
+      '<span><i style="background:var(--s1)"></i>Síncrono — a resposta é esperada na hora</span>'+
+      (nAs?'<span><i style="background:var(--s2)"></i>Assíncrono — mensagem, fila ou arquivo; a resposta vem depois</span>':''));
+    $('#chart-hld').firstChild.style.marginBottom='18px';
+  }
+
+  mountChart($('#chart-ctx'),'Entidades por contexto delimitado','Cada contexto vira um prefixo de tabela e uma fronteira de módulo',
+    hbar(T.dataModel.contextos.map(c=>({l:c.nome,v:c.entidades,tip:`${c.entidades} entidades · prefixo ${c.prefixo||'—'}`})),{labelW:186}),'');
+  mountChart($('#chart-api'),'Operações de API por módulo',nf(t.operacoesApi)+' operações em '+nf(t.pathsApi)+' paths, todas rastreadas a um requisito funcional',
+    hbar(T.api.porModulo.slice().sort((a,b)=>b.operacoes-a.operacoes).map(m=>({l:m.modulo.replace('MOD-',''),v:m.operacoes})),{labelW:196}),'');
+  const vb=T.api.porVerbo;
+  mountChart($('#chart-verb'),'','',hbar(Object.keys(vb).map(k=>({l:k,v:vb[k]})),{labelW:66,rowH:24}),'');
+  mountChart($('#chart-err'),'','',hbar(T.api.errosPorStatus.map(e=>({l:'HTTP '+e.status,v:e.quantidade,
+    tip:`${e.quantidade} códigos · ex.: ${(e.exemplos||[]).slice(0,2).join(', ')}`})),{labelW:76,rowH:24}),'');
+}
+
+/* ==========================================================
+   03 — TESTES
+   ========================================================== */
+function paneTestes(){
+  const T=D.testes;
+  const cov=T.cobertura;
+  let h=`<div class="wrap">
+  <span class="eyebrow">03 — Plano de testes</span>
+  <h2 class="big">Como se prova que funciona</h2>
+  <p class="lede">Roteiro de homologação escrito para pessoas de negócio validarem antes da entrega — passos observáveis e resultado verificável na tela ou no sistema de registro, sem jargão técnico.</p>
+  ${band([
+    {v:nf(T.totais.casos),l:'Casos de teste'},{v:T.totais.epicas,l:'Épicas cobertas'},
+    {v:cov.rfCobertos+'/'+cov.rfTotal,l:'Requisitos cobertos',d:'100%'},
+    {v:cov.rnCobertos+'/'+cov.rnTotal,l:'Regras cobertas',d:Math.round(cov.rnCobertos/cov.rnTotal*100)+'%'},
+    {v:T.jornadasCriticas.length,l:'Jornadas críticas'},{v:T.bloqueados.length,l:'Bloqueados',d:'FMS e módulos futuros'}
+  ])}
+
+  <div class="grid2" style="margin-top:20px">
+    <div id="chart-ttipo"></div>
+    <div class="card"><h4 style="margin-top:0">O que a cobertura significa</h4>
+      <p style="font-size:13.5px;color:var(--ink-2);margin:0">Cada requisito funcional tem, no mínimo, um caso de caminho feliz e um de exceção — só caminho feliz não fecha requisito. As <b>${cov.rnTotal-cov.rnCobertos} regras sem caso</b> não são omissão: têm justificativa nominal registrada.</p>
+      <div class="tw" style="margin-top:13px"><table><thead><tr><th>Regra</th><th>Por que não tem caso</th></tr></thead><tbody>
+      ${cov.rnSemCaso.map(r=>`<tr><td><span class="id">${esc(r.id)}</span></td><td style="font-size:12.5px">${esc(r.razao)}</td></tr>`).join('')}
+      </tbody></table></div></div>
+  </div>
+
+  <h3>Casos por épica</h3>
+  <div id="chart-tepica"></div>
+
+  <h3>As ${T.jornadasCriticas.length} jornadas críticas</h3>
+  <p class="note" style="margin-bottom:14px">Selecionadas por três critérios: materializam uma dor quantificada, atravessam mais de um módulo, ou contêm decisão irreversível. São as que recebem verificação formal de acessibilidade WCAG 2.2 AA e medição de tempo até o primeiro valor.</p>
+  <div class="grid2">`;
+  T.jornadasCriticas.forEach(j=>{
+    h+=`<div class="card"><div style="display:flex;gap:11px;align-items:baseline">
+      <span class="id a">${String(j.n).padStart(2,'0')}</span><b>${esc(j.nome)}</b></div>
+      ${(j.casosPrincipais&&j.casosPrincipais.length)?`<div style="margin-top:9px">${j.casosPrincipais.slice(0,6).map(c=>`<span class="tag">${esc(c)}</span>`).join('')}</div>`:''}
+      </div>`;
+  });
+  h+=`</div>
+
+  <h3>Os casos que mais importam</h3>
+  ${tbl(['Caso','Tipo','Épica','O que prova','Regras'],
+    T.casosCriticos.map(c=>`<tr><td><span class="id">${esc(c.id)}</span><div style="margin-top:5px;font-weight:600;font-size:12.5px">${esc(c.titulo)}</div></td>
+    <td><span class="pill ${c.tipo==='ACESSO'?'crit':(c.tipo==='REGRA'?'med':'')}">${esc(c.tipo)}</span></td>
+    <td style="font-size:12px">${esc(c.epica||'')}</td>
+    <td style="max-width:420px;font-size:12.5px">${esc(c.resumo||'')}</td>
+    <td style="max-width:150px;font-size:11px;font-family:var(--mono);color:var(--ink-3)">${esc((c.rn||[]).slice(0,3).join(' '))}</td></tr>`),'tall')}
+
+  <h3>Casos bloqueados</h3>
+  ${tbl(['Caso','Título','Motivo'],
+    T.bloqueados.map(b=>`<tr><td><span class="id">${esc(b.id)}</span></td><td>${esc(b.titulo)}</td>
+    <td><span class="pill blk">${esc(b.motivo)}</span></td></tr>`))}
+  <p class="note">Foram escritos e mantidos no plano em vez de omitidos — assim o custo da dependência aparece, em vez de sumir do escopo.</p>
+  </div>`;
+  $('#p-testes').innerHTML=h;
+
+  const tp=T.porTipo;
+  mountChart($('#chart-ttipo'),'Casos por tipo','Cinco cenários obrigatórios por requisito: feliz, entrada inválida, violação de regra, autorização e borda',
+    hbar(Object.keys(tp).sort((a,b)=>tp[b]-tp[a]).map(k=>({l:k,v:tp[k]})),{labelW:112,rowH:25}),'');
+  mountChart($('#chart-tepica'),'Distribuição por épica','',
+    hbar(T.porEpica.slice().sort((a,b)=>b.casos-a.casos).map(e=>({l:e.nome||e.epica,v:e.casos,tip:`${e.epica} · ${e.casos} casos`})),{labelW:232}),'');
+}
+
+/* ==========================================================
+   04 — SEGURANÇA
+   ========================================================== */
+function paneSeguranca(){
+  const S=D.seguranca, r=S.resumo;
+  let h=`<div class="wrap">
+  <span class="eyebrow">04 — Segurança</span>
+  <h2 class="big">O que foi planejado contra o que pode dar errado</h2>
+  <p class="lede">Revisão de especificação — não de código — das ${nf(r.historiasAnalisadas)} histórias do backlog, contra as ${S.camadasRule.length} camadas da regra universal da empresa: OWASP ASVS 5.0, Top 10:2025, CWE Top 25 e LGPD. Cada achado crítico ou alto carrega o teste que prova o ataque e o que valida a defesa.</p>
+  ${band([
+    {v:r.critico,l:'Críticos',d:'CVSS ≥ 9,0'},{v:r.alto,l:'Altos',d:'CVSS 7,0–8,9'},
+    {v:r.medio,l:'Médios'},{v:r.injetados,l:'Tasks injetadas',d:'em '+r.storiesAfetadas+' histórias'},
+    {v:nf1(r.esforcoDias)+' d',l:'Esforço acrescido'},{v:nf(r.historiasAnalisadas),l:'Histórias analisadas'}
+  ])}
+
+  ${S.achadoEstrutural?`<div class="callout c" style="margin-top:20px"><b>O achado que muda a leitura do backlog.</b> ${esc(S.achadoEstrutural)}</div>`:''}
+
+  <div class="grid2" style="margin-top:22px">
+    <div id="chart-sev"></div>
+    <div id="chart-cam"></div>
+  </div>
+
+  <h3>As ${S.camadasRule.length} camadas da regra de segurança</h3>
+  ${tbl(['','Camada','ASVS 5.0','O que cobre'],
+    S.camadasRule.map(c=>`<tr><td><span class="id a">${esc(c.letra)}</span></td><td><b>${esc(c.nome)}</b></td>
+    <td><code>${esc(c.asvs||'—')}</code></td><td style="max-width:560px;font-size:12.5px">${esc(c.resumo||'')}</td></tr>`))}
+
+  <h3>Os ${S.findings.length} achados</h3>
+  <p class="note" style="margin-bottom:14px">${S.findings.filter(f=>f.injetado).length} foram injetados como tasks no backlog, vinculados à história afetada; ${S.findings.length-S.findings.filter(f=>f.injetado).length} ficaram registrados para o próximo ciclo ou como dívida técnica. Clique para ver o problema, o risco, a correção e o par de testes.</p>
+  <div class="tree">`;
+  const ord={'CRÍTICO':0,'ALTO':1,'MÉDIO':2,'BAIXO':3};
+  S.findings.slice().sort((a,b)=>(ord[a.severidade]??9)-(ord[b.severidade]??9)||b.cvss-a.cvss).forEach(f=>{
+    h+=`<details class="node lv2"><summary><span class="tw-arrow"></span><div class="nb">
+      <div class="nt"><span class="id">${esc(f.id)}</span> &nbsp;${esc(f.nome)}</div>
+      <div class="nm">
+        <span class="pill ${sevCls(f.severidade)}">${esc(f.severidade)}</span>
+        <span style="font-family:var(--mono)">CVSS ${nf1(f.cvss)}</span>
+        <span>${esc(f.owasp||'')}</span><span><code>${esc(f.cwe||'')}</code></span>
+        <span>STRIDE ${esc(f.stride||'')}</span>
+        <span class="pill">${esc(f.camada)}</span>
+        ${f.injetado?`<span class="pill ok">injetado</span>`:`<span class="pill med">não injetado</span>`}
+        ${f.esforco?`<span>${esc(f.esforco)}</span>`:''}
+      </div></div></summary>
+      <div class="doc">
+        <div class="row"><div class="lab">Problema</div>${esc(f.problema)}</div>
+        <div class="row"><div class="lab">Risco</div>${esc(f.risco)}</div>
+        <div class="row"><div class="lab">Correção</div>${esc(f.fix)}</div>
+        <div class="row"><div class="lab">Teste — vermelho (prova o ataque)</div>
+          <div class="gk" style="border-left-color:var(--crit)">${esc(f.testeRed)}</div></div>
+        <div class="row"><div class="lab">Teste — verde (valida a defesa)</div>
+          <div class="gk" style="border-left-color:var(--good)">${esc(f.testeGreen)}</div></div>
+        ${f.storyAfetada?`<div class="row"><div class="lab">História afetada</div><span class="id d">${esc(f.storyAfetada)}</span></div>`:''}
+      </div></details>`;
+  });
+  h+=`</div>
+
+  <h3>Os ${S.pontosAuditados.length} pontos auditados</h3>
+  ${tbl(['#','Ponto','Conclusão','Tasks'],
+    S.pontosAuditados.map(p=>`<tr><td class="num">${esc(p.n)}</td><td style="max-width:220px"><b>${esc(p.ponto)}</b></td>
+    <td style="max-width:520px;font-size:12.5px">${esc(p.conclusao)}</td>
+    <td style="font-size:11px;font-family:var(--mono);color:var(--ink-3)">${esc(Array.isArray(p.tasks)?p.tasks.slice(0,3).join(' '):(p.tasks||''))}</td></tr>`),'tall')}
+
+  <div class="grid2" style="margin-top:26px">
+    <div class="card"><h4 style="margin-top:0">Controles com zero ocorrência no backlog</h4>
+      <p style="font-size:12.5px;color:var(--ink-3);margin:0 0 10px">${S.controlesZeroNota||'Buscados literalmente no backlog. Ausência aqui é ausência de controle, não de palavra.'}</p>
+      <div>${(S.controlesZeroOcorrencia||[]).map(c=>`<span class="tag">${esc(c)}</span>`).join('')}</div></div>
+    <div class="card"><h4 style="margin-top:0">Checklist pré-deploy</h4>
+      <div style="font-size:13px">${(S.checklistPreDeploy||[]).map(c=>
+        `<div style="display:flex;gap:9px;align-items:flex-start;margin:7px 0">
+        <span class="pill ${c.coberto?'ok':'med'}" style="flex:none">${c.coberto?'coberto':'aberto'}</span>
+        <span style="color:var(--ink-2)">${esc(c.item)}${c.onde?` <code style="font-size:10.5px">${esc(c.onde)}</code>`:''}</span></div>`).join('')}</div></div>
+  </div>
+
+  ${(S.limitacoes&&S.limitacoes.length)?`<div class="callout" style="margin-top:24px"><b>Limitações desta revisão.</b>
+    <ul style="margin:8px 0 0;padding-left:18px">${S.limitacoes.map(l=>`<li style="margin:4px 0">${esc(l)}</li>`).join('')}</ul></div>`:''}
+  </div>`;
+  $('#p-seguranca').innerHTML=h;
+
+  mountChart($('#chart-sev'),'Achados por severidade','CVSS, ajustado por EPSS e presença no catálogo KEV quando aplicável',
+    hbar([{l:'Crítico',v:r.critico,c:'var(--crit)'},{l:'Alto',v:r.alto,c:'var(--serious)'},
+          {l:'Médio',v:r.medio,c:'var(--warn)'},{l:'Baixo',v:r.baixo||0,c:'var(--ink-4)'}],{labelW:88,rowH:27}),'');
+  mountChart($('#chart-cam'),'Achados por camada','',
+    hbar(S.porCamada.slice().sort((a,b)=>b.quantidade-a.quantidade).map(c=>({l:c.camada,v:c.quantidade})),{labelW:112,rowH:25}),'');
+}
+
+/* ==========================================================
+   05 — LACUNAS (GAPs)
+   ========================================================== */
+function paneGaps(){
+  const G=D.gaps;
+  if(!G){ $('#p-gaps').innerHTML='<div class="wrap"><p class="lede">Seção de lacunas indisponível nesta versão dos dados.</p></div>'; return; }
+  const r=G.resumo, sv=r.porSeveridade||{}, nt=r.porNatureza||{};
+  let h=`<div class="wrap">
+  <span class="eyebrow">05 — Lacunas e decisões</span>
+  <h2 class="big">O que faltava decidir — e o que foi decidido</h2>
+  <p class="lede">${esc(r.nota||'')}</p>
+  ${band([
+    {v:r.total,l:'Lacunas registradas'},
+    {v:r.respondidos,l:'Respondidas',d:(nt.DERIVADA||0)+' derivadas · '+(nt.ARBITRADA||0)+' arbitradas · '+(nt.PENDENTE||0)+' pendentes'},
+    {v:r.naoRespondidos,l:'Não respondidas',d:'sem decisão até agora'},
+    {v:r.bloqueantes,l:'Bloqueantes'},
+    {v:r.comPendenciaResidual,l:'Com pendência residual',d:'a decisão foi tomada, algo ficou aberto'}
+  ])}
+
+  <div class="grid2" style="margin-top:20px">
+    <div id="chart-gnat"></div>
+    <div id="chart-gsev"></div>
+  </div>
+
+  <h3>Como ler esta aba</h3>
+  <div class="grid3">
+    <div class="card" style="border-left:3px solid var(--good)"><div class="eyebrow" style="color:var(--good)">Derivada</div>
+      <p style="font-size:13px;color:var(--ink-2);margin:7px 0 0">A documentação de origem continha a resposta — ela só não estava explícita. Risco baixo: é leitura, não escolha.</p></div>
+    <div class="card" style="border-left:3px solid var(--warn)"><div class="eyebrow" style="color:var(--warn-ink)">Arbitrada</div>
+      <p style="font-size:13px;color:var(--ink-2);margin:7px 0 0">A documentação era omissa ou contraditória. Foi escolhida a opção mais defensável e reversível, com a justificativa registrada. <b>Vale como decisão de trabalho e precisa de ratificação.</b></p></div>
+    <div class="card" style="border-left:3px solid var(--crit)"><div class="eyebrow" style="color:var(--crit)">Não respondida</div>
+      <p style="font-size:13px;color:var(--ink-2);margin:7px 0 0">Nenhuma opção era defensável sem informação que não existe no repositório, ou a lacuna foi aberta depois da rodada de respostas. <b>Segue sem decisão.</b></p></div>
+  </div>
+
+  <h3>Os quatro conjuntos</h3>
+  ${(G.conjuntos||[]).map(c=>`<div class="card" style="margin-bottom:12px;border-left:3px solid ${c.status==='respondido'?'var(--good)':'var(--crit)'}">
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:baseline;justify-content:space-between">
+      <div><b>${esc(c.nome)}</b> <span class="id" style="margin-left:7px">${esc(c.faixa||'')}</span></div>
+      <div><span class="pill ${c.status==='respondido'?'ok':'crit'}">${c.status==='respondido'?'respondido':'não respondido'}</span>
+      <span class="pill">${esc(c.quantidade)} itens</span></div></div>
+    <p style="font-size:13px;color:var(--ink-2);margin:10px 0 0">${esc(c.explicacao||'')}</p>
+    ${c.quemRespondeu?`<div class="nm" style="margin-top:9px"><span>Decidido por <b>${esc(c.quemRespondeu)}</b></span>${c.quando?`<span>em ${esc(c.quando)}</span>`:''}</div>`:''}
+  </div>`).join('')}
+
+  <h3>As ${r.naoRespondidos} lacunas sem resposta</h3>
+  <div class="callout c" style="margin-bottom:16px"><b>Estas continuam abertas.</b> Não foram respondidas porque dependem de informação que não existe no repositório — volumes medidos, faixas de margem, dono do FMS — ou porque foram levantadas depois da rodada de decisões, na geração do backlog e dos contratos. Cada uma mostra abaixo a decisão provisória que o gerador adotou para não travar, quando houve.</div>
+  <div class="tree">`;
+  const naoResp=(G.itens||[]).filter(i=>!i.respondido);
+  naoResp.forEach(i=>{ h+=gapNode(i); });
+  h+=`</div>
+
+  <h3>As ${r.respondidos} lacunas respondidas</h3>
+  <div class="filter">
+    <input id="qg" type="search" placeholder="Filtrar por ID, título, tema… (ex.: IMO, LGPD, alocação, GAP-1)" aria-label="Filtrar lacunas">
+    <button type="button" id="gexp">Expandir tudo</button>
+    <button type="button" id="gcol">Recolher tudo</button>
+    <span id="gcount" style="font-family:var(--mono);font-size:11px;color:var(--ink-3)"></span>
+  </div>
+  <div class="tree" id="gtree">`;
+  const resp=(G.itens||[]).filter(i=>i.respondido)
+    .sort((a,b)=>({'CRÍTICA':0,'ALTA':1,'MÉDIA':2,'BAIXA':3}[a.severidade]??9)-({'CRÍTICA':0,'ALTA':1,'MÉDIA':2,'BAIXA':3}[b.severidade]??9)
+      || String(a.id).localeCompare(String(b.id)));
+  resp.forEach(i=>{ h+=gapNode(i); });
+  h+=`</div></div>`;
+  $('#p-gaps').innerHTML=h;
+
+  mountChart($('#chart-gnat'),'Natureza da resposta','Como cada lacuna foi tratada',
+    hbar([
+      {l:'Derivada da doc.',v:nt.DERIVADA||0,c:'var(--good)'},
+      {l:'Arbitrada',v:nt.ARBITRADA||0,c:'var(--warn)'},
+      {l:'Pendente',v:nt.PENDENTE||0,c:'var(--serious)'},
+      {l:'Não respondida',v:nt.NAO_RESPONDIDO||0,c:'var(--crit)'}
+    ],{labelW:132,rowH:27}),'');
+  mountChart($('#chart-gsev'),'Severidade','20 itens técnicos não recebem severidade na origem',
+    hbar([
+      {l:'Crítica',v:sv.CRITICA||sv['CRÍTICA']||0,c:'var(--crit)'},
+      {l:'Alta',v:sv.ALTA||0,c:'var(--serious)'},
+      {l:'Média',v:sv.MEDIA||sv['MÉDIA']||0,c:'var(--warn)'},
+      {l:'Baixa',v:sv.BAIXA||0,c:'var(--ink-4)'}
+    ],{labelW:92,rowH:27}),'');
+
+  const qg=$('#qg'), gt=$('#gtree'), gc=$('#gcount');
+  let gqt;
+  qg.addEventListener('input',()=>{
+    clearTimeout(gqt);
+    gqt=setTimeout(()=>{
+      const v=qg.value.trim().toLowerCase();
+      const nodes=gt.querySelectorAll('details.node');
+      if(!v){ nodes.forEach(n=>{n.classList.remove('hide');n.open=false;}); gc.textContent=''; return; }
+      let n0=0;
+      nodes.forEach(n=>{ const hit=(n.dataset.s||'').includes(v);
+        n.classList.toggle('hide',!hit); n.open=false; if(hit) n0++; });
+      gc.textContent=n0+' lacunas';
+    },140);
+  });
+  $('#gexp').addEventListener('click',()=>gt.querySelectorAll('details').forEach(d=>d.open=true));
+  $('#gcol').addEventListener('click',()=>gt.querySelectorAll('details').forEach(d=>d.open=false));
+}
+function gapNode(i){
+  const nat=i.natureza||'NAO_RESPONDIDO';
+  const natCls={'DERIVADA':'ok','ARBITRADA':'med','PENDENTE':'high','NAO_RESPONDIDO':'crit'}[nat]||'';
+  const stripe={'DERIVADA':'var(--good)','ARBITRADA':'var(--warn)','PENDENTE':'var(--serious)','NAO_RESPONDIDO':'var(--crit)'}[nat];
+  const idx=[i.id,i.titulo,i.severidade,i.natureza,i.problema,i.resposta,i.donoSugerido,i.conjunto,
+    (i.perguntas||[]).join(' ')].join(' ').toLowerCase();
+  let d=`<details class="node" data-s="${esc(idx)}"><summary style="border-left:3px solid ${stripe}">
+    <span class="tw-arrow"></span><div class="nb">
+    <div class="nt">${esc(i.titulo)}</div>
+    <div class="nm"><span class="id ${i.respondido?'':'a'}">${esc(i.id)}</span>
+      ${i.severidade&&i.severidade!=='—'?`<span class="pill ${sevCls(i.severidade)}">${esc(i.severidade)}</span>`:''}
+      <span class="pill ${natCls}">${nat==='NAO_RESPONDIDO'?'não respondida':esc(String(nat).toLowerCase())}</span>
+      ${i.bloqueante?'<span class="pill crit">bloqueante</span>':''}
+      ${i.pendenciaResidual?'<span class="pill med">pendência residual</span>':''}
+      ${i.donoSugerido?`<span style="color:var(--ink-4)">${esc(String(i.donoSugerido).slice(0,58))}</span>`:''}
+    </div></div></summary>
+    <div class="doc">`;
+  if(i.problema) d+=`<div class="row"><div class="lab">Qual era o problema</div>${esc(i.problema)}</div>`;
+  if(i.porQueImporta) d+=`<div class="row"><div class="lab">Por que importa</div>${esc(i.porQueImporta)}</div>`;
+  if(i.perguntas&&i.perguntas.length) d+=`<div class="row"><div class="lab">O que precisava ser respondido</div>
+    <ul>${i.perguntas.map(p=>`<li>${esc(p)}</li>`).join('')}</ul></div>`;
+  if(i.respondido&&i.resposta){
+    d+=`<div class="row"><div class="lab" style="color:var(--good)">A decisão</div>
+      <div class="gk" style="border-left-color:${stripe};background:var(--surface-2)">${esc(i.resposta).replace(/\n/g,'<br>')}</div></div>`;
+    if(i.justificativa) d+=`<div class="row"><div class="lab">Por que essa e não outra</div>${esc(i.justificativa)}</div>`;
+    d+=`<div class="row"><div class="lab">Quem decidiu</div>
+      <span class="pill">${esc(i.decisor||'—')}</span>${i.data?`<span class="pill">${esc(i.data)}</span>`:''}
+      ${i.statusPropagacao?`<span class="pill ${i.statusPropagacao==='propagado'?'ok':''}">${esc(i.statusPropagacao)}</span>`:''}</div>`;
+  } else {
+    d+=`<div class="row"><div class="lab" style="color:var(--crit)">Resposta</div>
+      <div class="gk" style="border-left-color:var(--crit)"><b>Não foi respondida.</b>
+      ${i.conjunto==='backlog'?' Esta lacuna foi levantada pela geração do backlog, depois da rodada de decisões — ninguém a tratou desde então.'
+        :(i.conjunto==='tecnicas'?' Registrada pelo gerador do modelo de dados ou dos contratos como questão em aberto; segue sem decisão de negócio.'
+        :' Depende de informação que não existe no repositório.')}</div></div>`;
+  }
+  if(i.pendenciaResidual) d+=`<div class="row"><div class="lab" style="color:var(--warn-ink)">${i.respondido?'O que ainda ficou aberto':'Decisão provisória adotada para não travar'}</div>
+    <div class="gk" style="border-left-color:var(--warn)">${esc(i.pendenciaResidual)}</div></div>`;
+  if(i.ratificarCom) d+=`<div class="row"><div class="lab">Precisa ser ratificada com</div><span class="pill med">${esc(i.ratificarCom)}</span></div>`;
+  if(i.artefatosAfetados&&i.artefatosAfetados.length) d+=listBlock('Artefatos afetados',i.artefatosAfetados,true);
+  d+=`</div></details>`;
+  return d;
+}
+
+/* ==========================================================
+   06 — BACKLOG  (Epic › Feature › Story › Task)
+   ========================================================== */
+function listBlock(lab,arr,mono){
+  if(!arr||!arr.length) return '';
+  return `<div class="row"><div class="lab">${esc(lab)}</div>${mono
+    ? arr.map(a=>`<span class="tag">${esc(a)}</span>`).join('')
+    : `<ul>${arr.map(a=>`<li>${esc(typeof a==='string'?a:JSON.stringify(a))}</li>`).join('')}</ul>`}</div>`;
+}
+function taskNode(t){
+  const sec=t.isSec||t.classe==='security';
+  let d=`<details class="node lv4${sec?' sec':''}"><summary><span class="tw-arrow"></span><div class="nb">
+    <div class="nt" style="font-weight:550;font-size:13.5px">${esc(t.titulo)}</div>
+    <div class="nm"><span class="id">${esc(t.id)}</span>
+      <span class="pill">${esc(t.tipo||'—')}</span>
+      ${sec?'<span class="pill crit">segurança</span>':''}
+      ${t.tamanho?`<span>${esc(t.tamanho)}</span>`:''}
+      <span style="font-family:var(--mono)">${nf1(t.esforcoDias)} d</span></div></div></summary>
+    <div class="doc">`;
+  if(t.escopo) d+=`<div class="row"><div class="lab">Escopo técnico</div>${esc(t.escopo)}</div>`;
+  if(t.seguranca){ const s=t.seguranca;
+    d+=`<div class="row"><div class="lab">Classificação de segurança</div>
+      <span class="pill ${sevCls(s.severidade)}">${esc(s.severidade)}</span>
+      <span class="tag">CVSS ${nf1(s.cvss)}</span><span class="tag">${esc(s.owasp||'')}</span>
+      <span class="tag">${esc(s.cwe||'')}</span><span class="tag">STRIDE ${esc(s.stride||'')}</span>
+      <span class="tag">${esc(s.camada||'')}</span></div>`; }
+  if(t.cenarios&&t.cenarios.length) d+=listBlock('Cenários de teste',t.cenarios.map(c=>typeof c==='string'?c:(c.tipo+' — '+c.descricao)));
+  if(t.criteriosAceite&&t.criteriosAceite.length) d+=listBlock('Critérios de aceite',t.criteriosAceite);
+  if(t.testeRed) d+=`<div class="row"><div class="lab">Teste vermelho</div><div class="gk" style="border-left-color:var(--crit)">${esc(t.testeRed)}</div></div>`;
+  if(t.testeGreen) d+=`<div class="row"><div class="lab">Teste verde</div><div class="gk" style="border-left-color:var(--good)">${esc(t.testeGreen)}</div></div>`;
+  d+=`</div></details>`;
+  return d;
+}
+/* índice de busca: percorre os dados, não o DOM — as tasks são preguiçosas */
+const sx = a => (Array.isArray(a)?a:[a]).map(v=>typeof v==='string'?v:(v&&(v.id||v.titulo||v.texto)||'')).join(' ');
+function storyNode(s){
+  const kind = s.tipo==='enabler'?'enabler':(s.tipo==='uat'?'uat':'');
+  const idx = [s.id,s.titulo,s.tipo,s.modulo,s.contexto,s.rolloutWave,s.bloqueadoPor,
+    sx(s.tasks||[]), sx(s.regrasNegocio||[]), sx(s.entidades||[]), sx(s.endpoints||[]),
+    sx(s.telas||[]), sx(s.papeis||[]), s.narrativa?[s.narrativa.comoA,s.narrativa.quero,s.narrativa.para].join(' '):'',
+    s.enabler?[s.enabler.capacidade,s.enabler.porQue].join(' '):''
+  ].join(' ').toLowerCase();
+  let d=`<details class="node lv3 ${kind}" data-s="${esc(idx)}"><summary><span class="tw-arrow"></span><div class="nb">
+    <div class="nt">${esc(s.titulo)}</div>
+    <div class="nm"><span class="id">${esc(s.id)}</span>
+      <span class="pill ${s.tipo==='enabler'?'blk':(s.tipo==='uat'?'ok':'')}">${esc(s.tipo)}</span>
+      ${s.prioridade?`<span class="pill ${s.prioridade==='CRITICAL'?'crit':(s.prioridade==='HIGH'?'high':'')}">${esc(s.prioridade)}</span>`:''}
+      ${s.bloqueadoPor?`<span class="pill blk">bloqueada por ${esc(s.bloqueadoPor)}</span>`:''}
+      <span style="font-family:var(--mono)">${nf1(s.esforcoDias)} d</span>
+      <span>${(s.tasks||[]).length} tasks</span>
+      ${s.rolloutWave?`<span>${esc(s.rolloutWave)}</span>`:''}</div></div></summary>
+    <div class="doc">`;
+  if(s.narrativa) d+=`<div class="row"><div class="lab">História</div>
+    <b>Como</b> ${esc(s.narrativa.comoA)}, <b>quero</b> ${esc(s.narrativa.quero)}, <b>para</b> ${esc(s.narrativa.para)}.</div>`;
+  if(s.contexto) d+=`<div class="row"><div class="lab">Contexto</div>${esc(s.contexto)}</div>`;
+  if(s.enabler){ const e=s.enabler;
+    d+=`<div class="row"><div class="lab">Capacidade habilitada</div>${esc(e.capacidade||'')}</div>`;
+    if(e.porQue) d+=`<div class="row"><div class="lab">Por que é pré-requisito</div>${esc(e.porQue)}</div>`;
+    if(e.desbloqueia) d+=listBlock('O que desbloqueia',e.desbloqueia,true);
+    if(e.risco) d+=`<div class="row"><div class="lab">Risco se não for feito</div>${esc(e.risco)}</div>`; }
+  if(s.gherkin&&s.gherkin.length){
+    d+=`<div class="row"><div class="lab">Critérios em Gherkin${s.nGherkin>s.gherkin.length?` — ${s.gherkin.length} de ${s.nGherkin}`:''}</div>`;
+    s.gherkin.forEach(g=>{ d+=`<div class="gk"><div class="gkn">${esc(g.cenario||g.nome||'Cenário')}</div>
+      <ol>${(g.passos||[]).map(p=>`<li>${esc(p)}</li>`).join('')}</ol></div>`; });
+    d+=`</div>`; }
+  if(s.criteriosAceite&&s.criteriosAceite.length) d+=listBlock(`Critérios de aceite${s.nCriteriosAceite>s.criteriosAceite.length?` — ${s.criteriosAceite.length} de ${s.nCriteriosAceite}`:''}`,s.criteriosAceite);
+  if(s.regrasNegocio&&s.regrasNegocio.length){
+    d+=`<div class="row"><div class="lab">Regras de negócio${s.nRegras>s.regrasNegocio.length?` — ${s.regrasNegocio.length} de ${s.nRegras}`:''}</div><ul>`;
+    s.regrasNegocio.forEach(r=>{ d+=`<li><span class="id">${esc(r.id||'')}</span> ${esc(r.texto||r.enunciado||'')}</li>`; });
+    d+=`</ul></div>`; }
+  if(s.entidades) d+=listBlock('Entidades',s.entidades,true);
+  if(s.endpoints) d+=listBlock('Endpoints',s.endpoints,true);
+  if(s.telas) d+=listBlock('Telas',s.telas,true);
+  if(s.papeis) d+=listBlock('Papéis autorizados',s.papeis,true);
+  if(s.estadosUI) d+=listBlock('Estados de interface',s.estadosUI,true);
+  if(s.definitionOfDone) d+=listBlock(`Definição de pronto${s.nDefinitionOfDone>s.definitionOfDone.length?` — ${s.definitionOfDone.length} de ${s.nDefinitionOfDone}`:''}`,s.definitionOfDone);
+  if(s.casosDeTesteDeNegocio) d+=listBlock('Casos de teste de negócio',s.casosDeTesteDeNegocio,true);
+  d+=`</div><div class="kids" data-lazy="task">${(s.tasks||[]).map(t=>`<i data-t='${esc(JSON.stringify(t))}'></i>`).join('')}</div></details>`;
+  return d;
+}
+function featureNode(f){
+  const kidsHtml=(f.stories||[]).map(storyNode).join('');
+  const kidsIdx=(kidsHtml.match(/data-s="([^"]*)"/g)||[]).join(' ');
+  const idx=[f.id,f.titulo,f.modulo,f.descricao,f.valorEntregue,sx(f.fluxos||[]),sx(f.telas||[]),sx(f.rf||[]),kidsIdx].join(' ').toLowerCase();
+  let d=`<details class="node lv2" data-s="${esc(idx)}"><summary><span class="tw-arrow"></span><div class="nb">
+    <div class="nt">${esc(f.titulo)}</div>
+    <div class="nm"><span class="id d">${esc(f.id)}</span>
+      ${f.modulo?`<span>${esc(f.modulo)}</span>`:''}
+      ${f.prioridade?`<span class="pill ${f.prioridade==='CRITICAL'?'crit':''}">${esc(f.prioridade)}</span>`:''}
+      <span style="font-family:var(--mono)">${nf1(f.esforcoDias)} d</span>
+      <span>${(f.stories||[]).length} histórias</span></div></div></summary>
+    <div class="doc">`;
+  if(f.descricao) d+=`<div class="row"><div class="lab">Descrição</div>${esc(f.descricao)}</div>`;
+  if(f.valorEntregue) d+=`<div class="row"><div class="lab">Valor entregue</div>${esc(f.valorEntregue)}</div>`;
+  if(f.fluxos) d+=listBlock('Fluxos realizados',f.fluxos,true);
+  if(f.telas) d+=listBlock('Telas',f.telas,true);
+  if(f.rf) d+=listBlock('Requisitos cobertos',f.rf,true);
+  if(f.criteriosAceite) d+=listBlock(`Critérios de aceite${f.totalCriteriosAceite>f.criteriosAceite.length?` — ${f.criteriosAceite.length} de ${f.totalCriteriosAceite}`:''}`,f.criteriosAceite);
+  d+=`</div><div class="kids">${kidsHtml}</div></details>`;
+  return d;
+}
+function epicNode(e){
+  const kidsHtml=(e.features||[]).map(featureNode).join('');
+  const kidsIdx=(kidsHtml.match(/data-s="([^"]*)"/g)||[]).join(' ');
+  const idx=[e.id,e.titulo,e.dominio,e.objetivo,e.problema,e.rolloutWave,
+    sx(e.modulos||[]),sx(e.personas||[]),sx(e.sistemasLegados||[]),sx(e.capacidades||[]),kidsIdx].join(' ').toLowerCase();
+  let d=`<details class="node lv1" data-s="${esc(idx)}"><summary><span class="tw-arrow"></span><div class="nb">
+    <div class="nt" style="font-size:15px">${esc(e.titulo)}</div>
+    <div class="nm"><span class="id a">${esc(e.id)}</span>
+      <span class="pill ${e.prioridade==='CRITICAL'?'crit':(e.prioridade==='HIGH'?'high':'')}">${esc(e.prioridade||'')}</span>
+      <span>${esc(e.dominio||'')}</span>
+      <span class="pill">${esc(e.rolloutWave||'')}</span>
+      <span style="font-family:var(--mono)"><b>${nf1(e.esforcoDias)} d</b></span>
+      <span>${(e.features||[]).length} features</span>
+      <span>${(e.features||[]).reduce((a,f)=>a+(f.stories||[]).length,0)} histórias</span>
+      <span>${(e.features||[]).reduce((a,f)=>a+(f.stories||[]).reduce((x,s)=>x+(s.tasks||[]).length,0),0)} tasks</span>
+    </div></div></summary>
+    <div class="doc">`;
+  if(e.objetivo) d+=`<div class="row"><div class="lab">Objetivo</div>${esc(e.objetivo)}</div>`;
+  if(e.problema) d+=`<div class="row"><div class="lab">Problema que resolve</div>${esc(e.problema)}</div>`;
+  if(e.resultados) d+=listBlock('Resultados esperados',e.resultados);
+  if(e.metricas) d+=listBlock('Como se mede',e.metricas);
+  if(e.capacidades) d+=listBlock('Capacidades incluídas',e.capacidades);
+  if(e.foraDeEscopo) d+=listBlock('Fora do escopo deste épico',e.foraDeEscopo);
+  if(e.personas) d+=listBlock('Personas',e.personas,true);
+  if(e.modulos) d+=listBlock('Módulos',e.modulos,true);
+  if(e.sistemasLegados) d+=listBlock('Sistemas legados envolvidos',e.sistemasLegados,true);
+  if(e.dependencias) d+=listBlock('Dependências',e.dependencias);
+  if(e.riscos) d+=listBlock('Riscos',e.riscos);
+  if(e.criteriosAceite) d+=listBlock(`Critérios de aceite${e.totalCriteriosAceite>e.criteriosAceite.length?` — ${e.criteriosAceite.length} de ${e.totalCriteriosAceite}`:''}`,e.criteriosAceite);
+  d+=`</div><div class="kids">${kidsHtml}</div></details>`;
+  return d;
+}
+function paneBacklog(){
+  const B=D.backlog, t=B.totais;
+  let h=`<div class="wrap">
+  <span class="eyebrow">06 — Backlog</span>
+  <h2 class="big">Épico, feature, história, task</h2>
+  <p class="lede">Quatro níveis mais habilitadores, com documentação completa em cada um — não só na task. Um agente implementador trabalha a partir daqui e das regras técnicas, sem precisar abrir o modelo de dados nem o contrato de API.</p>
+  ${band([
+    {v:t.epics,l:'Épicos'},{v:t.features,l:'Features'},{v:t.stories,l:'Histórias',d:t.storiesNegocio+' negócio · '+t.enablers+' habilitadores · '+t.storiesUat+' UAT'},
+    {v:nf(t.tasks),l:'Tasks',d:t.tasksSeguranca+' de segurança'},{v:nf1(t.esforcoDiasTasks),l:'Dias-pessoa'}
+  ])}
+  <div id="chart-epic" style="margin-top:20px"></div>
+  <div style="height:16px"></div>
+  <div id="chart-onda"></div>
+
+  <h3>Árvore completa</h3>
+  <div class="filter">
+    <input id="q" type="search" placeholder="Filtrar por título, ID, módulo… (ex.: IMO, alocação, SEC-, MOD-FATURAMENTO)" aria-label="Filtrar backlog">
+    <button type="button" id="expand">Expandir épicos</button>
+    <button type="button" id="collapse">Recolher tudo</button>
+    <span id="qcount" style="font-family:var(--mono);font-size:11px;color:var(--ink-3)"></span>
+  </div>
+  <div class="tree" id="tree">${B.epics.map(epicNode).join('')}</div>
+
+  <h3>Dependências globais</h3>
+  <div class="grid2">${Object.keys(B.dependenciasGlobais||{}).map(k=>
+    `<div class="card"><div class="eyebrow">${esc(k)}</div><div style="font-size:13px;color:var(--ink-2);margin-top:7px">${esc(B.dependenciasGlobais[k])}</div></div>`).join('')}</div>
+
+  <h3>Padrões aplicados a todas as tasks</h3>
+  <div class="grid2">
+    <div class="card"><h4 style="margin-top:0">Tratamento de erro</h4><dl class="kv">
+      ${Object.keys(B.errorHandlingPadrao||{}).map(k=>`<dt>${esc(k)}</dt><dd>${esc(B.errorHandlingPadrao[k])}</dd>`).join('')}</dl></div>
+    <div class="card"><h4 style="margin-top:0">Critérios de aceite padrão</h4>
+      ${(B.criteriosAceitePadraoTask&&B.criteriosAceitePadraoTask.tecnico)?`<ul style="font-size:13px;color:var(--ink-2);padding-left:18px;margin:0">
+      ${B.criteriosAceitePadraoTask.tecnico.map(c=>`<li style="margin:5px 0">${esc(c)}</li>`).join('')}</ul>`:''}
+      ${B.criteriosAceitePadraoTask&&B.criteriosAceitePadraoTask.nota?`<p class="note">${esc(B.criteriosAceitePadraoTask.nota)}</p>`:''}</div>
+  </div>
+  </div>`;
+  $('#p-backlog').innerHTML=h;
+
+  /* tasks preguiçosas */
+  $('#p-backlog').addEventListener('toggle', e=>{
+    const d=e.target; if(!(d instanceof HTMLDetailsElement)||!d.open) return;
+    const kids=d.querySelector(':scope > .kids[data-lazy="task"]');
+    if(kids && !kids.dataset.done){
+      kids.innerHTML=[...kids.querySelectorAll('i[data-t]')].map(i=>taskNode(JSON.parse(i.dataset.t))).join('');
+      kids.dataset.done='1';
+    }
+  }, true);
+
+  const q=$('#q'), tree=$('#tree'), qc=$('#qcount');
+  let qt;
+  q.addEventListener('input',()=>{
+    clearTimeout(qt);
+    qt=setTimeout(()=>{
+      const v=q.value.trim().toLowerCase();
+      const nodes=tree.querySelectorAll('details.node');
+      if(!v){ nodes.forEach(n=>{n.classList.remove('hide');n.open=false;}); qc.textContent=''; return; }
+      let ep=0,ft=0,st=0;
+      nodes.forEach(n=>{
+        const hit=(n.dataset.s||'').includes(v);
+        n.classList.toggle('hide',!hit);
+        if(hit){
+          n.open = !n.classList.contains('lv3');           /* abre até a história, não além */
+          if(n.classList.contains('lv1')) ep++;
+          else if(n.classList.contains('lv2')) ft++;
+          else if(n.classList.contains('lv3')) st++;
+        } else { n.open=false; }
+      });
+      qc.textContent = st?`${st} histórias em ${ft} features · ${ep} épicos`:(ep||ft?`${ep} épicos · ${ft} features`:'nenhum item');
+    },140);
+  });
+  $('#expand').addEventListener('click',()=>tree.querySelectorAll(':scope > details').forEach(d=>d.open=true));
+  $('#collapse').addEventListener('click',()=>tree.querySelectorAll('details').forEach(d=>d.open=false));
+
+  stackChart($('#chart-epic'),'Composição por épico','Features, histórias e tasks — a barra é o volume de itens, não o esforço',
+    B.epics.map(e=>({l:e.titulo.split('—')[0].trim(),
+      f:(e.features||[]).length,
+      s:(e.features||[]).reduce((a,f)=>a+(f.stories||[]).length,0),
+      t:(e.features||[]).reduce((a,f)=>a+(f.stories||[]).reduce((x,s)=>x+(s.tasks||[]).length,0),0)})),
+    ['f','s','t'],['Features','Histórias','Tasks']);
+  mountChart($('#chart-onda'),'Esforço por épico','Dias-pessoa ideais, régua P=0,5 · M=1 · G=3 · GG=5',
+    hbar(B.epics.slice().sort((a,b)=>b.esforcoDias-a.esforcoDias).map(e=>({l:e.titulo.split('—')[0].trim(),v:e.esforcoDias,
+      t:nf1(e.esforcoDias)+' d',tip:`${nf1(e.esforcoDias)} dias · ${e.rolloutWave||''}`})),{labelW:214}),'');
+}
+
+/* ==========================================================
+   06 — ESTIMATIVA
+   ========================================================== */
+function paneEstimativa(){
+  const E=D.estimativa, f=E.forecast;
+  const riscos=(E.riscos||[]).slice().sort((a,b)=>(b.esperadoDias||0)-(a.esperadoDias||0));
+  const riscoTotal=riscos.reduce((a,r)=>a+(r.esperadoDias||0),0);
+  const NP=E.equipe.pessoas;
+  const ia=f.iaAssistida||{p50:{},p85:{},p95:{}};
+  const cmp=(E.custos&&E.custos.comparativoModos)||null;
+  let h=`<div class="wrap">
+  <span class="eyebrow">07 — Estimativa</span>
+  <h2 class="big">Quanto tempo, quanta gente, quanto risco</h2>
+  <p class="lede">Previsão por Monte Carlo com <b>${NP} desenvolvedores</b> atravessando o sistema sequencialmente${E.calibracaoNota?', '+E.calibracaoNota:''}. Todos os números aparecem nos <b>dois modos de execução</b>: as mesmas ${NP} pessoas implementando, ou as mesmas ${NP} pessoas orquestrando e revisando agentes.</p>
+
+  <div class="modes">
+    <div class="mode trad">
+      <div class="mhd"><span class="mtag">Tradicional</span><span class="msub">${NP} pessoas implementam</span></div>
+      <div class="mrow"><span>P50</span><b>${f.p50.dias} d</b><i>${esc(f.p50.data)}</i></div>
+      <div class="mrow hi"><span>P85</span><b>${f.p85.dias} d</b><i>${esc(f.p85.data)}</i></div>
+      <div class="mrow"><span>Custo P85</span><b>${brl(f.p85.custoBRL)}</b><i>${nf1(f.p85.semanas||Math.round(f.p85.dias/5))} sem.</i></div>
+      <div class="mrow"><span>Confiança</span><b>${E.indices.dci}/100</b><i>crítica</i></div>
+    </div>
+    <div class="mode ia">
+      <div class="mhd"><span class="mtag">Assistido por IA</span><span class="msub">as mesmas ${NP} orquestram e revisam</span></div>
+      <div class="mrow"><span>P50</span><b>${ia.p50.dias} d</b><i>${esc(ia.p50.data)}</i></div>
+      <div class="mrow hi"><span>P85</span><b>${ia.p85.dias} d</b><i>${esc(ia.p85.data)}</i></div>
+      <div class="mrow"><span>Custo P85</span><b>${brl(ia.p85.custoBRL)}</b><i>−${nf1(ia.economiaPct)}%</i></div>
+      <div class="mrow"><span>Confiança</span><b>${E.indices.dciIA}/100</b><i>crítica</i></div>
+    </div>
+    <div class="mode delta">
+      <div class="mhd"><span class="mtag">Diferença</span><span class="msub">IA sobre tradicional</span></div>
+      <div class="mrow"><span>Prazo</span><b>${nf1(cmp.ganhoPrazoX)}×</b><i>mais rápido</i></div>
+      <div class="mrow hi"><span>Antecipação</span><b>${f.p85.dias-ia.p85.dias} d</b><i>≈ ${Math.round((f.p85.dias-ia.p85.dias)/21)} meses</i></div>
+      <div class="mrow"><span>Economia</span><b>${brl(f.p85.custoBRL-ia.p85.custoBRL)}</b><i>no P85</i></div>
+      <div class="mrow"><span>Esforço</span><b>${nf1(E.equipe.esforcoPM)} → ${nf1(ia.esforcoPM)}</b><i>pessoas-mês</i></div>
+    </div>
+  </div>
+
+  ${band([
+    {v:NP,l:'Desenvolvedores',d:'equipe única, sequencial'},
+    {v:nf1(riscoTotal),l:'Risco acumulado',d:'dias, soma do valor esperado'},
+    {v:nf1(E.caminhoCritico.dias)+' / '+nf1(E.caminhoCritico.diasIA),l:'Caminho crítico',d:'tradicional / IA'},
+    {v:E.cenarios?E.cenarios.length:'—',l:'Cenários de escopo',d:'A, B, C e D'},
+    {v:riscos.length,l:'Riscos mapeados'}
+  ])}
+
+  <div id="chart-fc" style="margin-top:20px"></div>
+
+  <div class="callout c" style="margin-top:20px"><b>A recomendação é não firmar prazo ainda.</b> ${esc(E.indices.interpretacao||'')}</div>
+
+  ${cmp?`<h3>Tradicional × assistido por IA, lado a lado</h3>
+  <p class="note" style="margin-bottom:14px">${esc(ia.nota||'')}</p>
+  ${tbl(['Métrica','Tradicional','Assistido por IA'],
+    (cmp.linhas||[]).map(l=>`<tr><td><b>${esc(l.metrica)}</b></td>
+    <td>${l.moeda?brl(l.tradicional):esc(l.tradicional)}</td>
+    <td style="color:var(--accent-ink)"><b>${l.moeda?brl(l.ia):esc(l.ia)}</b></td></tr>`))}
+  ${ia.notaDerivacao?`<p class="note">${esc(ia.notaDerivacao)}</p>`:''}`:''}
+
+  <h3 id="riscos-sec">Riscos de execução</h3>
+  <div class="callout c" style="margin-bottom:16px">
+    <div style="display:flex;gap:22px;flex-wrap:wrap;align-items:baseline">
+      <div><div style="font-size:34px;font-weight:700;letter-spacing:-.03em;line-height:1;color:var(--crit)">${nf1(riscoTotal)} d</div>
+      <div style="font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-3);margin-top:6px">Risco acumulado</div></div>
+      <div style="flex:1;min-width:260px"><b>Isso é ${Math.round(riscoTotal/f.p50.dias*100)}% do prazo mediano.</b>
+      A soma dos valores esperados (probabilidade × impacto) dos ${riscos.length} riscos mapeados equivale a ${nf1(riscoTotal)} dias.${E.riscosNota?' '+E.riscosNota:''}</div>
+    </div>
+  </div>
+  <div class="grid3">
+  ${riscos.slice(0,6).map((r,i)=>{
+    const sev = r.esperadoDias>=20?'crit':(r.esperadoDias>=12?'high':'med');
+    const col = r.esperadoDias>=20?'var(--crit)':(r.esperadoDias>=12?'var(--serious)':'var(--warn)');
+    return `<div class="card" style="border-left:3px solid ${col}">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:9px">
+        <span class="id">${esc(r.id)}</span>
+        <span style="font-family:var(--mono);font-size:19px;font-weight:700;color:${col}">${nf1(r.esperadoDias)} d</span></div>
+      <div style="font-weight:620;font-size:13.5px;margin-top:8px;line-height:1.35">${esc(r.risco)}</div>
+      <div class="nm" style="margin-top:9px">
+        <span class="pill ${sev}">${esc(r.probabilidade)}</span>
+        <span>impacto ${nf1(r.impactoDias)} d</span>
+        ${r.categoria?`<span style="color:var(--ink-4)">${esc(r.categoria)}</span>`:''}</div>
+    </div>`;}).join('')}
+  </div>
+  <div style="height:16px"></div>
+  <div id="chart-risco"></div>
+  <div style="height:14px"></div>
+  ${tbl(['Risco','Categoria','Probabilidade','#Impacto (d)','#Esperado (d)'],
+    riscos.map(r=>`<tr><td style="max-width:440px"><span class="id">${esc(r.id)}</span> ${esc(r.risco)}</td>
+    <td style="font-size:12px">${esc(r.categoria||'')}</td>
+    <td><span class="pill ${String(r.probabilidade).toLowerCase().includes('alta')?'crit':(String(r.probabilidade).toLowerCase().includes('m')?'med':'')}">${esc(r.probabilidade)}</span></td>
+    <td class="num">${nf1(r.impactoDias)}</td><td class="num"><b>${nf1(r.esperadoDias)}</b></td></tr>`)
+    .concat([`<tr style="background:var(--surface-2)"><td><b>Total</b></td><td></td><td></td><td class="num"></td>
+      <td class="num"><b>${nf1(riscoTotal)}</b></td></tr>`]),'tall')}
+
+  <h3>Equipe</h3>
+  <div class="grid2">
+    <div id="chart-brooks"></div>
+    <div class="card"><h4 style="margin-top:0">Por que ${NP} e o que isso custa</h4>
+      <p style="font-size:13.5px;color:var(--ink-2);margin:0">${esc(E.equipe.brooks||'')}</p>
+      ${(E.equipe.lacunasEspecializacao&&E.equipe.lacunasEspecializacao.length)?`
+      <h4>Lacunas de competência</h4>
+      <div class="tw"><table><thead><tr><th>Competência</th><th>Cobertura</th><th>Recomendação</th></tr></thead><tbody>
+      ${E.equipe.lacunasEspecializacao.map(l=>`<tr><td>${esc(l.competencia)}</td><td class="num">${esc(l.cobertura)}</td>
+        <td style="font-size:12.5px">${esc(l.recomendacao||'')}</td></tr>`).join('')}</tbody></table></div>`:''}
+    </div>
+  </div>
+
+  <h4>Composição dos squads</h4>
+  ${tbl(['Squad','Tipo','#Pessoas','Foco','#Carga cognitiva'],
+    E.equipe.composicao.map(c=>`<tr><td><b>${esc(c.squad)}</b></td>
+    <td><span class="pill ${c.tipo==='platform'?'crit':(String(c.tipo).includes('ACL')?'med':'')}">${esc(c.tipo)}</span></td>
+    <td class="num">${esc(c.pessoas)}</td><td style="max-width:400px;font-size:12.5px">${esc(c.foco||'')}</td>
+    <td class="num">${esc(c.cargaCognitiva!=null?nf1(c.cargaCognitiva):'—')}</td></tr>`))}
+
+  <h3>Caminho crítico</h3>
+  <p class="note" style="margin-bottom:14px">${esc(E.caminhoCritico.resumo||'')} — ${nf1(E.caminhoCritico.dias)} dias em ${E.caminhoCritico.tarefas} tarefas, ou seja <b>${Math.round(E.caminhoCritico.dias/f.p50.dias*100)}% do prazo mediano</b>. Os outros ${100-Math.round(E.caminhoCritico.dias/f.p50.dias*100)}% são fila, não dependência: <b>o prazo é limitado por capacidade, não por sequência</b>. Reordenar o backlog quase não move a data; acrescentar gente move.</p>
+  <h4>Os maiores gargalos — ${E.caminhoCritico.gargalos.length} itens</h4>
+  ${tbl(['Item','#Score','Por que trava','Ação'],
+    E.caminhoCritico.gargalos.map(g=>`<tr><td><span class="id">${esc(g.id)}</span><div style="margin-top:4px;font-size:12.5px;font-weight:600">${esc(g.nome||'')}</div></td>
+    <td class="num">${esc(g.score)}</td><td style="max-width:360px;font-size:12.5px">${esc(g.porque||'')}</td>
+    <td style="max-width:280px;font-size:12.5px;color:var(--ink-3)">${esc(g.acao||'')}</td></tr>`))}
+
+  <h3>Esforço por épico e por onda</h3>
+  <div class="grid2"><div id="chart-est-epic"></div><div id="chart-est-onda"></div></div>
+  <div style="height:16px"></div>
+  ${tbl(['Épico','Domínio','#Dias','Onda','Risco'],
+    E.porEpic.map(e=>`<tr><td><span class="id">${esc(e.epic)}</span> ${esc(e.titulo||'')}</td>
+    <td>${esc(e.dominio||'')}</td><td class="num">${nf1(e.esforcoDias)}</td><td>${esc(e.onda||'')}</td>
+    <td><span class="pill ${e.risco==='alto'?'crit':(e.risco==='medio'?'med':'ok')}">${esc(e.risco||'')}</span></td></tr>`))}
+
+  ${(E.cenarios&&E.cenarios.length)?`<h3>Cenários de escopo</h3>
+  ${E.cenariosNota?`<p class="note" style="margin-bottom:14px">${E.cenariosNota}</p>`:''}
+  <div class="grid2">
+  ${E.cenarios.map(c=>`<div class="card" style="${c.recomendado?'border-color:var(--accent);border-width:2px':''}">
+    <div style="display:flex;gap:10px;align-items:baseline;justify-content:space-between;flex-wrap:wrap">
+      <div><span class="id a">${esc(c.id)}</span> <b style="margin-left:6px">${esc(c.nome)}</b></div>
+      ${c.recomendado?'<span class="pill ok">recomendado</span>':''}</div>
+    <p style="font-size:13px;color:var(--ink-2);margin:9px 0 0">${esc(c.descricao||'')}</p>
+    <div style="font-size:12.5px;color:var(--ink-3);margin-top:11px">${nf1(c.diasIdeais)} dias ideais de backlog</div>
+    <div class="tw" style="margin-top:8px"><table><thead><tr><th></th><th>Tradicional</th><th>Com IA</th></tr></thead><tbody>
+      <tr><td style="color:var(--ink-3)">P50</td><td>${esc(c.p50Data||'—')}</td>
+        <td style="color:var(--accent-ink)">${c.ia?esc(c.ia.p50Data):'—'}</td></tr>
+      <tr><td style="color:var(--ink-3)">P85</td><td><b>${esc(c.p85Data||'—')}</b></td>
+        <td style="color:var(--accent-ink)"><b>${c.ia?esc(c.ia.p85Data):'—'}</b></td></tr>
+      <tr><td style="color:var(--ink-3)">Custo P85</td><td>${brl(c.custoP85BRL)}</td>
+        <td style="color:var(--accent-ink)">${c.ia?brl(c.ia.custoP85BRL):'—'}</td></tr>
+    </tbody></table></div>
+    ${c.dorQueResolve?`<div style="margin-top:10px;font-size:12.5px;color:var(--ink-2)"><b>Resolve:</b> ${esc(c.dorQueResolve)}</div>`:''}
+    ${(c.oQueFicaDeFora&&c.oQueFicaDeFora.length)?`<div style="margin-top:9px;font-size:12.5px;color:var(--ink-3)"><b>Fica de fora:</b> ${esc(c.oQueFicaDeFora.slice(0,4).join(' · '))}</div>`:''}
+  </div>`).join('')}</div>`:''}
+
+  ${(E.cronogramaSequencial&&E.cronogramaSequencial.length)?`<h3>Cronograma sequencial</h3>
+  <p class="note" style="margin-bottom:14px">Uma equipe única atravessa o sistema por partes. A coluna «cabem» é o número máximo de pessoas que o épico comporta sem colisão — quando é menor que ${NP}, sobra gente.
+  ${E.desperdicioSequenciamento?`<b>O desperdício medido é de ${nf(E.desperdicioSequenciamento.pessoaDia)} dias-pessoa (${esc(E.desperdicioSequenciamento.pct)}%, ≈${brl(E.desperdicioSequenciamento.custoBRL)}, +${E.desperdicioSequenciamento.diasCalendario} dias de calendário).</b> ${esc(E.desperdicioSequenciamento.nota||'')}`:''}</p>
+  <div class="tw"><table><thead><tr>
+    <th class="num">#</th><th>Épico</th><th class="num">Cabem</th>
+    <th colspan="3" style="border-left:1px solid var(--line)">Tradicional</th>
+    <th colspan="3" style="border-left:1px solid var(--line);color:var(--accent-ink)">Assistido por IA</th>
+    </tr><tr>
+    <th></th><th></th><th></th>
+    <th style="border-left:1px solid var(--line)">Início</th><th>Fim</th><th class="num">Dias</th>
+    <th style="border-left:1px solid var(--line)">Início</th><th>Fim</th><th class="num">Dias</th>
+    </tr></thead><tbody>
+    ${E.cronogramaSequencial.map(c=>`<tr><td class="num">${esc(c.ordem)}</td>
+      <td><span class="id">${esc(c.epic)}</span><div style="font-size:12px;margin-top:3px;color:var(--ink-3)">${esc(String(c.titulo||'').slice(0,64))}</div></td>
+      <td class="num"><span class="pill ${c.devsQueCabem<NP?'med':'ok'}">${esc(c.devsQueCabem)}</span></td>
+      <td style="border-left:1px solid var(--line);font-family:var(--mono);font-size:11.5px">${esc(c.inicio||'—')}</td>
+      <td style="font-family:var(--mono);font-size:11.5px">${esc(c.fim||'—')}</td>
+      <td class="num">${nf(c.duracaoHumanaDias!=null?c.duracaoHumanaDias:'—')}</td>
+      <td style="border-left:1px solid var(--line);font-family:var(--mono);font-size:11.5px;color:var(--accent-ink)">${c.ia?esc(c.ia.inicio):'—'}</td>
+      <td style="font-family:var(--mono);font-size:11.5px;color:var(--accent-ink)">${c.ia?esc(c.ia.fim):'—'}</td>
+      <td class="num" style="color:var(--accent-ink)">${c.ia?nf(c.ia.duracaoDias):'—'}</td></tr>`).join('')}
+  </tbody></table></div>
+  <p class="note">Os épicos se sobrepõem — o cronograma roda duas frentes, e por isso a soma das durações excede o prazo de calendário. As datas do modo IA preservam a mesma estrutura de sobreposição, escaladas pelo fator medido no escopo integral.</p>`:''}
+
+  <h3>Sensibilidade — o que mais move a data</h3>
+  <div id="chart-sens"></div>
+
+  <h3>COCOMO II</h3>
+  <div class="grid2">
+    <div class="card"><dl class="kv">
+      <dt>Esforço adotado</dt><dd><b>${nf1(E.cocomo.pm)} pessoas-mês</b></dd>
+      <dt>COCOMO calibrado</dt><dd>${nf1(E.cocomo.pmCocomoCalibrado)} PM</dd>
+      <dt>COCOMO padrão</dt><dd>${nf1(E.cocomo.pmCocomoPadrao)} PM</dd>
+    </dl><p class="note">${esc(E.cocomo.calibracao||'')}</p></div>
+    <div class="card"><h4 style="margin-top:0">Fatores aplicados</h4>
+      <div class="tw"><table><thead><tr><th>Fator</th><th>Valor</th><th>Justificativa</th></tr></thead><tbody>
+      ${E.cocomo.fatores.map(x=>`<tr><td>${esc(x.fator)}</td><td class="num">${esc(x.valor)}</td>
+        <td style="font-size:12.5px">${esc(x.justificativa||'')}</td></tr>`).join('')}</tbody></table></div></div>
+  </div>
+
+  <h3>Custo nos dois modos</h3>
+  ${tbl(['Base de cálculo','Tradicional — P50','Tradicional — P85','Com IA — P50','Com IA — P85'],[
+    `<tr><td><b>Calendário</b><div style="font-size:12px;color:var(--ink-3);margin-top:3px">equipe alocada durante todo o prazo</div></td>
+      <td>${brl(E.custos.calendarioBRL.p50)}</td><td><b>${brl(E.custos.calendarioBRL.p85)}</b></td>
+      <td style="color:var(--accent-ink)">${brl(E.custos.iaAssistidaBRL.p50)}</td>
+      <td style="color:var(--accent-ink)"><b>${brl(E.custos.iaAssistidaBRL.p85)}</b></td></tr>`,
+    `<tr><td><b>Esforço puro</b><div style="font-size:12px;color:var(--ink-3);margin-top:3px">só as horas efetivamente trabalhadas</div></td>
+      <td>${brl(E.custos.esforcoPuroBRL.p50)}</td><td>${brl(E.custos.esforcoPuroBRL.p85)}</td>
+      <td colspan="2" style="color:var(--ink-3);font-size:12.5px">o modo IA não separa esforço de calendário — as ${NP} pessoas ficam alocadas o prazo inteiro</td></tr>`,
+    `<tr style="background:var(--surface-2)"><td><b>Diferença no P85</b></td><td colspan="2"></td>
+      <td colspan="2" style="color:var(--good)"><b>−${brl(E.custos.calendarioBRL.p85-E.custos.iaAssistidaBRL.p85)}</b> · −${nf1(f.iaAssistida.economiaPct)}%</td></tr>`
+  ])}
+  ${f.iaAssistida.nota?`<div class="callout d" style="margin-top:16px">${esc(f.iaAssistida.nota)}</div>`:''}
+
+  <h3>Fora da previsão</h3>
+  ${tbl(['Item','#Dias','Razão'],
+    E.foraDoForecast.map(x=>`<tr><td><b>${esc(x.item)}</b></td><td class="num">${nf1(x.dias)}</td>
+    <td style="max-width:600px;font-size:12.5px">${esc(x.razao)}</td></tr>`))}
+  ${E.cenarioCompleto?`<div class="callout" style="margin-top:16px"><b>Cenário completo.</b> ${esc(E.cenarioCompleto)}</div>`:''}
+
+  <h3>O que ainda falta decidir</h3>
+  ${tbl(['GAP','O que falta','Efeito na estimativa'],
+    E.pendencias.map(p=>`<tr><td><span class="id">${esc(p.gap)}</span></td><td style="max-width:340px">${esc(p.o_que)}</td>
+    <td style="max-width:440px;font-size:12.5px">${esc(p.efeito)}</td></tr>`))}
+
+  <h3>Recomendações</h3>
+  <div class="grid2">${E.recomendacoes.map((r,i)=>`<div class="card">
+    <div style="display:flex;gap:10px;align-items:baseline"><span class="id a">${String(i+1).padStart(2,'0')}</span><b>${esc(r.titulo)}</b></div>
+    <div style="font-size:13px;color:var(--ink-2);margin-top:8px">${esc(r.oQue||'')}</div>
+    <div style="font-size:12.5px;color:var(--ink-3);margin-top:7px"><b>Por quê:</b> ${esc(r.porQue||'')}</div>
+    <div class="nm" style="margin-top:9px">${r.quem?`<span class="pill">${esc(r.quem)}</span>`:''}${r.quando?`<span class="pill">${esc(r.quando)}</span>`:''}${r.esforco?`<span class="tag">${esc(r.esforco)}</span>`:''}</div>
+  </div>`).join('')}</div>
+
+  <h3>Premissas da estimativa</h3>
+  ${tbl(['Premissa','Valor','Base'],
+    E.premissas.map(p=>`<tr><td><b>${esc(p.premissa)}</b></td><td>${esc(p.valor)}</td>
+    <td style="max-width:520px;font-size:12.5px">${esc(p.base||'')}</td></tr>`))}
+  </div>`;
+  $('#p-estimativa').innerHTML=h;
+
+  forecastChart($('#chart-fc'),f);
+  if(E.equipe.brooksCurva&&E.equipe.brooksCurva.length)
+    lineChart($('#chart-brooks'),'Curva de Brooks','Duração conforme o tamanho da equipe — o overhead de coordenação cai muito com poucas pessoas, mas não compensa a perda de capacidade',
+      E.equipe.brooksCurva,'pessoas','dias','pessoas');
+  mountChart($('#chart-est-epic'),'Esforço por épico','dias-pessoa',
+    hbar(E.porEpic.slice().sort((a,b)=>b.esforcoDias-a.esforcoDias).map(e=>({l:e.epic,v:e.esforcoDias,t:nf1(e.esforcoDias)})),{labelW:96,rowH:24}),'');
+  mountChart($('#chart-est-onda'),'Esforço por onda de implantação','',
+    hbar(E.porOnda.map(o=>({l:o.onda,v:o.backlogDias||o.pessoaDia||0,t:nf1(o.backlogDias||o.pessoaDia||0),
+      tip:`${nf1(o.backlogDias)} dias de backlog · ${o.tarefas||0} tarefas · ${o.pct||''}`})),{labelW:112,rowH:24}),'');
+  mountChart($('#chart-risco'),'Risco esperado, em dias','Probabilidade × impacto. As barras vermelhas são as que a equipe reduzida criou ou agravou',
+    hbar(riscos.map(r=>({l:String(r.risco).slice(0,44),
+      v:r.esperadoDias,t:nf1(r.esperadoDias)+' d',
+      c:r.esperadoDias>=20?'var(--crit)':(r.esperadoDias>=12?'var(--serious)':'var(--warn)'),
+      tip:`<b>${esc(r.id)}</b> ${esc(r.risco)}<br>Probabilidade ${esc(r.probabilidade)} · impacto ${nf1(r.impactoDias)} d · esperado ${nf1(r.esperadoDias)} d`})),{labelW:268,rowH:27}),'');
+  mountChart($('#chart-sens'),'Variáveis por efeito no prazo','Quantos dias cada variável move a data de entrega',
+    hbar(E.sensibilidade.slice().sort((a,b)=>Math.abs(b.efeitoDias)-Math.abs(a.efeitoDias)).map(s=>({l:s.variavel,
+      v:Math.abs(s.efeitoDias),t:(s.efeitoDias>0?'+':'')+nf1(s.efeitoDias)+' d',
+      c:s.efeitoDias>0?'var(--crit)':'var(--good)',tip:esc(s.descricao||'')})),{labelW:200,rowH:26}),'');
+}
+
+/* ==========================================================
+   NAVEGAÇÃO / TEMA / RODAPÉ
+   ========================================================== */
+const built={};
+const builders={negocio:paneNegocio,tecnica:paneTecnica,testes:paneTestes,seguranca:paneSeguranca,gaps:paneGaps,backlog:paneBacklog,estimativa:paneEstimativa};
+function show(p){
+  if(!builders[p]) p='negocio';
+  if(!built[p]){ builders[p](); built[p]=1; }
+  document.querySelectorAll('.pane').forEach(s=>s.classList.toggle('on', s.id==='p-'+p));
+  document.querySelectorAll('#nav a').forEach(a=>a.classList.toggle('on', a.dataset.p===p));
+  if(location.hash.slice(1)!==p) history.replaceState(null,'','#'+p);
+  window.scrollTo({top:0,behavior:'instant'});
+}
+document.querySelectorAll('#nav a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();show(a.dataset.p);}));
+addEventListener('hashchange',()=>show(location.hash.slice(1)||'negocio'));
+
+const tb=$('#themebtn');
+tb.addEventListener('click',()=>{
+  const cur=document.documentElement.getAttribute('data-theme');
+  const sysDark=matchMedia('(prefers-color-scheme: dark)').matches;
+  const next = cur ? (cur==='dark'?'light':'dark') : (sysDark?'light':'dark');
+  document.documentElement.setAttribute('data-theme',next);
+});
+
+$('#railfoot').innerHTML = `${esc(D.meta.pipeline||'')}<br>${D.meta.fases.length} fases · ${nf(D.meta.totais.tasks)} tasks<br>Gerado em ${esc(D.meta.geradoEm)}`;
+show(location.hash.slice(1)||'negocio');
+</script>
+</body>
+</html>

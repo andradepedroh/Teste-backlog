@@ -1,0 +1,34 @@
+node_modules/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+
+# Decisão 40 — marcador de "sou o template"; NUNCA versionar (viajaria no clone). Ver MANUTENCAO.md.
+.harness-template
+
+# Baseline do repositório no ADO (EloGuard Factory) — entradas que o harness não tinha.
+packages/*/node_modules/
+dist/
+out/
+build/
+*.js.map
+.env.local
+.idea/
+.vscode/
+*.swp
+*.swo
+coverage/
+*.lcov
+logs/
+
+# Pasta de trabalho do validar.mjs (passo G3 da spec-implement) — efêmera, uma por task.
+outputs/spec/validacao/
+
+# Pontos de controle do registro de execução (princípio P10 do plano de melhoria das skills): patches
+# cumulativos e pacotes dos arquivos novos. Ficam na máquina de quem mantém e não vão para o git:
+# carregam o conteúdo antigo dos exemplos, inclusive o que a revisão de riscos de 2026-10-21 tirou.
+docs/execucao/**/*.patch
+docs/execucao/**/*.tgz

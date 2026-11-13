@@ -1,0 +1,148 @@
+{
+  "_comment": "Exemplo de Story de Controles de Seguranca Transversais criada por spec-security-review. Valida contra #/definitions/Story. Usa 'name' (nao 'title'), priority, businessRules e narrative completos, e agrupa tasks SEC (class=security).",
+  "id": "STORY-SEC-TRANSVERSAL",
+  "epicId": "EPIC-001",
+  "name": "Implementacao de Controles de Seguranca Transversais",
+  "priority": "CRITICAL",
+  "adoWorkItemType": "User Story",
+  "userStory": {
+    "asA": "equipe de engenharia",
+    "iWant": "implementar os controles de seguranca que se aplicam a todo o sistema",
+    "soThat": "todas as features nascam sobre uma base segura e conforme com as politicas definidas"
+  },
+  "narrative": {
+    "elevatorPitch": "Como equipe de engenharia, queremos implementar os controles de seguranca transversais (autenticacao, RBAC, rate limiting, headers, segredos, LGPD, auditoria) antes das features, para que todo o produto nasca sobre uma base segura e conforme.",
+    "context": "Story tecnica gerada por spec-security-review que agrupa os controles de seguranca transversais identificados na revisao do backlog. Deve ser a primeira story implementada, pois as demais features dependem destes controles estarem no lugar - autenticacao, autorizacao global, rate limiting, headers de seguranca, gestao de segredos, LGPD e logging de auditoria.",
+    "problem": "Sem uma base de controles transversais, cada feature reimplementa seguranca de forma inconsistente, abrindo lacunas exploraveis em autenticacao, autorizacao e protecao de dados.",
+    "deliveredValue": "Base de seguranca unica e reutilizavel que reduz risco sistemico e evita retrabalho de seguranca em cada feature entregue.",
+    "actors": ["Equipe de engenharia", "Time de seguranca"]
+  },
+  "businessRules": [
+    {
+      "id": "RN-SEC-TRANSVERSAL-001",
+      "title": "Controles transversais como pre-requisito",
+      "description": "Nenhuma feature de produto pode ir a producao antes que os controles de seguranca transversais desta story estejam implementados e verificados.",
+      "sourceStoryIds": ["STORY-SEC-TRANSVERSAL"]
+    }
+  ],
+  "acceptanceCriteria": [
+    { "id": "AC-SEC-T-01", "statement": "Todos os controles transversais listados nas tasks desta story estao implementados e verificados." },
+    { "id": "AC-SEC-T-02", "statement": "Nenhuma outra story foi entregue em producao sem que esta story esteja concluida." }
+  ],
+  "generatedBy": "spec-security-review",
+  "mustImplementFirst": true,
+  "tasks": [
+    {
+      "id": "SEC-010",
+      "storyId": "STORY-SEC-TRANSVERSAL",
+      "type": "backend",
+      "class": "security",
+      "title": "SEC-010 - Setup de autenticacao (hash adaptativo + sessao httpOnly)",
+      "description": "Implementar base de autenticacao com hash adaptativo de senhas e sessao em cookie httpOnly.",
+      "security": {
+        "severity": "ALTO",
+        "cvss": 8.1,
+        "dread": 11,
+        "owasp": ["A07", "A02"],
+        "stride": "S",
+        "mustCompleteBeforeStoryClose": true
+      },
+      "agentExecutionContext": {
+        "selfContainedSummary": "CONTROLE TRANSVERSAL DE AUTENTICACAO: o backlog nao possui uma story dedicada ao setup de autenticacao, deixando a criacao de senhas e tokens a cargo de cada feature, o que leva a hashes fracos e tokens em armazenamento inseguro. VULNERABILIDADE: falhas de identificacao e autenticacao (OWASP A07) e falhas criptograficas (A02). RISCO CONCRETO: senhas armazenadas com hash fraco podem ser quebradas em vazamento; tokens em localStorage sao roubados via XSS. CONTROLE A IMPLEMENTAR: hash adaptativo (Argon2id ou bcrypt >= 12 rounds) para senhas e sessao via cookie httpOnly; Secure; SameSite=Strict emitido pelo backend, com TTL curto e revogacao no logout. FLUXO: (1) no cadastro/troca de senha, aplicar hash adaptativo; (2) no login, verificar o hash e emitir a sessao em cookie httpOnly; (3) no logout, revogar a sessao. VERIFICACAO: teste que garante que a senha nunca e persistida em claro e que o token nunca chega ao JavaScript do browser. Pre-requisito para as demais stories.",
+        "criticalWarnings": [
+          "Nunca persistir senha em claro nem com hash rapido (MD5/SHA*).",
+          "Token de sessao sempre em cookie httpOnly - nunca em localStorage."
+        ],
+        "doNotDo": [
+          "Nao usar bcrypt com menos de 12 rounds.",
+          "Nao entregar o token de sessao ao frontend em JSON."
+        ],
+        "minimumOutputToDeliver": [
+          "Servico de hash adaptativo de senhas",
+          "Emissao de sessao em cookie httpOnly; Secure; SameSite=Strict",
+          "Revogacao de sessao no logout",
+          "Testes RED/GREEN de armazenamento seguro"
+        ]
+      },
+      "implementationGuidance": {
+        "architecturalDecisions": [
+          "Controle: hash adaptativo (Argon2id preferido; bcrypt >= 12 rounds como alternativa).",
+          "Padrao: sessao em cookie httpOnly; Secure; SameSite=Strict emitido pelo backend.",
+          "Anti-padrao: guardar JWT em localStorage/sessionStorage (exposto a XSS)."
+        ],
+        "dataFlow": [
+          "1. Cadastro/troca: receber senha em transito TLS.",
+          "2. Aplicar hash adaptativo antes de persistir.",
+          "3. Persistir apenas o hash.",
+          "4. Login: buscar o hash pelo identificador.",
+          "5. Verificar a senha contra o hash.",
+          "6. Emitir sessao e setar cookie httpOnly.",
+          "7. Retornar sucesso sem expor o token no corpo.",
+          "8. Logout: revogar a sessao (blacklist/JTI).",
+          "9. Middleware: validar a sessao em cada request.",
+          "10. Auditar login, logout e falhas de autenticacao."
+        ],
+        "errorHandling": {
+          "CREDENCIAL_INVALIDA": {
+            "scenario": "Senha nao confere com o hash.",
+            "action": "Retornar 401 generico sem revelar qual campo falhou.",
+            "userImpact": "Evita enumeracao de usuarios."
+          },
+          "SESSAO_EXPIRADA": {
+            "scenario": "Cookie de sessao expirado ou revogado.",
+            "action": "Retornar 401 e exigir novo login.",
+            "userImpact": "Sessao curta reduz janela de sequestro."
+          },
+          "HASH_LEGADO": {
+            "scenario": "Usuario com hash em algoritmo antigo.",
+            "action": "Reidratar para hash adaptativo no proximo login bem-sucedido.",
+            "userImpact": "Migracao transparente."
+          }
+        },
+        "observability": {
+          "structuredLogging": [
+            "Log de login (INFO): correlationId, usuarioId mascarado, resultado.",
+            "Log de logout (INFO): correlationId, usuarioId mascarado.",
+            "Log de falha de autenticacao (WARN): correlationId, ip."
+          ],
+          "metrics": [
+            "Counter auth_login_total por resultado.",
+            "Counter auth_failed_total por motivo.",
+            "Histogram auth_login_duration_seconds."
+          ],
+          "tracing": [
+            "Span de login com atributo de resultado."
+          ]
+        },
+        "securityConsiderations": [
+          "Hash adaptativo obrigatorio.",
+          "Sessao em cookie httpOnly.",
+          "Revogacao no logout."
+        ],
+        "testingStrategy": {
+          "unitTests": [
+            "senha_nunca_persistida_em_claro (RED sem hash, GREEN com hash).",
+            "logout_revoga_sessao."
+          ],
+          "integrationTests": [
+            "Login emite cookie httpOnly.",
+            "Token nao aparece no corpo da resposta."
+          ]
+        }
+      },
+      "acceptanceCriteria": [
+        { "id": "AC-SEC-010-01", "statement": "Senhas sao persistidas apenas com hash adaptativo." },
+        { "id": "AC-SEC-010-02", "statement": "Sessao e emitida em cookie httpOnly; Secure; SameSite=Strict." }
+      ],
+      "tddTests": {
+        "red": "Senha persistida em claro / token no corpo - prova a falha.",
+        "green": "Senha so em hash adaptativo e token so em cookie httpOnly."
+      },
+      "validation": {
+        "businessCriteria": ["Base de autenticacao segura disponivel para todas as features."],
+        "technicalCriteria": ["Hash adaptativo", "Cookie httpOnly", "Revogacao no logout"]
+      }
+    }
+  ],
+  "traceability": { "sourceStoryIds": ["STORY-SEC-TRANSVERSAL"] }
+}

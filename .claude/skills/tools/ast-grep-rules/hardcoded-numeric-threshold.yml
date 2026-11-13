@@ -1,0 +1,38 @@
+# Regra 3 — limite numérico hardcoded em condicional (if x > 1000)
+id: hardcoded-numeric-threshold-js
+language: javascript
+severity: hint
+message: "Limite numérico hardcoded (≥ 3 dígitos) em condicional — candidato a regra de negócio (teto, piso, alçada). Perguntar ao cliente a origem do número."
+rule:
+  any:
+    - pattern: $X > $N
+    - pattern: $X >= $N
+    - pattern: $X < $N
+    - pattern: $X <= $N
+  inside:
+    any:
+      - kind: if_statement
+      - kind: ternary_expression
+    stopBy: end
+constraints:
+  N:
+    regex: "^\\d{3,}$"
+---
+id: hardcoded-numeric-threshold-py
+language: python
+severity: hint
+message: "Limite numérico hardcoded (≥ 3 dígitos) em condicional — candidato a regra de negócio (teto, piso, alçada). Perguntar ao cliente a origem do número."
+rule:
+  any:
+    - pattern: $X > $N
+    - pattern: $X >= $N
+    - pattern: $X < $N
+    - pattern: $X <= $N
+  inside:
+    any:
+      - kind: if_statement
+      - kind: conditional_expression
+    stopBy: end
+constraints:
+  N:
+    regex: "^\\d{3,}$"

@@ -1,0 +1,53 @@
+{
+  "metadata": { "projeto": "fixture de calibração do validar.mjs — dados sintéticos" },
+  "stories": [
+    {
+      "id": "US-FIX-001",
+      "name": "Cliente cria pedido",
+      "tasks": [
+        {
+          "id": "TASK-FIX-001",
+          "title": "Criar pedido validando estoque e limite de itens",
+          "description": "O serviço cria o pedido do cliente. Antes de gravar, confere o limite de itens do pedido e o estoque de cada item.",
+          "class": "functional",
+          "businessRules": [
+            {
+              "id": "RN-EST-001",
+              "title": "Estoque suficiente",
+              "description": "O pedido só é criado se cada item tem estoque disponível maior ou igual à quantidade pedida.",
+              "implementation": {
+                "validationPoint": "pedido.service.js — criarPedido, antes de gravar",
+                "errorMessages": { "ESTOQUE_INSUFICIENTE": "Estoque insuficiente para {produto}" }
+              }
+            },
+            {
+              "id": "RN-LIM-002",
+              "title": "Limite de itens",
+              "description": "Um pedido tem no máximo 10 itens.",
+              "implementation": {
+                "validationPoint": "pedido.service.js — criarPedido, antes de consultar o estoque",
+                "errorMessages": { "LIMITE_ITENS": "Pedido aceita no máximo 10 itens" }
+              }
+            }
+          ],
+          "acceptanceScenarios": [
+            {
+              "id": "AS-FIX-001-01",
+              "category": "HAPPY_PATH",
+              "given": "Produto 1 com estoque 5",
+              "when": "o cliente pede 2 unidades do produto 1",
+              "then": ["o pedido é criado"]
+            },
+            {
+              "id": "AS-FIX-001-02",
+              "category": "BUSINESS_RULE_VIOLATION",
+              "given": "Produto 1 com estoque 1",
+              "when": "o cliente pede 3 unidades do produto 1",
+              "then": ["o pedido é recusado com 'Estoque insuficiente para Produto 1'", "nada é gravado"]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2599 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "tasks/v5.3",
+  "description": "Schema canônico do tasks.json v5.3 (compact-prose) produzido por spec-tasks. Versão única: tasks/v5.3 no campo metadata.schemaVersion. Epic/Feature/Story exigem narrativa, regras e critérios de aceite (statement, sem Given/When/Then) para Kanban ADO. Tasks usam formato compact-prose (strings ricas) para apiContracts e persistenceModel. Formatos object-based anteriores foram movidos para definitions/legacy-v5.0 (deprecated).",
+  "type": "object",
+  "required": [
+    "metadata",
+    "stories"
+  ],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "outputLanguage",
+        "backlogHierarchy"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "string",
+          "enum": [
+            "tasks/v5.3"
+          ],
+          "description": "Versão canônica única do schema: tasks/v5.3 (compact-prose com negócio obrigatório em Epic/Feature/Story)."
+        },
+        "outputLanguage": {
+          "type": "string",
+          "default": "pt-BR"
+        },
+        "projectName": {
+          "type": "string"
+        },
+        "projectVersion": {
+          "type": "string"
+        },
+        "skillVersion": {
+          "type": "string"
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "paths": {
+          "type": "object",
+          "properties": {
+            "specRoot": {
+              "type": "string",
+              "default": "outputs/spec"
+            },
+            "pipelineRoot": {
+              "type": "string",
+              "default": "outputs/spec"
+            },
+            "rulesRoot": {
+              "type": "string",
+              "default": ".cursor/rules"
+            }
+          }
+        },
+        "backlogHierarchy": {
+          "type": "object",
+          "required": [
+            "chosen"
+          ],
+          "properties": {
+            "levels": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "epic",
+                  "feature",
+                  "story",
+                  "task"
+                ]
+              }
+            },
+            "suggested": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "chosen": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "epic",
+                  "feature",
+                  "story",
+                  "task"
+                ]
+              },
+              "minItems": 1
+            },
+            "rationale": {
+              "type": "string"
+            },
+            "decidedAt": {
+              "type": "string"
+            },
+            "decidedBy": {
+              "type": "string",
+              "enum": [
+                "user",
+                "agent"
+              ]
+            },
+            "levelDetail": {
+              "type": "object",
+              "description": "Modo de detalhe POR NÍVEL. \"full\" (default, inclusive quando o campo é ausente): os validadores de negócio NARRATIVE_*, HAS_BUSINESS_RULES, HAS_ACCEPTANCE_CRITERIA, LEVEL_GROUNDED_IN_SOURCE e NARRATIVE_NOT_BOILERPLATE são FATAL para o nível. \"title-only\": o nível carrega apenas rótulo humano (name/title) e esses validadores ficam INATIVOS para ele por contrato — não suprimidos. Consequência assumida por quem escolhe: os cartões daquele nível ficam sem contexto de negócio no Kanban. Declarar aqui, nunca em campo x- em prosa livre (ver LEVEL_DETAIL_UNDECLARED).",
+              "properties": {
+                "epic": {
+                  "type": "string",
+                  "enum": [
+                    "title-only",
+                    "full"
+                  ],
+                  "default": "full"
+                },
+                "feature": {
+                  "type": "string",
+                  "enum": [
+                    "title-only",
+                    "full"
+                  ],
+                  "default": "full"
+                },
+                "story": {
+                  "type": "string",
+                  "enum": [
+                    "title-only",
+                    "full"
+                  ],
+                  "default": "full"
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "effortSummary": {
+          "type": "object",
+          "description": "Rollup agregado das estimativas effortHours de todas as tasks (bottom-up). Base para o cross-check da spec-estimate. hoursPerDay é a constante de conversão hora↔dia (default 8). Ver SKILL.md § \"Estimativa de esforço em horas (dois formatos)\".",
+          "properties": {
+            "hoursPerDay": {
+              "type": "number",
+              "default": 8,
+              "description": "Horas de trabalho por dia usadas na conversão hora↔dia (default 8)."
+            },
+            "method": {
+              "type": "string",
+              "description": "Método de cálculo (ex.: \"bottom-up grounded (spec-tasks)\")."
+            },
+            "manualHoursTotal": {
+              "type": "number",
+              "description": "Soma de effortHours.manual de todas as tasks."
+            },
+            "aiAssistedHoursTotal": {
+              "type": "number",
+              "description": "Soma de effortHours.aiAssisted de todas as tasks."
+            },
+            "manualDaysTotal": {
+              "type": "number",
+              "description": "manualHoursTotal ÷ hoursPerDay."
+            },
+            "aiAssistedDaysTotal": {
+              "type": "number",
+              "description": "aiAssistedHoursTotal ÷ hoursPerDay."
+            },
+            "byType": {
+              "type": "object",
+              "description": "Totais por type de task (backend, frontend, integration, database, infrastructure, documentation).",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "manual": {
+                    "type": "number"
+                  },
+                  "aiAssisted": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "azureTemplate": {
+          "type": "object",
+          "description": "Snapshot opcional do template Azure DevOps usado na geração (entrada azureTemplate.json)",
+          "properties": {
+            "sourcePath": {
+              "type": "string"
+            },
+            "displayName": {
+              "type": "string"
+            },
+            "targetProvider": {
+              "type": "string"
+            },
+            "processTemplateName": {
+              "type": "string"
+            }
+          }
+        },
+        "azureDevOps": {
+          "type": "object",
+          "properties": {
+            "epicWorkItemId": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "useExistingEpic": {
+              "type": "boolean"
+            },
+            "processTemplateName": {
+              "type": "string",
+              "enum": [
+                "Agile",
+                "Scrum",
+                "CMMI",
+                "Custom"
+              ]
+            },
+            "workItemTypes": {
+              "type": "object",
+              "description": "Mapeamento de níveis de backlog para WITs do processo ADO",
+              "properties": {
+                "epic": {
+                  "type": "object",
+                  "properties": {
+                    "wit": {
+                      "type": "string"
+                    },
+                    "publish": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "feature": {
+                  "type": "object",
+                  "properties": {
+                    "wit": {
+                      "type": "string"
+                    },
+                    "publish": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "story": {
+                  "type": "object",
+                  "properties": {
+                    "wit": {
+                      "type": "string"
+                    },
+                    "publish": {
+                      "type": "boolean"
+                    }
+                  }
+                },
+                "task": {
+                  "type": "object",
+                  "properties": {
+                    "wit": {
+                      "type": "string"
+                    },
+                    "publish": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            },
+            "workItemTags": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "completenessCheck": {
+          "type": "object"
+        },
+        "fatalErrors": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "scope": {
+                "type": "string",
+                "description": "taskId ou storyId afetado"
+              },
+              "affectedField": {
+                "type": "string"
+              },
+              "suggestedFix": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "scope"
+            ]
+          }
+        },
+        "domainGlossary": {
+          "type": "array"
+        },
+        "compactProse": {
+          "type": "object",
+          "required": [
+            "enabled",
+            "scope"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Se true, apiContracts e persistenceModel usam formato compact-prose"
+            },
+            "scope": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "apiContracts",
+                  "persistenceModel"
+                ]
+              },
+              "description": "Campos afetados pelo compact-prose"
+            },
+            "notes": {
+              "type": "string",
+              "description": "Notas sobre o formato compact-prose"
+            }
+          },
+          "description": "Configuração do formato compact-prose (v5.2)"
+        },
+        "securityReview": {
+          "type": "object",
+          "description": "Metadados da revisão de segurança do backlog (spec-security-review): resumo de vetores, tasks SEC injetadas e story transversal.",
+          "additionalProperties": true
+        },
+        "enrichmentGaps": {
+          "type": "array",
+          "description": "Lacunas do enriquecimento: campo de negócio que NÃO pôde ser derivado de dado real e por isso ficou ausente. Preencher com prosa genérica em vez de registrar aqui é proibido — ver validador FATAL NARRATIVE_NOT_BOILERPLATE.",
+          "items": {
+            "type": "object",
+            "required": [
+              "scope",
+              "field",
+              "reason"
+            ],
+            "properties": {
+              "scope": {
+                "type": "string",
+                "description": "id do Epic/Feature/Story afetado"
+              },
+              "field": {
+                "type": "string",
+                "description": "caminho do campo que ficou vazio (ex.: narrative.elevatorPitch)"
+              },
+              "reason": {
+                "type": "string",
+                "description": "por que não foi possível derivar — que insumo faltou"
+              }
+            }
+          }
+        },
+        "validation": {
+          "type": "object",
+          "description": "Registro da última execução dos validadores (gravado por validate-tasks-business.mjs --write e validate-tasks-selfsufficiency.mjs --write). Com este bloco presente, a AUSÊNCIA de metadata.fatalErrors significa \"validado e limpo\"; a ausência dos dois significa \"nunca validado\" — distinção que antes não existia.",
+          "properties": {
+            "business": {
+              "type": "object"
+            },
+            "selfsufficiency": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "epics": {
+      "type": "array",
+      "description": "Epics — presentes quando 'epic' em metadata.backlogHierarchy.chosen",
+      "items": {
+        "$ref": "#/definitions/Epic"
+      }
+    },
+    "features": {
+      "type": "array",
+      "description": "Features — presentes quando 'feature' em metadata.backlogHierarchy.chosen",
+      "items": {
+        "$ref": "#/definitions/Feature"
+      }
+    },
+    "stories": {
+      "type": "array",
+      "description": "Stories — sempre presentes",
+      "items": {
+        "$ref": "#/definitions/Story"
+      }
+    },
+    "globalDependencies": {
+      "type": "object"
+    },
+    "glossary": {
+      "type": "array"
+    },
+    "externalReferences": {
+      "type": "array"
+    }
+  },
+  "definitions": {
+    "Epic": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "description": "Rótulo humano CANÔNICO do Epic — vira o título do work item no ADO e o cabeçalho no relatório HTML. `title` é aceito como alias opcional."
+        },
+        "title": {
+          "type": "string",
+          "description": "Alias OPCIONAL de `name`. `name` é a chave CANÔNICA de rótulo humano; os consumidores normalizam name = name ?? title ?? id na entrada (normalizeLabels em spec-tasks-azure/lib/load-tasks.mjs e spec-tasks-html/lib/load-tasks.mjs)."
+        },
+        "priority": {
+          "type": "string"
+        },
+        "narrative": {
+          "$ref": "#/definitions/BusinessNarrative"
+        },
+        "businessRules": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/ConsolidatedBusinessRule"
+          }
+        },
+        "acceptanceCriteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/BusinessAcceptanceCriterion"
+          }
+        },
+        "executiveSummary": {
+          "type": "string"
+        },
+        "problemStatement": {
+          "type": "string"
+        },
+        "businessOutcomes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "successMetrics": {
+          "type": "array",
+          "description": "Métricas de sucesso do Epic. TRÊS formas aceitas, todas em uso: string solta, {name, target, baseline} — a forma que o renderer do ADO lê (buildEpicNarrativeHtml) — e {metric, …}. O validador EPIC_HAS_OUTCOME aceita as três; ler apenas `metric` produzia FATAL falso em Epic conforme o schema e corretamente renderizado.",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "metric": {
+                    "type": "string"
+                  },
+                  "target": {
+                    "type": [
+                      "string",
+                      "number"
+                    ]
+                  },
+                  "baseline": {
+                    "type": [
+                      "string",
+                      "number"
+                    ]
+                  },
+                  "deadline": {
+                    "type": "string"
+                  },
+                  "owner": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          }
+        },
+        "inScopeCapabilities": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outOfScope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "businessRisks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "executionOrder": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Posição na ordem lógica de execução, contada no nível inteiro do backlog (1 = primeiro). Escrita por scripts/order-backlog.mjs: precedência declarada (story mustImplementFirst; task SEC no início da story), dependência, camada, etapa do fluxo, prioridade e ID, nessa precedência."
+        },
+        "layer": {
+          "type": "string",
+          "enum": ["data", "service", "ui", "integration", "quality"],
+          "description": "Camada na ordem de fundação: data (estrutura e migração) → service (regra de negócio e API) → ui (tela) → integration (sistema externo) → quality (itens transversais de qualidade). Em story, feature e epic: a mais fundacional entre as das tasks."
+        },
+        "businessRuleHeavy": {
+          "type": "boolean",
+          "description": "Marca de regra de negócio: a maior parte do trabalho deste item é implementar ou validar regra de negócio. Calculada por scripts/mark-business-rules.mjs; vai para o Azure DevOps como tag."
+        },
+        "businessRuleShare": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "A fração que decide a marca: na task, cenários de aceite que existem para provar RN ÷ cenários — BUSINESS_RULE_VIOLATION, ou HAPPY_PATH/EDGE_CASE cujo relatedRules cita uma RN do businessRules[] da própria task (relatedRules sozinho não basta); nos outros níveis, esforço das tasks marcadas ÷ esforço total. Na task, a marca exige ainda businessRules[] próprio e trabalho de regra, não de estrutura, tela ou integração (camada data/ui/integration e stories ENABLER/TECHNICAL_DEBT/SPIKE ficam fora) — scripts/mark-business-rules.mjs."
+        },
+        "businessRuleOverride": {
+          "type": "object",
+          "required": ["marked", "justification"],
+          "properties": {
+            "marked": { "type": "boolean" },
+            "justification": { "type": "string", "minLength": 20 }
+          },
+          "description": "Marca decidida à mão, contra o cálculo, com a justificativa escrita. O script a respeita e avisa a divergência."
+        },
+        "scopeBoundaries": {
+          "$ref": "#/definitions/ScopeBoundaries"
+        },
+        "containedStoryIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "stakeholders": {
+          "type": "object"
+        },
+        "traceability": {
+          "$ref": "#/definitions/Traceability"
+        },
+        "adoWorkItemType": {
+          "type": "string"
+        },
+        "sourceRefs": {
+          "type": "array",
+          "description": "De ONDE veio o negócio deste nível. Sem sourceRefs não há como distinguir conteúdo ancorado na especificação de conteúdo inventado — é o que o validador FATAL LEVEL_GROUNDED_IN_SOURCE exige quando levelDetail do nível é \"full\".",
+          "items": {
+            "type": "object",
+            "required": [
+              "document",
+              "itemId"
+            ],
+            "properties": {
+              "document": {
+                "type": "string",
+                "description": "documento de origem: requirements.md, business-rules.md, modules.md, product-vision.md, test-plan.md, threat-model.md"
+              },
+              "section": {
+                "type": "string",
+                "description": "seção/heading exato de onde o conteúdo foi extraído"
+              },
+              "itemId": {
+                "type": "string",
+                "description": "id do item de origem (RF-…, RN-…, MOD-…, TC-…) ou o rótulo da seção"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "moduleScope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Códigos MOD-XXX de modules.md cobertos por este Epic. Renderizado no ADO em \"Módulos no escopo\"."
+        },
+        "containedFeatureIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Ids das Features contidas neste Epic."
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "name"
+          ]
+        },
+        {
+          "required": [
+            "title"
+          ]
+        }
+      ],
+      "description": "Rótulo humano: `name` OU `title` (pelo menos um) — `name` é canônico e os consumidores normalizam name = name ?? title ?? id na entrada. `narrative`, `businessRules` e `acceptanceCriteria` NÃO são required aqui de propósito: são exigidos pelo validador validate-tasks-business.mjs conforme metadata.backlogHierarchy.levelDetail — FATAL quando o nível é \"full\" (default), inativos quando \"title-only\". Ver SKILL.md § \"Modo de detalhe por nível (levelDetail)\"."
+    },
+    "Feature": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "description": "Rótulo humano CANÔNICO da Feature. `title` é aceito como alias opcional."
+        },
+        "epicId": {
+          "type": "string"
+        },
+        "narrative": {
+          "$ref": "#/definitions/BusinessNarrative"
+        },
+        "businessRules": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/ConsolidatedBusinessRule"
+          }
+        },
+        "acceptanceCriteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/BusinessAcceptanceCriterion"
+          }
+        },
+        "containedStoryIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "touchpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "traceability": {
+          "$ref": "#/definitions/Traceability"
+        },
+        "adoWorkItemType": {
+          "type": "string"
+        },
+        "workItemType": {
+          "type": "string",
+          "enum": ["FEATURE", "ENABLER"],
+          "default": "FEATURE",
+          "description": "FEATURE (default) ou ENABLER — Enabler de nível 2 (filho direto do Epic, habilita trabalho comum a várias Features). Ver EloCore § 1.5 e SKILL.md § 'Tipos de Demanda Operacional (EloCore)'."
+        },
+        "sourceRefs": {
+          "type": "array",
+          "description": "De ONDE veio o negócio deste nível. Sem sourceRefs não há como distinguir conteúdo ancorado na especificação de conteúdo inventado — é o que o validador FATAL LEVEL_GROUNDED_IN_SOURCE exige quando levelDetail do nível é \"full\".",
+          "items": {
+            "type": "object",
+            "required": [
+              "document",
+              "itemId"
+            ],
+            "properties": {
+              "document": {
+                "type": "string",
+                "description": "documento de origem: requirements.md, business-rules.md, modules.md, product-vision.md, test-plan.md, threat-model.md"
+              },
+              "section": {
+                "type": "string",
+                "description": "seção/heading exato de onde o conteúdo foi extraído"
+              },
+              "itemId": {
+                "type": "string",
+                "description": "id do item de origem (RF-…, RN-…, MOD-…, TC-…) ou o rótulo da seção"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "title": {
+          "type": "string",
+          "description": "Alias OPCIONAL de `name`. `name` é a chave CANÔNICA de rótulo humano; os consumidores normalizam name = name ?? title ?? id na entrada (normalizeLabels em spec-tasks-azure/lib/load-tasks.mjs e spec-tasks-html/lib/load-tasks.mjs)."
+        },
+        "moduleCode": {
+          "type": "string",
+          "description": "Código MOD-XXX de modules.md que esta Feature recorta — o vínculo que permite voltar do cartão ao módulo de negócio."
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "executionOrder": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Posição na ordem lógica de execução, contada no nível inteiro do backlog (1 = primeiro). Escrita por scripts/order-backlog.mjs: precedência declarada (story mustImplementFirst; task SEC no início da story), dependência, camada, etapa do fluxo, prioridade e ID, nessa precedência."
+        },
+        "layer": {
+          "type": "string",
+          "enum": ["data", "service", "ui", "integration", "quality"],
+          "description": "Camada na ordem de fundação: data (estrutura e migração) → service (regra de negócio e API) → ui (tela) → integration (sistema externo) → quality (itens transversais de qualidade). Em story, feature e epic: a mais fundacional entre as das tasks."
+        },
+        "businessRuleHeavy": {
+          "type": "boolean",
+          "description": "Marca de regra de negócio: a maior parte do trabalho deste item é implementar ou validar regra de negócio. Calculada por scripts/mark-business-rules.mjs; vai para o Azure DevOps como tag."
+        },
+        "businessRuleShare": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "A fração que decide a marca: na task, cenários de aceite que existem para provar RN ÷ cenários — BUSINESS_RULE_VIOLATION, ou HAPPY_PATH/EDGE_CASE cujo relatedRules cita uma RN do businessRules[] da própria task (relatedRules sozinho não basta); nos outros níveis, esforço das tasks marcadas ÷ esforço total. Na task, a marca exige ainda businessRules[] próprio e trabalho de regra, não de estrutura, tela ou integração (camada data/ui/integration e stories ENABLER/TECHNICAL_DEBT/SPIKE ficam fora) — scripts/mark-business-rules.mjs."
+        },
+        "businessRuleOverride": {
+          "type": "object",
+          "required": ["marked", "justification"],
+          "properties": {
+            "marked": { "type": "boolean" },
+            "justification": { "type": "string", "minLength": 20 }
+          },
+          "description": "Marca decidida à mão, contra o cálculo, com a justificativa escrita. O script a respeita e avisa a divergência."
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "name"
+          ]
+        },
+        {
+          "required": [
+            "title"
+          ]
+        }
+      ],
+      "description": "Rótulo humano: `name` OU `title` (pelo menos um) — `name` é canônico e os consumidores normalizam name = name ?? title ?? id na entrada. `narrative`, `businessRules` e `acceptanceCriteria` NÃO são required aqui de propósito: são exigidos pelo validador validate-tasks-business.mjs conforme metadata.backlogHierarchy.levelDetail — FATAL quando o nível é \"full\" (default), inativos quando \"title-only\". Ver SKILL.md § \"Modo de detalhe por nível (levelDetail)\"."
+    },
+    "Story": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "featureId": {
+          "type": "string"
+        },
+        "epicId": {
+          "type": "string"
+        },
+        "epic": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "description": "Rótulo humano CANÔNICO da Story — sem ele o ADO publica \"<id>: <id>\". `title` é aceito como alias opcional."
+        },
+        "title": {
+          "type": "string",
+          "description": "Alias OPCIONAL de `name`. `name` é a chave CANÔNICA de rótulo humano; os consumidores normalizam name = name ?? title ?? id na entrada (normalizeLabels em spec-tasks-azure/lib/load-tasks.mjs e spec-tasks-html/lib/load-tasks.mjs)."
+        },
+        "priority": {
+          "type": "string",
+          "enum": [
+            "CRITICAL",
+            "HIGH",
+            "MEDIUM",
+            "LOW"
+          ]
+        },
+        "userStory": {
+          "$ref": "#/definitions/UserStory"
+        },
+        "narrative": {
+          "$ref": "#/definitions/BusinessNarrative"
+        },
+        "workItemType": {
+          "type": "string",
+          "enum": ["USER_STORY", "ENABLER", "SPIKE", "TECHNICAL_DEBT", "BUG"],
+          "default": "USER_STORY",
+          "description": "Tipo de demanda operacional (EloCore § 3). USER_STORY é o default retrocompatível. Determina o conteúdo esperado da narrativa (SKILL.md § 'Tipos de Demanda Operacional (EloCore)') e a isenção de validators de linguagem de negócio (ENABLER/SPIKE/TECHNICAL_DEBT/BUG são tecnicamente exemptos, como security/uat)."
+        },
+        "spikeDetails": {
+          "type": "object",
+          "description": "Presente quando workItemType=SPIKE — a dúvida/incerteza a investigar e o resultado esperado (EloCore § 3.5).",
+          "properties": {
+            "question": { "type": "string", "description": "Dúvida, risco ou incerteza que motiva o spike." },
+            "timebox": { "type": "string", "description": "Prazo máximo da investigação, ex.: '3 dias'." },
+            "expectedOutcome": {
+              "type": "string",
+              "enum": ["LEARNING", "RECOMMENDATION", "DECISION"],
+              "description": "Tipo de resultado que a investigação deve produzir."
+            }
+          }
+        },
+        "technicalDebtDetails": {
+          "type": "object",
+          "description": "Presente quando workItemType=TECHNICAL_DEBT — limitação técnica, impacto atual e melhoria esperada (EloCore § 3.6).",
+          "properties": {
+            "limitation": { "type": "string", "description": "Qual limitação técnica, decisão de curto prazo ou solução paliativa existe hoje." },
+            "currentImpact": { "type": "string", "description": "Quais impactos essa limitação causa hoje (qualidade, performance, segurança, manutenibilidade)." },
+            "improvementAfterFix": { "type": "string", "description": "O que melhora depois do tratamento do débito." }
+          }
+        },
+        "bugReport": {
+          "type": "object",
+          "description": "Presente quando workItemType=BUG — comportamento observado, reprodução e resultado atual vs. esperado (EloCore § 3.7).",
+          "properties": {
+            "observedBehavior": { "type": "string", "description": "Qual comportamento incorreto foi observado." },
+            "reproductionSteps": { "type": "array", "items": { "type": "string" }, "description": "Passos para reproduzir o defeito." },
+            "currentResult": { "type": "string", "description": "Resultado atual (o que acontece hoje)." },
+            "expectedResult": { "type": "string", "description": "Resultado esperado (o que deveria acontecer)." }
+          }
+        },
+        "businessRules": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/ConsolidatedBusinessRule"
+          }
+        },
+        "acceptanceCriteria": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/BusinessAcceptanceCriterion"
+          }
+        },
+        "businessSummary": {
+          "$ref": "#/definitions/BusinessSummary",
+          "description": "Legado — preferir narrative"
+        },
+        "acceptanceScenarios": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AcceptanceScenario"
+          },
+          "description": "Legado em story — preferir acceptanceCriteria"
+        },
+        "successMetricsContribution": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "businessRisks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "executionOrder": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Posição na ordem lógica de execução, contada no nível inteiro do backlog (1 = primeiro). Escrita por scripts/order-backlog.mjs: precedência declarada (story mustImplementFirst; task SEC no início da story), dependência, camada, etapa do fluxo, prioridade e ID, nessa precedência."
+        },
+        "layer": {
+          "type": "string",
+          "enum": ["data", "service", "ui", "integration", "quality"],
+          "description": "Camada na ordem de fundação: data (estrutura e migração) → service (regra de negócio e API) → ui (tela) → integration (sistema externo) → quality (itens transversais de qualidade). Em story, feature e epic: a mais fundacional entre as das tasks."
+        },
+        "businessRuleHeavy": {
+          "type": "boolean",
+          "description": "Marca de regra de negócio: a maior parte do trabalho deste item é implementar ou validar regra de negócio. Calculada por scripts/mark-business-rules.mjs; vai para o Azure DevOps como tag."
+        },
+        "businessRuleShare": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "A fração que decide a marca: na task, cenários de aceite que existem para provar RN ÷ cenários — BUSINESS_RULE_VIOLATION, ou HAPPY_PATH/EDGE_CASE cujo relatedRules cita uma RN do businessRules[] da própria task (relatedRules sozinho não basta); nos outros níveis, esforço das tasks marcadas ÷ esforço total. Na task, a marca exige ainda businessRules[] próprio e trabalho de regra, não de estrutura, tela ou integração (camada data/ui/integration e stories ENABLER/TECHNICAL_DEBT/SPIKE ficam fora) — scripts/mark-business-rules.mjs."
+        },
+        "businessRuleOverride": {
+          "type": "object",
+          "required": ["marked", "justification"],
+          "properties": {
+            "marked": { "type": "boolean" },
+            "justification": { "type": "string", "minLength": 20 }
+          },
+          "description": "Marca decidida à mão, contra o cálculo, com a justificativa escrita. O script a respeita e avisa a divergência."
+        },
+        "deliveryScope": {
+          "type": "array",
+          "description": "Escopo de entrega por task (Kanban ADO) — síntese de negócio",
+          "items": {
+            "$ref": "#/definitions/DeliveryScopeItem"
+          }
+        },
+        "uiContext": {
+          "$ref": "#/definitions/UiContext"
+        },
+        "traceability": {
+          "$ref": "#/definitions/Traceability"
+        },
+        "adoWorkItemType": {
+          "type": "string"
+        },
+        "generatedBy": {
+          "type": "string",
+          "description": "Skill que gerou a story (ex.: spec-tasks, spec-security-review, spec-test-plan)."
+        },
+        "mustImplementFirst": {
+          "type": "boolean",
+          "description": "Story que deve ser implementada antes das demais (ex.: controles transversais de segurança). Critério 0 do scripts/order-backlog.mjs: sai em 1º no backlog inteiro, mesmo morando noutra epic, junto com o que ela exige por dependência declarada."
+        },
+        "slicingPlan": {
+          "type": "array",
+          "description": "Plano de fatiamento vertical da story em incrementos entregáveis.",
+          "items": {
+            "type": "object"
+          }
+        },
+        "businessRulesApplicable": {
+          "type": "array",
+          "description": "DEPRECATED — usar businessRules[]"
+        },
+        "tasks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Task"
+          }
+        },
+        "sourceRefs": {
+          "type": "array",
+          "description": "De ONDE veio o negócio deste nível. Sem sourceRefs não há como distinguir conteúdo ancorado na especificação de conteúdo inventado — é o que o validador FATAL LEVEL_GROUNDED_IN_SOURCE exige quando levelDetail do nível é \"full\".",
+          "items": {
+            "type": "object",
+            "required": [
+              "document",
+              "itemId"
+            ],
+            "properties": {
+              "document": {
+                "type": "string",
+                "description": "documento de origem: requirements.md, business-rules.md, modules.md, product-vision.md, test-plan.md, threat-model.md"
+              },
+              "section": {
+                "type": "string",
+                "description": "seção/heading exato de onde o conteúdo foi extraído"
+              },
+              "itemId": {
+                "type": "string",
+                "description": "id do item de origem (RF-…, RN-…, MOD-…, TC-…) ou o rótulo da seção"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "anyOf": [
+        {
+          "required": [
+            "name"
+          ]
+        },
+        {
+          "required": [
+            "title"
+          ]
+        }
+      ],
+      "description": "Rótulo humano: `name` OU `title` (pelo menos um) — `name` é canônico e os consumidores normalizam name = name ?? title ?? id na entrada. `narrative`, `businessRules` e `acceptanceCriteria` NÃO são required aqui de propósito: são exigidos pelo validador validate-tasks-business.mjs conforme metadata.backlogHierarchy.levelDetail — FATAL quando o nível é \"full\" (default), inativos quando \"title-only\". Ver SKILL.md § \"Modo de detalhe por nível (levelDetail)\"."
+    },
+    "Task": {
+      "type": "object",
+      "required": [
+        "id",
+        "storyId",
+        "title",
+        "type",
+        "agentExecutionContext"
+      ],
+      "allOf": [
+        {
+          "description": "Requisitos condicionais por CLASSE de task. functional (default): description + implementationGuidance. uat: isenta do contrato técnico (a fonte humana é o test-plan.md) — cobrada por UAT_TASK_HAS_SUMMARY. spike: isenta do contrato técnico (o resultado é uma DECISÃO) — cobrada por SPIKE_TASK_COMPLETE, que exige description, pergunta, timebox, critério de saída e o GAP fechado. security: exige implementationGuidance. `validation` NÃO é required em nenhuma classe: o conteúdo equivalente é cobrado por TASK_HAS_CONCRETE_TEST_DATA (FATAL) em acceptanceScenarios[].testData.",
+          "if": {
+            "properties": {
+              "class": {
+                "enum": [
+                  "uat",
+                  "spike"
+                ]
+              }
+            },
+            "required": [
+              "class"
+            ]
+          },
+          "then": {},
+          "else": {
+            "if": {
+              "properties": {
+                "class": {
+                  "const": "security"
+                }
+              },
+              "required": [
+                "class"
+              ]
+            },
+            "then": {
+              "required": [
+                "implementationGuidance"
+              ]
+            },
+            "else": {
+              "required": [
+                "description",
+                "implementationGuidance"
+              ]
+            }
+          }
+        }
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string",
+          "enum": [
+            "functional",
+            "uat",
+            "security",
+            "spike"
+          ],
+          "default": "functional",
+          "description": "Classe da task — define quais validators de auto-suficiência se aplicam. functional (default): todos. uat: isenta do contrato técnico (TASK_HAS_FULL_SUMMARY, TASK_HAS_COMPLETE_API_SCHEMAS, TASK_HAS_COMPLETE_DATA_MODEL, TASK_HAS_CONCRETE_TEST_DATA) e de NO_EXTERNAL_REFS_IN_TASKS apenas para test-plan.md — em troca é cobrada por UAT_TASK_HAS_SUMMARY (FATAL). security: shape SEC (ver security{}). spike: investigação com timebox — isenta do contrato técnico (não há API, dados nem cenário com testData a entregar, porque o resultado é uma DECISÃO) e cobrada por SPIKE_TASK_COMPLETE (FATAL). Isenção nunca significa ausência de gate."
+        },
+        "storyId": {
+          "type": "string"
+        },
+        "featureId": {
+          "type": "string"
+        },
+        "dependencies": {
+          "description": "IDs de tasks (de qualquer story) que precisam terminar antes desta. Lido pelo order-backlog.mjs, pela spec-estimate e pela spec-tasks-azure (links de dependência).",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "executionOrder": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Posição na ordem lógica de execução, contada no nível inteiro do backlog (1 = primeiro). Escrita por scripts/order-backlog.mjs: precedência declarada (story mustImplementFirst; task SEC no início da story), dependência, camada, etapa do fluxo, prioridade e ID, nessa precedência."
+        },
+        "layer": {
+          "type": "string",
+          "enum": ["data", "service", "ui", "integration", "quality"],
+          "description": "Camada na ordem de fundação: data (estrutura e migração) → service (regra de negócio e API) → ui (tela) → integration (sistema externo) → quality (itens transversais de qualidade). Em story, feature e epic: a mais fundacional entre as das tasks."
+        },
+        "businessRuleHeavy": {
+          "type": "boolean",
+          "description": "Marca de regra de negócio: a maior parte do trabalho deste item é implementar ou validar regra de negócio. Calculada por scripts/mark-business-rules.mjs; vai para o Azure DevOps como tag."
+        },
+        "businessRuleShare": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "A fração que decide a marca: na task, cenários de aceite que existem para provar RN ÷ cenários — BUSINESS_RULE_VIOLATION, ou HAPPY_PATH/EDGE_CASE cujo relatedRules cita uma RN do businessRules[] da própria task (relatedRules sozinho não basta); nos outros níveis, esforço das tasks marcadas ÷ esforço total. Na task, a marca exige ainda businessRules[] próprio e trabalho de regra, não de estrutura, tela ou integração (camada data/ui/integration e stories ENABLER/TECHNICAL_DEBT/SPIKE ficam fora) — scripts/mark-business-rules.mjs."
+        },
+        "businessRuleOverride": {
+          "type": "object",
+          "required": ["marked", "justification"],
+          "properties": {
+            "marked": { "type": "boolean" },
+            "justification": { "type": "string", "minLength": 20 }
+          },
+          "description": "Marca decidida à mão, contra o cálculo, com a justificativa escrita. O script a respeita e avisa a divergência."
+        },
+        "sequence": {
+          "type": "integer"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "description": "Descrição da task. NÃO é required no schema para class=uat e class=spike, porque nessas classes o conteúdo vive em outro carrier — o roteiro em agentExecutionContext.selfContainedSummary (UAT) ou o contrato em spike{}. Para class=functional CONTINUA required e o validador foi alinhado para cima: ausência ou menos de 80 caracteres é FATAL (TASK_HAS_DESCRIPTION). Ver SKILL.md § \"description e validation — exigidos por CLASSE, não pelo schema\"."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "backend",
+            "frontend",
+            "database",
+            "integration",
+            "infrastructure",
+            "documentation"
+          ]
+        },
+        "durationEstimatedDays": {
+          "type": "number"
+        },
+        "status": {
+          "type": "string",
+          "default": "PENDING"
+        },
+        "business": {
+          "type": "object",
+          "properties": {
+            "objective": {
+              "type": "string"
+            },
+            "rationale": {
+              "type": "string"
+            },
+            "businessFlowSteps": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "implementationSteps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Passos de alto nível — detalhamento completo em implementationGuidance.dataFlow"
+        },
+        "agentExecutionContext": {
+          "$ref": "#/definitions/AgentExecutionContext"
+        },
+        "implementationGuidance": {
+          "$ref": "#/definitions/ImplementationGuidance"
+        },
+        "apiContracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ApiContract"
+          },
+          "description": "Schemas COMPLETOS de API — NUNCA apenas referência"
+        },
+        "persistenceModel": {
+          "$ref": "#/definitions/PersistenceModel"
+        },
+        "businessRules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/BusinessRule"
+          },
+          "description": "Regras de negócio EXPANDIDAS — objetos completos, não apenas IDs"
+        },
+        "validation": {
+          "$ref": "#/definitions/Validation",
+          "description": "Bloco de validação e testes. SAIU de required no schema: nenhum validador o cobrava e 131/147 tasks de um artefato real não o tinham. O conteúdo equivalente é cobrado, FATAL, por TASK_HAS_CONCRETE_TEST_DATA em acceptanceScenarios[].testData. Exigir no schema o que nenhum gate verifica é a divergência silenciosa que este fix elimina."
+        },
+        "security": {
+          "$ref": "#/definitions/SecurityExtension"
+        },
+        "effortEstimate": {
+          "type": "string",
+          "description": "Estimativa de esforço relativa — convenção de camiseta (XS | S | M | L) ou texto livre."
+        },
+        "effortHours": {
+          "type": "object",
+          "description": "Estimativa de esforço de desenvolvimento em HORAS, calculada bottom-up a partir das evidências concretas da própria task (nº de operações de API, regras de negócio, entidades, cenários, integrações e campos de UI) — NÃO é tamanho×HDF. Dois formatos: manual (dev humano) e aiAssisted (via spec-implement). Consumida pela spec-estimate como base de cross-check. Ver SKILL.md § \"Estimativa de esforço em horas (dois formatos)\".",
+          "required": [
+            "manual",
+            "aiAssisted"
+          ],
+          "properties": {
+            "manual": {
+              "type": "number",
+              "description": "Horas estimadas para um desenvolvedor humano implementar a task manualmente (base bottom-up × typeFactor)."
+            },
+            "aiAssisted": {
+              "type": "number",
+              "description": "Horas estimadas com implementação IA-assistida via spec-implement — execução do agente (manual ÷ velocidade do tipo × retry 1,35) + overhead de revisão humana."
+            },
+            "basis": {
+              "type": "string",
+              "description": "Rastro curto de como os números saíram (evidências e fatores aplicados)."
+            }
+          },
+          "additionalProperties": false
+        },
+        "tddTests": {
+          "type": "object",
+          "description": "Par RED/GREEN: teste que prova a falha (red) e valida a correção (green).",
+          "properties": {
+            "red": {
+              "type": "string"
+            },
+            "green": {
+              "type": "string"
+            }
+          }
+        },
+        "acceptanceCriteria": {
+          "type": "array",
+          "description": "Critérios de aceite da task (statement, sem Given/When/Then).",
+          "items": {
+            "$ref": "#/definitions/BusinessAcceptanceCriterion"
+          }
+        },
+        "acceptanceScenarios": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/AcceptanceScenario"
+          },
+          "description": "Cenários BDD da task (Given/When/Then + testData). Opcional no schema por retrocompatibilidade — a obrigatoriedade vem das instruções (SKILL §5) e dos validators (TASK_HAS_CONCRETE_TEST_DATA, STORY_HAPPY_PATH_ONLY). Derivar do test-plan.md quando existir (coverageNote rastreia o TC-NNN); senão, da matriz mínima RF+RN."
+        },
+        "uiContext": {
+          "$ref": "#/definitions/UiContext"
+        },
+        "generatedBy": {
+          "type": "string",
+          "description": "Skill que gerou a task (ex.: spec-tasks, spec-security-review, spec-test-plan)."
+        },
+        "testType": {
+          "type": "string",
+          "description": "Tipo de teste (tasks class=uat) — ex.: functional, e2e, regression."
+        },
+        "testCaseIds": {
+          "type": "array",
+          "description": "IDs de casos de teste do test-plan.md cobertos por esta task (class=uat).",
+          "items": {
+            "type": "string"
+          }
+        },
+        "spike": {
+          "type": "object",
+          "description": "Contrato da task de investigação (class=spike). Um spike é definido por quatro coisas e o validador FATAL SPIKE_TASK_COMPLETE exige as quatro: pergunta fechada, timebox em dias, critério de saída (o que precisa estar DECIDIDO ao final) e qual GAP fecha. Spike sem isso é item aberto no board, não investigação delimitada.",
+          "required": [
+            "question",
+            "timeboxDays",
+            "exitCriteria",
+            "closesGapId"
+          ],
+          "properties": {
+            "question": {
+              "type": "string",
+              "minLength": 20,
+              "description": "Pergunta FECHADA, respondível ao fim do timebox. Pergunta aberta produz spike sem fim."
+            },
+            "timeboxDays": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "maximum": 5,
+              "description": "Dias de investigação. Passado o timebox, a decisão é tomada com o que se sabe e o spike encerra."
+            },
+            "exitCriteria": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              },
+              "description": "O que precisa estar DECIDIDO ao final (não \"pesquisado\") e onde a decisão fica registrada."
+            },
+            "closesGapId": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "description": "GAP-NNN do gaps-document.md que esta investigação resolve."
+            },
+            "findings": {
+              "type": "string",
+              "description": "Resultado da investigação, preenchido no encerramento."
+            }
+          },
+          "additionalProperties": true
+        }
+      }
+    },
+    "SecurityExtension": {
+      "type": "object",
+      "description": "Extensão aditiva para tasks class=security (injetadas por spec-security-review). Concentra os metadados de segurança da task SEC.",
+      "required": [
+        "severity",
+        "cvss",
+        "owasp",
+        "stride",
+        "mustCompleteBeforeStoryClose"
+      ],
+      "properties": {
+        "severity": {
+          "type": "string",
+          "enum": [
+            "CRÍTICO",
+            "ALTO",
+            "MÉDIO",
+            "BAIXO"
+          ]
+        },
+        "cvss": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10
+        },
+        "dread": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 15
+        },
+        "owasp": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1
+        },
+        "stride": {
+          "type": "string",
+          "description": "Categoria(s) STRIDE — S/T/R/I/D/E"
+        },
+        "mustCompleteBeforeStoryClose": {
+          "type": "boolean"
+        }
+      }
+    },
+    "AgentExecutionContext": {
+      "type": "object",
+      "required": [
+        "selfContainedSummary",
+        "minimumOutputToDeliver"
+      ],
+      "properties": {
+        "selfContainedSummary": {
+          "type": "string",
+          "description": "Contexto COMPLETO: descrição funcional, contexto de negócio, atores, fluxo principal, pré/pós-condições, decisões arquiteturais. O piso de tamanho (≥800 chars para functional/security) é enforçado pelo validator TASK_HAS_FULL_SUMMARY, não pelo schema — tasks class=uat são isentas."
+        },
+        "criticalWarnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "doNotDo": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "minimumOutputToDeliver": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ImplementationGuidance": {
+      "type": "object",
+      "required": [
+        "architecturalDecisions",
+        "dataFlow",
+        "errorHandling",
+        "observability",
+        "testingStrategy"
+      ],
+      "properties": {
+        "architecturalDecisions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 3,
+          "description": "Padrões arquiteturais, bibliotecas, trade-offs (mínimo 3 itens)"
+        },
+        "dataFlow": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 10,
+          "description": "Fluxo de execução detalhado layer-by-layer (mínimo 10 passos)"
+        },
+        "errorHandling": {
+          "type": "object",
+          "minProperties": 3,
+          "patternProperties": {
+            "^[A-Z_]+$": {
+              "type": "object",
+              "required": [
+                "scenario",
+                "action",
+                "userImpact"
+              ],
+              "properties": {
+                "scenario": {
+                  "type": "string"
+                },
+                "action": {
+                  "type": "string"
+                },
+                "userImpact": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "description": "Mapeamento de cenários de erro (mínimo 3)"
+        },
+        "observability": {
+          "type": "object",
+          "required": [
+            "structuredLogging",
+            "metrics",
+            "tracing"
+          ],
+          "properties": {
+            "structuredLogging": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 3
+            },
+            "metrics": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 3
+            },
+            "tracing": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "alerts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "securityConsiderations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "performanceConsiderations": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "testingStrategy": {
+          "type": "object",
+          "required": [
+            "unitTests",
+            "integrationTests"
+          ],
+          "properties": {
+            "unitTests": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "integrationTests": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "contractTests": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "e2eTests": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "loadTests": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "ApiContract": {
+      "type": "object",
+      "description": "Contrato de API em formato compact-prose v5.3. auth/request/responses/policies são STRINGS RICAS estruturadas (não objetos aninhados). Ver tasks.format-reference.md.",
+      "required": [
+        "operationId",
+        "method",
+        "path",
+        "summary",
+        "auth",
+        "request",
+        "responses",
+        "openApiRef",
+        "tags"
+      ],
+      "properties": {
+        "operationId": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "GET",
+            "POST",
+            "PUT",
+            "PATCH",
+            "DELETE"
+          ]
+        },
+        "path": {
+          "type": "string"
+        },
+        "signature": {
+          "type": "string",
+          "description": "Assinatura legível, ex.: 'POST /pedidos'"
+        },
+        "summary": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "auth": {
+          "type": "string",
+          "minLength": 1,
+          "description": "String rica: tipo de autenticação, roles e claims. Ex.: 'Bearer JWT — roles: CLIENTE, ADMIN. Claims: sub (clienteId)'. Nunca vazio (usar 'Público — ...' quando não houver auth)."
+        },
+        "request": {
+          "type": "string",
+          "description": "String rica pipe-separated: componentes Path/Query/Body/Headers. Ex.: 'Body: campo (type required — descr) | Headers: Authorization (required — ...)'."
+        },
+        "responses": {
+          "type": "string",
+          "description": "String rica pipe-separated por status code, cobrindo 2xx, 4xx e 5xx. Ex.: '201 application/json — ... | 400 ... | 422 ... | 500 ...'."
+        },
+        "policies": {
+          "type": "string",
+          "description": "String rica: Rate / Caching / Idempotency. Ex.: 'Rate: TOKEN_BUCKET ... Caching: cacheable=False. Idempotency: required (...)'."
+        },
+        "openApiRef": {
+          "type": "string",
+          "description": "Referência rastreável ao arquivo fonte, ex.: 'api-contracts.yaml#/paths/~1pedidos/post'."
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "PersistenceModel": {
+      "type": "object",
+      "required": [
+        "entities"
+      ],
+      "properties": {
+        "entities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Entity"
+          }
+        }
+      }
+    },
+    "Entity": {
+      "type": "object",
+      "description": "Entidade de persistência em formato compact-prose v5.3. columns/relationships/indexes/uniqueConstraints/checkConstraints são STRINGS RICAS estruturadas (não arrays de objetos). identifierStrategy e primaryKey são strings. Ver tasks.format-reference.md.",
+      "required": [
+        "table",
+        "purpose",
+        "operationType",
+        "identifierStrategy",
+        "primaryKey",
+        "columns",
+        "dataModelRef"
+      ],
+      "properties": {
+        "table": {
+          "type": "string"
+        },
+        "purpose": {
+          "type": "string"
+        },
+        "boundedContext": {
+          "type": "string"
+        },
+        "operationType": {
+          "type": "string",
+          "enum": [
+            "NEW",
+            "ALTER",
+            "DROP",
+            "EXISTING_REF"
+          ],
+          "description": "Tipo de operação de migração que ESTA task executa na tabela. EXISTING_REF = a task apenas CONSULTA a tabela e não migra nada — a criação/alteração pertence a outra task ou a tabela já existe. Espelha o valor homônimo do enum de tabela do data-model.json, para a conversão data-model → task não precisar declarar uma migração falsa (o caso típico é a task de frontend que só exibe o dado e mesmo assim tem de embutir as colunas)."
+        },
+        "identifierStrategy": {
+          "type": "string",
+          "description": "String: SEQUENCE | UUID | AUTO_INCREMENT | MANUAL | COMPOSITE (com detalhe opcional, ex.: 'SEQUENCE (SEQ_PEDIDO)')."
+        },
+        "primaryKey": {
+          "type": "string",
+          "description": "Chave primária, ex.: 'id' ou 'cliente_id, pedido_id' para composta."
+        },
+        "columns": {
+          "type": "string",
+          "minLength": 1,
+          "description": "String rica pipe-separated. Cada segmento: 'nome TIPO constraints [op] — descrição'. Ex.: 'id BIGINT PK NOT NULL [NEW] — PK gerada por sequence. | status VARCHAR(40) NOT NULL [NEW] — Status.'"
+        },
+        "relationships": {
+          "type": "string",
+          "description": "String rica pipe-separated: 'TYPE → tabela (fk → pk) onDelete=... — descr'."
+        },
+        "indexes": {
+          "type": "string",
+          "description": "String rica pipe-separated: 'nome [UNIQUE] TYPE(cols) — purpose'."
+        },
+        "uniqueConstraints": {
+          "type": "string",
+          "description": "String rica pipe-separated: 'nome (cols) [WHERE cond] — descr'."
+        },
+        "checkConstraints": {
+          "type": "string",
+          "description": "String rica pipe-separated: 'nome: expressão'."
+        },
+        "migrationNotes": {
+          "type": "string"
+        },
+        "dataModelRef": {
+          "type": "string",
+          "description": "Referência rastreável ao arquivo fonte, ex.: 'data-model.json#/tableName/TB_PEDIDO'."
+        }
+      }
+    },
+    "legacy-v5.0": {
+      "deprecated": true,
+      "description": "ARQUIVADO — Formatos object-based v5.0 (ApiContract com authentication/requestSchema/responseSchemas; Entity com columnsToWrite[]/relationships[]/indexes[] via defs Column/Relationship/Index). Substituídos pelo compact-prose v5.3 (strings ricas). Mantido apenas como marcador de deprecação; NÃO referenciar em produção.",
+      "type": "object"
+    },
+    "BusinessRule": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "description",
+        "implementation",
+        "testScenarios",
+        "traceability"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 200
+        },
+        "rationale": {
+          "type": "string"
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "document": {
+              "type": "string"
+            },
+            "section": {
+              "type": "string"
+            },
+            "excerpt": {
+              "type": "string"
+            }
+          }
+        },
+        "implementation": {
+          "type": "object",
+          "required": [
+            "validationPoint",
+            "algorithm",
+            "errorMessages"
+          ],
+          "properties": {
+            "validationPoint": {
+              "type": "string"
+            },
+            "algorithm": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 3,
+              "description": "Passo-a-passo do algoritmo de validação"
+            },
+            "errorMessages": {
+              "type": "object",
+              "minProperties": 1,
+              "patternProperties": {
+                "^[A-Z_]+$": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "testScenarios": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "category",
+              "description",
+              "given",
+              "then"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "given": {
+                "type": "string"
+              },
+              "then": {
+                "type": "string"
+              }
+            }
+          },
+          "minItems": 1
+        },
+        "exceptions": {
+          "type": "array"
+        },
+        "relatedRules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "traceability": {
+          "type": "object",
+          "properties": {
+            "requirementId": {
+              "type": "string"
+            },
+            "legalBasis": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "AcceptanceScenario": {
+      "type": "object",
+      "required": [
+        "id",
+        "category",
+        "title",
+        "given",
+        "when",
+        "then",
+        "testData",
+        "verificationSteps"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "HAPPY_PATH",
+            "INVALID_INPUT",
+            "BUSINESS_RULE_VIOLATION",
+            "EXTERNAL_SERVICE_FAILURE",
+            "AUTHORIZATION",
+            "EDGE_CASE"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "coverageNote": {
+          "type": "string",
+          "description": "Rastreio do caso de origem no plano de testes (ex.: 'Cobre TC-004 do plano de testes') quando SCENARIOS_FROM: test-plan. O ID do caso, nunca o nome do arquivo: NO_EXTERNAL_REFS_IN_TASKS reprova nome de artefato de especificação em qualquer campo da task; o caminho do plano fica em externalReferences (TEST-PLAN), na raiz do tasks.json."
+        },
+        "given": {
+          "type": "string",
+          "minLength": 50
+        },
+        "when": {
+          "type": "string",
+          "minLength": 30
+        },
+        "then": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "testData": {
+          "type": "object",
+          "required": [
+            "request",
+            "expectedResponse"
+          ],
+          "properties": {
+            "request": {
+              "type": "object",
+              "description": "Requisição concreta do cenário. `body` é exigido apenas quando o método carrega corpo — GET/HEAD/DELETE/OPTIONS legitimamente não têm, e a versão anterior deste schema (body em required) tornava IMPOSSÍVEL representar um cenário de listagem, divergindo de validate-tasks-selfsufficiency.mjs (BODYLESS_METHODS), que é a autoridade FATAL.",
+              "required": [
+                "method",
+                "path"
+              ],
+              "properties": {
+                "method": {
+                  "type": "string"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "headers": {
+                  "type": "object"
+                },
+                "body": {
+                  "type": ["object", "array", "string"],
+                  "description": "Objeto/array para payload JSON; string para operações não-HTTP (ex.: comando de migration, INSERT de teste). Mesma aceitação do validador."
+                }
+              },
+              "if": {
+                "not": {
+                  "properties": {
+                    "method": { "enum": ["GET", "HEAD", "DELETE", "OPTIONS", "get", "head", "delete", "options"] }
+                  },
+                  "required": ["method"]
+                }
+              },
+              "then": { "required": ["body"] }
+            },
+            "mockedExternalResponse": {
+              "type": "object"
+            },
+            "mockedServiceResponse": {
+              "type": "object"
+            },
+            "expectedResponse": {
+              "type": "object",
+              "required": [
+                "statusCode",
+                "body"
+              ],
+              "properties": {
+                "statusCode": {
+                  "type": "integer"
+                },
+                "body": {
+                  "type": "object"
+                },
+                "headers": {
+                  "type": "object"
+                }
+              }
+            },
+            "expectedDatabaseState": {
+              "type": "object",
+              "description": "Estado esperado de TODAS as tabelas afetadas"
+            },
+            "expectedEvents": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "verificationSteps": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 3
+        },
+        "relatedRules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Validation": {
+      "type": "object",
+      "properties": {
+        "businessCriteria": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "technicalCriteria": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "unitTestScenarios": {
+          "type": "array"
+        }
+      }
+    },
+    "UserStory": {
+      "type": "object",
+      "properties": {
+        "asA": {
+          "type": "string"
+        },
+        "iWant": {
+          "type": "string"
+        },
+        "soThat": {
+          "type": "string"
+        }
+      }
+    },
+    "BusinessSummary": {
+      "type": "object",
+      "properties": {
+        "problem": {
+          "type": "string"
+        },
+        "deliveredValue": {
+          "type": "string"
+        },
+        "actors": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "storyAcceptanceCriteria": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "BusinessNarrative": {
+      "type": "object",
+      "required": [
+        "elevatorPitch",
+        "context",
+        "problem",
+        "deliveredValue",
+        "actors"
+      ],
+      "properties": {
+        "elevatorPitch": {
+          "type": "string",
+          "minLength": 120,
+          "description": "Elevator pitch: ator, capacidade, dor atual, proposta de valor e impacto (sem jargão técnico)"
+        },
+        "context": {
+          "type": "string",
+          "minLength": 200,
+          "description": "Narrativa híbrida: elevator pitch + complemento opcional (parágrafos separados por linha em branco)"
+        },
+        "problem": {
+          "type": "string",
+          "minLength": 80
+        },
+        "deliveredValue": {
+          "type": "string",
+          "minLength": 80
+        },
+        "actors": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "mainFlow": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Fluxo principal em linguagem de negócio"
+        },
+        "operationalImpact": {
+          "type": "string"
+        },
+        "regulatoryContext": {
+          "type": "string"
+        },
+        "userStoryStatement": {
+          "type": "string",
+          "description": "Como [ator], quero [ação], para [valor]"
+        }
+      }
+    },
+    "ConsolidatedBusinessRule": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "description"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 40,
+          "description": "Obrigação/comportamento em linguagem executiva (rastreio em sourceTaskIds/scopeNote)"
+        },
+        "legalBasis": {
+          "type": "string"
+        },
+        "exceptions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sourceTaskIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sourceStoryIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "scopeNote": {
+          "type": "string",
+          "description": "Tasks de origem da regra (ex.: Aplicável às tasks: TASK-001-001)"
+        }
+      }
+    },
+    "UiContext": {
+      "type": "object",
+      "description": "Contexto de UI EMBUTIDO a partir do flow-map.md (obtido via check-flowmap.py --json). OPCIONAL — presente apenas em stories/tasks que tocam UI quando o flow-map existe (ausente → modo UI_CONTEXT_SKIPPED). Auto-suficiência: os campos embutem o CONTEÚDO textual (nomes, estados, texto das regras) — nunca instruem a ler o flow-map. Apenas screenshot é referência por caminho.",
+      "required": [
+        "tela",
+        "rota"
+      ],
+      "properties": {
+        "tela": {
+          "type": "string",
+          "pattern": "^(?:TEL-\\d{3}|[a-z0-9]+(?:-[a-z0-9]+)*)$",
+          "description": "Identificador da tela. COM flow-map.md: o ID TEL-xxx (ex.: 'TEL-001'). SEM flow-map.md (modo UI_CONTEXT_SKIPPED): o slug da rota, alinhado ao contrato screens-manifest.json — onde `route` é a chave e `id` (TEL-xxx) é opcional, e o screenshot de tela sem id usa '<slug-da-rota>.png' (ex.: rota '/propostas/nova' → slug 'propostas-nova'). O pattern ^TEL-\\d{3}$ sozinho tornava impossível preencher uiContext em projeto sem flow-map, o que empurrava o gerador a omitir o uiContext inteiro."
+        },
+        "telaNome": {
+          "type": "string",
+          "description": "Nome da tela (coluna Nome de ## Telas)."
+        },
+        "rota": {
+          "type": "string",
+          "description": "Rota da tela, ex.: '/propostas/nova'."
+        },
+        "fluxo": {
+          "type": "string",
+          "description": "String rica: FLX-xxx + nome. Ex.: 'FLX-001 — Contratação de proposta'."
+        },
+        "etapa": {
+          "type": "string",
+          "description": "String rica: ETP-xxx + ordem + nome. Ex.: 'ETP-003 (ordem 2) — Preencher dados da proposta'."
+        },
+        "estadosUI": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Estados de UI declarados no flow-map (ex.: 'vazio', 'carregando', 'erro') — cada estado vira cenário obrigatório de verificação na spec-implement."
+        },
+        "regras": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Regras das transições que tocam a tela — string rica 'RN-xxx — texto curto da regra' (conteúdo embutido, não só o ID)."
+        },
+        "entidades": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Entidades da ## Amarração Técnica do flow-map associadas à tela."
+        },
+        "endpoints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Endpoints 'METHOD /path' da ## Amarração Técnica associados à tela."
+        },
+        "screenshot": {
+          "type": "string",
+          "description": "Caminho da imagem (ex.: 'outputs/spec/screens/TEL-001.png') — única referência por caminho permitida no uiContext; anexada ao work item pela spec-tasks-azure. ATENÇÃO: screenshot NÃO substitui fields[] — o agente implementador não lê imagens."
+        },
+        "fields": {
+          "type": "array",
+          "description": "INVENTÁRIO DE CAMPOS da tela — um item por campo de formulário, filtro ou coluna de grid. OBRIGATÓRIO quando uiContext existe (validator TASK_UI_HAS_FIELD_CONTRACT). Fonte: seção 'Inventário de campos' do PR em product-requirements.md, screens-manifest.json e enumerations do data-model.json. Os VALORES devem ser TRANSCRITOS aqui — é proibido remeter a outro arquivo.",
+          "items": {
+            "$ref": "#/definitions/UiField"
+          }
+        },
+        "grid": {
+          "type": "object",
+          "description": "Contrato de tabela/listagem, quando a tela exibe grid.",
+          "properties": {
+            "columns": {
+              "type": "array",
+              "description": "Colunas exibidas, em ordem. String rica: 'rótulo — conteúdo/formato (largura, alinhamento)'.",
+              "items": {
+                "type": "string"
+              }
+            },
+            "defaultSort": {
+              "type": "string",
+              "description": "Ex.: 'dataCriacao DESC'."
+            },
+            "pagination": {
+              "type": "string",
+              "description": "Ex.: 'server-side, 25 por página, opções 25/50/100'."
+            },
+            "rowActions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "emptyState": {
+              "type": "string",
+              "description": "Texto exibido quando não há resultados."
+            }
+          }
+        },
+        "filterBehavior": {
+          "type": "object",
+          "description": "Comportamento do conjunto de filtros da tela.",
+          "properties": {
+            "applyOn": {
+              "type": "string",
+              "enum": [
+                "change",
+                "submit"
+              ],
+              "description": "Aplica ao alterar o campo ou só ao acionar o botão."
+            },
+            "combination": {
+              "type": "string",
+              "enum": [
+                "AND",
+                "OR"
+              ],
+              "description": "Como os filtros se combinam entre si."
+            },
+            "clearAll": {
+              "type": "boolean",
+              "description": "Existe ação de limpar todos os filtros de uma vez."
+            },
+            "persistence": {
+              "type": "string",
+              "description": "Ex.: 'querystring', 'sessão', 'nenhuma'."
+            },
+            "notes": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "UiField": {
+      "type": "object",
+      "description": "Contrato atômico de um campo de tela (formulário, filtro ou coluna). Fecha a lacuna que fazia listas de opções de dropdown nunca chegarem ao implementador.",
+      "required": [
+        "name",
+        "type"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Nome técnico do campo."
+        },
+        "label": {
+          "type": "string",
+          "description": "Rótulo exibido ao usuário (pt-BR)."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "text",
+            "textarea",
+            "number",
+            "currency",
+            "percent",
+            "date",
+            "datetime",
+            "daterange",
+            "month",
+            "time",
+            "email",
+            "phone",
+            "cpf",
+            "cnpj",
+            "document",
+            "password",
+            "file",
+            "select",
+            "multiselect",
+            "dropdown",
+            "combo",
+            "combobox",
+            "radio",
+            "radiogroup",
+            "checkbox",
+            "checkboxgroup",
+            "toggle",
+            "autocomplete",
+            "lookup",
+            "readonly",
+            "hidden"
+          ],
+          "description": "Tipo de controle. Os tipos com lista de opções exigem options[] ou optionsSource."
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "options": {
+          "type": "array",
+          "description": "Valores permitidos, TRANSCRITOS. Obrigatório para select/multiselect/dropdown/combo/radio/checkboxgroup/autocomplete/lookup quando a lista é conhecida em tempo de especificação (enum ou tabela de domínio).",
+          "items": {
+            "type": "object",
+            "required": [
+              "value"
+            ],
+            "properties": {
+              "value": {
+                "type": "string"
+              },
+              "label": {
+                "type": "string",
+                "description": "Rótulo exibido (pt-BR)."
+              },
+              "default": {
+                "type": "boolean"
+              },
+              "notes": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "optionsSource": {
+          "type": "object",
+          "description": "Origem das opções. Para kind=enum ou domainTable os valores DEVEM também vir transcritos em options[]; optionsSource sozinho só é aceito para kind=endpoint (lista dinâmica em runtime).",
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "enum",
+                "endpoint",
+                "domainTable",
+                "static"
+              ]
+            },
+            "ref": {
+              "type": "string",
+              "description": "Nome da enumeração, 'METHOD /path' do endpoint, ou nome da tabela de domínio."
+            },
+            "notes": {
+              "type": "string"
+            }
+          }
+        },
+        "selection": {
+          "type": "string",
+          "enum": [
+            "single",
+            "multiple"
+          ],
+          "description": "Para campos de opção: seleção única ou múltipla."
+        },
+        "mask": {
+          "type": "string",
+          "description": "Máscara de entrada, ex.: '000.000.000-00'."
+        },
+        "format": {
+          "type": "string",
+          "description": "Formato de exibição, ex.: 'R$ #.##0,00'."
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "default": {
+          "description": "Valor inicial do campo."
+        },
+        "min": {
+          "description": "Limite inferior (número, data ou comprimento)."
+        },
+        "max": {
+          "description": "Limite superior."
+        },
+        "maxLength": {
+          "type": "integer"
+        },
+        "searchableBy": {
+          "type": "array",
+          "description": "Para campos de busca: por quais atributos a busca opera. Ex.: ['Nome', 'CPF/CNPJ'].",
+          "items": {
+            "type": "string"
+          }
+        },
+        "validations": {
+          "type": "array",
+          "description": "Validações client-side com a mensagem exibida em cada falha.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rule": {
+                "type": "string"
+              },
+              "errorMessage": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "dependsOn": {
+          "type": "string",
+          "description": "Campo do qual este depende (ex.: Controle depende de Grupo de Controle)."
+        },
+        "traceability": {
+          "type": "string",
+          "description": "RF/PR que define este campo, ex.: 'RF-MOD-SEGURADO-06'."
+        }
+      }
+    },
+    "DeliveryScopeItem": {
+      "type": "object",
+      "required": [
+        "taskId",
+        "title",
+        "businessOutcome"
+      ],
+      "properties": {
+        "taskId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "businessOutcome": {
+          "type": "string",
+          "minLength": 20
+        }
+      }
+    },
+    "BusinessAcceptanceCriterion": {
+      "type": "object",
+      "required": [
+        "id",
+        "statement"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 20,
+          "description": "Critério textual de resultado de negócio (sem Given/When/Then)"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "OUTCOME",
+            "HAPPY_PATH",
+            "EDGE_CASE",
+            "BUSINESS_RULE",
+            "NON_FUNCTIONAL",
+            "INTEGRATION"
+          ]
+        },
+        "relatedRuleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sourceTaskIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sourceStoryIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "AcceptanceCriterion": {
+      "type": "object",
+      "description": "Legado BDD — usar BusinessAcceptanceCriterion em Epic/Story/Feature",
+      "required": [
+        "id",
+        "given",
+        "when",
+        "then"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string",
+          "enum": [
+            "HAPPY_PATH",
+            "EDGE_CASE",
+            "BUSINESS_RULE",
+            "NON_FUNCTIONAL",
+            "INTEGRATION"
+          ]
+        },
+        "title": {
+          "type": "string"
+        },
+        "given": {
+          "type": "string",
+          "minLength": 20
+        },
+        "when": {
+          "type": "string",
+          "minLength": 20
+        },
+        "then": {
+          "type": "string",
+          "minLength": 20
+        },
+        "relatedRuleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sourceTaskIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sourceStoryIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ScopeBoundaries": {
+      "type": "object",
+      "properties": {
+        "inScope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "outOfScope": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "Traceability": {
+      "type": "object",
+      "properties": {
+        "requirementIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sourceStoryIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "sourceTaskIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

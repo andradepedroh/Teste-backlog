@@ -1,0 +1,42 @@
+{
+  "_comment": "Exemplo canônico de task de INVESTIGAÇÃO (class=spike). Validado contra #/definitions/Task por validate-examples.mjs. Um spike é definido por QUATRO coisas e o validador FATAL SPIKE_TASK_COMPLETE exige as quatro: pergunta fechada, timebox em dias, critério de saída (o que precisa estar DECIDIDO ao final) e qual GAP fecha. No artefato real que motivou este template, os 2 spikes tinham APENAS id, adoWorkItemType, type e title — nada mais. Isso não é investigação delimitada, é item aberto no board. O domínio abaixo é ilustrativo: NÃO copiar o conteúdo, copiar a ESTRUTURA.",
+  "id": "SPIKE-001",
+  "storyId": "STORY-007-01",
+  "class": "spike",
+  "sequence": 1,
+  "title": "Spike — viabilidade de geração de PDF no dispositivo, sem rede",
+  "type": "documentation",
+  "adoWorkItemType": "Task",
+  "durationEstimatedDays": 2,
+  "status": "TODO",
+  "description": "Hoje não se sabe se é viável gerar o documento oficial em PDF diretamente no dispositivo, offline, dentro do tempo que o usuário tolera em campo. A decisão entre gerar no dispositivo ou gerar no servidor muda a decomposição de toda a Feature de documentos: muda a biblioteca, muda o modelo de dados do template e muda o contrato de sincronização. Enquanto a dúvida existir, qualquer task de implementação da Feature é especulação. Esta investigação produz a decisão e a evidência que a sustenta.",
+  "spike": {
+    "question": "Uma biblioteca de geração de PDF embarcada consegue produzir o documento oficial completo (com as variáveis do template preenchidas e a assinatura embutida) em menos de 3 segundos, offline, no aparelho de menor capacidade da frota?",
+    "timeboxDays": 2,
+    "exitCriteria": [
+      "Biblioteca escolhida, com o nome e a versão registrados na rule de arquitetura do projeto.",
+      "Medição anexada ao work item: tempo de geração no aparelho de menor capacidade, em 10 execuções, com o template real de maior tamanho.",
+      "Decisão registrada: geração no dispositivo OU geração no servidor — com o motivo em uma frase.",
+      "Se a decisão for geração no servidor, o impacto no contrato de sincronização está descrito em uma lista de itens a rever."
+    ],
+    "closesGapId": "GAP-021",
+    "findings": ""
+  },
+  "agentExecutionContext": {
+    "selfContainedSummary": "Investigação com timebox de 2 dias para decidir onde o documento oficial é gerado. Não há código de produção a entregar: o resultado é uma DECISÃO registrada, com medição que a sustente. Executar em protótipo descartável. Ao final, preencher spike.findings, anexar a medição ao work item e registrar a decisão na rule de arquitetura do projeto. Passado o timebox, decidir com o que se sabe — spike não se estende.",
+    "verificationBeforeStart": [
+      "Confirmar qual é o aparelho de menor capacidade da frota e ter acesso a ele (ou a um emulador equivalente).",
+      "Ter em mão o template real de maior tamanho, para não medir com um caso otimista."
+    ],
+    "minimumOutputToDeliver": [
+      "spike.findings preenchido com a resposta à pergunta de investigação.",
+      "Medição anexada ao work item (10 execuções, aparelho alvo, template real).",
+      "Decisão registrada na rule de arquitetura do projeto.",
+      "GAP-021 marcado como fechado no gaps-document.md, citando este work item."
+    ],
+    "doNotDo": [
+      "Não abrir código de produção: o protótipo é descartável e não entra no repositório principal.",
+      "Não estender o timebox. Se a resposta não vier em 2 dias, a decisão é tomada com a evidência disponível e o risco fica registrado."
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+# Regra 4 — validação de documento (CPF/CNPJ/formato)
+id: document-validation-js
+language: javascript
+severity: hint
+message: "Referência a CPF/CNPJ ou regex de formato de documento — candidato a regra de validação de documento (compliance). Redigir RN de validação."
+rule:
+  any:
+    - kind: identifier
+      regex: "(?i)(cpf|cnpj)"
+    - kind: property_identifier
+      regex: "(?i)(cpf|cnpj)"
+    - kind: regex
+      regex: "\\\\d\\{2,\\}"
+---
+id: document-validation-py
+language: python
+severity: hint
+message: "Referência a CPF/CNPJ ou regex de formato de documento — candidato a regra de validação de documento (compliance). Redigir RN de validação."
+rule:
+  any:
+    - kind: identifier
+      regex: "(?i)(cpf|cnpj)"
+    - kind: string
+      regex: "\\\\d\\{2,\\}"

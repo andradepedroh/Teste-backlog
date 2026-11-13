@@ -1,0 +1,15 @@
+* text=auto eol=lf
+
+# Fim de linha na zona das skills — Decisao 32 do Plano 4.
+#
+# O kit vendorizado em .claude/skills/ e a fonte unica de verdade (Decisao 30), e a base de
+# comparacao dele e o snapshot datado do upstream, guardado como recebido — sem normalizacao de
+# fim de linha, nem em LF nem em CRLF. A regra acima (M1) ja normaliza o repositorio inteiro para
+# LF no checkout, mas normalizacao nao e o mesmo que "sem conversao": para o passo "o que NOS
+# mudamos" do merge de tres pontas (MANUTENCAO.md) ficar byte-a-byte comparavel com o snapshot do
+# upstream, a copia viva precisa ficar tao intocada por regra de fim de linha quanto ele.
+#
+# O escopo e DELIBERADAMENTE estreito: so a zona das skills. Alargar para `** -text` mudaria o
+# fim de linha do maquinario todo, e ha teste de controle negativo em vendorizacao.test.mjs
+# provando que isso nao aconteceu.
+.claude/skills/** -text

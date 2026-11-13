@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "generatedBy": "spec-prototype/geracao",
+  "generatedAt": "2026-07-28T12:00:00-03:00",
+  "screens": [
+    {
+      "id": "TEL-001",
+      "route": "/solicitacoes/nova",
+      "title": "Formulário de solicitação",
+      "fields": [
+        { "name": "nome", "type": "text", "required": true },
+        { "name": "dataNascimento", "type": "date", "required": false },
+        { "name": "tipoSolicitacao", "type": "select", "required": true }
+      ],
+      "actions": ["Salvar rascunho", "Enviar", "Cancelar"],
+      "states": ["padrão", "vazio", "erro", "carregando"],
+      "screenshot": "screens/TEL-001.png"
+    },
+    {
+      "route": "/relatorios",
+      "title": "Relatórios gerenciais",
+      "fields": [
+        { "name": "periodo", "type": "date", "required": true }
+      ],
+      "actions": ["Exportar CSV"],
+      "states": ["padrão", "vazio", "carregando"],
+      "screenshot": "screens/relatorios.png"
+    }
+  ]
+}

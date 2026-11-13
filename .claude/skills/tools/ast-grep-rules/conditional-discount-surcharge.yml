@@ -1,0 +1,25 @@
+# Regra 8 — desconto/acréscimo condicionais
+id: conditional-discount-surcharge-js
+language: javascript
+severity: hint
+message: "Desconto/acréscimo/juros dentro de condicional — regra de precificação condicionada. Levantar condição, percentual e exceções; redigir RN."
+rule:
+  any:
+    - kind: identifier
+      regex: "(?i)(desconto|discount|acrescimo|surcharge|juros|multa|rebate|markup)"
+    - kind: property_identifier
+      regex: "(?i)(desconto|discount|acrescimo|surcharge|juros|multa|rebate|markup)"
+  inside:
+    kind: if_statement
+    stopBy: end
+---
+id: conditional-discount-surcharge-py
+language: python
+severity: hint
+message: "Desconto/acréscimo/juros dentro de condicional — regra de precificação condicionada. Levantar condição, percentual e exceções; redigir RN."
+rule:
+  kind: identifier
+  regex: "(?i)(desconto|discount|acrescimo|surcharge|juros|multa|rebate|markup)"
+  inside:
+    kind: if_statement
+    stopBy: end

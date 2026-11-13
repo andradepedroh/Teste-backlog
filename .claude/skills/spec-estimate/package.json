@@ -1,0 +1,13 @@
+{
+  "name": "spec-estimate-html",
+  "version": "1.7.0",
+  "private": true,
+  "type": "module",
+  "description": "Gerador do relat\u00f3rio HTML premium da spec-estimate (Fase 8.5) a partir de estimate-data.json.",
+  "bin": {
+    "spec-estimate-html": "cli.mjs"
+  },
+  "scripts": {
+    "render": "node cli.mjs"
+  }
+}

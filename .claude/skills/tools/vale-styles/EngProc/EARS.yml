@@ -1,0 +1,19 @@
+# EngProc.EARS — critérios de aceitação (linhas "- CA-NN" / "CA-NN") devem conter um
+# gatilho EARS PT-BR: "QUANDO … o sistema DEVE", "ENQUANTO … o sistema DEVE",
+# "SE … ENTÃO o sistema DEVE", "ONDE … o sistema DEVE" ou "O sistema DEVE".
+#
+# LIMITAÇÃO (documentada também no README): a sintaxe do Vale usa Go RE2, que não
+# suporta lookaround — não há "negative match" limpo. A regra é implementada como
+# `conditional`: todo identificador CA-NN capturado por `first` precisa aparecer em
+# alguma linha que contenha "o sistema DEVE" (`second`). Consequências:
+#   1. Critérios sem identificador numerado (ex.: "- CA: …") não são verificados.
+#   2. Verifica a presença de "o sistema DEVE" (todos os 5 gatilhos EARS a contêm),
+#      não a estrutura completa QUANDO/ENQUANTO/SE…ENTÃO/ONDE.
+#   3. "DEVE" precisa estar em caixa alta (convenção EARS da metodologia).
+extends: conditional
+message: "Critério de aceitação '%s' sem gatilho EARS — use 'QUANDO/ENQUANTO/ONDE/SE … ENTÃO … o sistema DEVE …' ou 'O sistema DEVE …'."
+level: warning
+scope: raw
+ignorecase: false
+first: '(?m)^[ \t]*(?:[-*+][ \t]+)?\**(CA-?\d+)'
+second: '(?m)^[ \t]*(?:[-*+][ \t]+)?\**(CA-?\d+)\**[^\n]*?[Oo] sistema DEVE\b'

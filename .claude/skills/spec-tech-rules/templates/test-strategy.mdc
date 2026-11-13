@@ -1,0 +1,111 @@
+---
+description: "{{TEST_DESCRIPTION}}"
+globs: "**/*Test*,**/*Spec*,**/test/**,**/__tests__/**"
+alwaysApply: false
+---
+
+# Estratégia de Testes — {{PROJECT_NAME}}
+
+---
+
+## Pirâmide de Testes
+
+| Camada | Ferramenta | Localização | Threshold |
+|--------|-----------|-------------|-----------|
+{{TEST_PYRAMID_TABLE}}
+
+---
+
+## Testes Unitários — Domínio
+
+**MUST:** Domínio testado sem contexto de framework — sem `{{DI_FRAMEWORK_ANNOTATION}}`, sem mocks de infra.
+
+**MUST:** Cobrir happy path + cada ramo de exceção de domínio.
+
+```{{LANGUAGE}}
+{{DOMAIN_TEST_EXAMPLE}}
+```
+
+---
+
+## Testes Unitários — Use Cases / Services
+
+**MUST:** Mockar apenas {{MOCK_TARGET}} — nunca classes concretas de infraestrutura.
+
+```{{LANGUAGE}}
+{{USECASE_TEST_EXAMPLE}}
+```
+
+---
+
+## Testes de Integração — {{INTEGRATION_TEST_TYPE}}
+
+**MUST:** {{INTEGRATION_TEST_RULES}}
+
+**MUST:** {{DB_TEST_TOOL}} com banco real — sem `{{FAKE_DB}}`.
+
+```{{LANGUAGE}}
+{{INTEGRATION_TEST_EXAMPLE}}
+```
+
+---
+
+## Cobertura — {{COVERAGE_TOOL}}
+
+**Threshold:** {{COVERAGE_THRESHOLD}}
+
+```{{CONFIG_FORMAT}}
+{{COVERAGE_CONFIG}}
+```
+
+**MUST:** CI falha se cobertura cair abaixo do threshold.
+
+---
+
+{{#if E2E}}
+## E2E — {{E2E_TOOL}}
+
+**Localização:** `{{E2E_LOCATION}}`
+
+**Escopo:** {{E2E_SCOPE}}
+
+{{#if E2E_UI}}
+**MUST:** Seletores `data-testid` como primário — sem classes CSS frágeis.
+
+**MUST:** Cobrir por fluxo crítico: happy path + estado de erro + estado vazio.
+
+**MUST:** Testes navegam como o usuário: abrir páginas, clicar botões, preencher formulários — não apenas verificar DOM estático.
+{{/if}}
+
+{{#if E2E_API}}
+**MUST:** Testes de API E2E verificam contrato real do endpoint: status HTTP, body de resposta, headers, erros esperados.
+
+**MUST:** Usar ambiente de teste isolado com banco próprio — nunca prod ou dev compartilhado.
+{{/if}}
+
+{{E2E_EXTRA_RULES}}
+{{/if}}
+
+---
+
+{{#if LOAD}}
+## Carga — {{LOAD_TOOL}}
+
+**Localização:** `{{LOAD_LOCATION}}`
+
+**SLO a validar (derivados dos RNFs do produto):**
+
+| Endpoint / Cenário | p95 | Taxa de erro | Throughput |
+|--------------------|-----|-------------|------------|
+{{LOAD_SLO}}
+
+**MUST:** Scripts de carga rodam em CI antes de deploy em homolog.
+
+**MUST:** Falha se qualquer métrica ultrapassar o SLO definido.
+{{/if}}
+
+---
+
+## Anti-patterns
+
+{{ANTIPATTERNS_LIST}}

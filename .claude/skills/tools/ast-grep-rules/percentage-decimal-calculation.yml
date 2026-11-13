@@ -1,0 +1,24 @@
+# Regra 2 — cálculo com percentual / multiplicação por constante decimal
+id: percentage-decimal-calculation-js
+language: javascript
+severity: hint
+message: "Multiplicação/divisão por constante decimal ou 100 — candidato a regra de cálculo (percentual, taxa, juros). Confirmar a fórmula e redigir RN."
+rule:
+  any:
+    - pattern: $X * $N
+    - pattern: $X / $N
+constraints:
+  N:
+    regex: "^(0\\.\\d+|1\\.0\\d+|100(\\.0+)?)$"
+---
+id: percentage-decimal-calculation-py
+language: python
+severity: hint
+message: "Multiplicação/divisão por constante decimal ou 100 — candidato a regra de cálculo (percentual, taxa, juros). Confirmar a fórmula e redigir RN."
+rule:
+  any:
+    - pattern: $X * $N
+    - pattern: $X / $N
+constraints:
+  N:
+    regex: "^(0\\.\\d+|1\\.0\\d+|100(\\.0+)?)$"

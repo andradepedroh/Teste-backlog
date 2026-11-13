@@ -1,0 +1,39 @@
+# sgconfig.yml — configuração versionada do ast-grep para o catálogo de regras do
+# spec-legacy (Passo 0.7 — Sinais determinísticos).
+#
+# Por que existe: o ast-grep não tem flag `--rule-dirs`; ele lê os diretórios/arquivos
+# de regra de um `sgconfig.yml`. Antes este arquivo era criado na hora com heredoc pelo
+# README — o `skills/tools/README.md` já documentava um caminho que não existia.
+#
+# Caminhos RELATIVOS a este arquivo: o mesmo sgconfig.yml funciona nos espelhos
+# gerados por a atualização do pacote de skills (rodado na raiz do kit), sem edição:
+#   skills/tools/ast-grep-rules/          (fonte versionada)
+#   .cursor/skills/tools/ast-grep-rules/
+#   .claude/skills/tools/ast-grep-rules/
+#   plugin/skills/tools/ast-grep-rules/
+#   ~/.claude/skills/tools/ast-grep-rules/
+#
+# As 12 regras são listadas UMA A UMA (e não como `ruleDirs: [.]`) porque o ast-grep
+# trataria este próprio sgconfig.yml como arquivo de regra e abortaria com
+# "missing field `language`". Lista explícita = erro alto e claro se um arquivo for
+# renomeado/removido ("Cannot read rule directory ..."). Ao adicionar uma 13ª regra,
+# acrescentar a linha aqui e na tabela do README.md desta pasta.
+#
+# Uso (caminho relativo ao SKILL.md que invoca — vale nos 3 espelhos; ver
+# tools/references/paths.md):
+#   sg scan --config ../tools/ast-grep-rules/sgconfig.yml --json src/ \
+#     > outputs/spec/signals/rules-candidates.json
+#   (binário `ast-grep` em algumas distribuições — ver README.md desta pasta)
+ruleDirs:
+  - business-error-message.yml
+  - conditional-discount-surcharge.yml
+  - document-validation.yml
+  - eligibility-rule.yml
+  - hardcoded-date-deadline.yml
+  - hardcoded-feature-flag.yml
+  - hardcoded-numeric-threshold.yml
+  - monetary-rounding.yml
+  - percentage-decimal-calculation.yml
+  - state-transition-assignment.yml
+  - status-string-comparison.yml
+  - switch-on-type-category.yml

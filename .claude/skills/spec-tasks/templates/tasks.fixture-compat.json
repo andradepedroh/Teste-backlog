@@ -1,0 +1,786 @@
+{
+  "_comment": "FIXTURE DE RETROCOMPATIBILIDADE — exercita as DUAS formas de cada chave divergente que já causou perda silenciosa de conteúdo nos consumidores. Rodar os três consumidores sobre este arquivo: spec-tasks/scripts/validate-tasks-business.mjs, spec-tasks-html/cli.mjs e (dry-run) spec-tasks-azure/cli.mjs. O contrato é: TODA forma abaixo produz saída legível — nenhuma cai em branco. Domínio deliberadamente neutro (nada de licenciamento, fiscalização, seguros): a skill é agnóstica de projeto e o fixture não pode sugerir o contrário.",
+  "_formasExercitadas": {
+    "rotulo humano": "EPIC-A usa `name`; EPIC-B usa só `title` (alias). STORY-A usa `name`; STORY-B usa só `title`. FEAT-B usa só `title`.",
+    "acceptanceCriteria": "STORY-A: array de OBJETOS {id, statement} (canônico v5.3). STORY-B: array de STRINGS. STORY-C: só businessSummary.storyAcceptanceCriteria[] (legado v5.0).",
+    "traceability": "STORY-A: OBJETO {rf, productRequirement, requirementIds[]}. STORY-B: ARRAY de {section, itemId, excerpt} (legado). TASK-B-01: OBJETO. TASK-A-01: ARRAY.",
+    "narrativa": "STORY-A/B: `narrative` (v5.3). STORY-C: só `businessSummary` (legado v5.0) — deve continuar renderizando.",
+    "_resultado esperado do validador de negócio": "EXIT 1, e isso é CORRETO — não é bug do fixture. STORY-A e STORY-B saem sem FATAL. STORY-C (legado v5.0 puro) acumula os FATAL de conteúdo v5.3 ausente (NARRATIVE_*, HAS_BUSINESS_RULES, HAS_ACCEPTANCE_CRITERIA, STORY_HAS_USER_STORY, STORY_HAS_DELIVERY_SCOPE, LEVEL_GROUNDED_IN_SOURCE) — ela realmente não tem esse conteúdo. As duas afirmações convivem: o validador APONTA a lacuna (é o trabalho dele) e os consumidores RENDERIZAM o que existe (é a retrocompatibilidade). Em CONSUMER_CONTRACT, `narrative` e `acceptanceCriteria` saem como WARNING de migração — os consumidores têm fallback para `businessSummary` — e só `businessRules` é FATAL, porque para essa chave não existe fallback em nenhum dos dois consumidores. FEAT-B não gera FATAL de negócio porque o nível feature está declarado como title-only.",
+    "_resultado esperado dos consumidores": "ZERO falhas — node test-consumer-compat.mjs afirma que cada forma acima produz saída legível nos três consumidores."
+  },
+  "metadata": {
+    "schemaVersion": "tasks/v5.3",
+    "outputLanguage": "pt-BR",
+    "projectName": "Fixture de retrocompatibilidade",
+    "skillVersion": "1.3",
+    "backlogHierarchy": {
+      "chosen": [
+        "epic",
+        "feature",
+        "story",
+        "task"
+      ],
+      "levelDetail": {
+        "epic": "full",
+        "feature": "title-only",
+        "story": "full"
+      },
+      "rationale": "Feature em title-only de propósito: o fixture também precisa provar que o modo declarado por nível desativa os validadores de negócio APENAS naquele nível, e que o rótulo humano continua exigido."
+    }
+  },
+  "epics": [
+    {
+      "id": "EPIC-A",
+      "name": "Cadastro de itens do catálogo",
+      "priority": "HIGH",
+      "moduleScope": [
+        "MOD-CAT"
+      ],
+      "containedFeatureIds": [
+        "FEAT-A",
+        "FEAT-B"
+      ],
+      "containedStoryIds": [
+        "STORY-A",
+        "STORY-B",
+        "STORY-C"
+      ],
+      "sourceRefs": [
+        {
+          "document": "product-vision.md",
+          "section": "2. Contexto e Oportunidade",
+          "itemId": "problema"
+        },
+        {
+          "document": "modules.md",
+          "section": "Catálogo",
+          "itemId": "MOD-CAT"
+        }
+      ],
+      "narrative": {
+        "elevatorPitch": "Para a pessoa responsável pelo catálogo, o cadastro de itens — um único lugar onde o item é criado, corrigido e retirado de circulação. Diferente do cenário atual, em que a mesma informação é redigitada em duas planilhas paralelas, esta entrega permite manter um registro único e auditável de cada item.",
+        "context": "Para a pessoa responsável pelo catálogo, o cadastro de itens — um único lugar onde o item é criado, corrigido e retirado de circulação. Diferente do cenário atual, em que a mesma informação é redigitada em duas planilhas paralelas, esta entrega permite manter um registro único e auditável de cada item.\n\nCapacidades no escopo: criação de item; correção de item já publicado; retirada de circulação com histórico preservado. Fora do escopo: precificação e integração com o sistema fiscal.",
+        "problem": "A mesma informação de item é mantida em duas planilhas paralelas, o que produz divergência entre elas e retrabalho de conferência a cada fechamento.",
+        "deliveredValue": "Registro único por item, com histórico de alteração, eliminando a conferência manual entre planilhas no fechamento.",
+        "actors": [
+          "Responsável pelo catálogo",
+          "Conferente"
+        ],
+        "mainFlow": [
+          "A pessoa responsável cria o item informando código, descrição e categoria",
+          "O sistema registra o item e passa a exibi-lo na listagem do catálogo",
+          "Correções posteriores preservam o histórico do que mudou e quando"
+        ]
+      },
+      "successMetrics": [
+        {
+          "name": "Divergências entre registros no fechamento",
+          "target": "0",
+          "baseline": "18 por mês"
+        }
+      ],
+      "businessOutcomes": [
+        "Eliminar a conferência manual entre planilhas no fechamento mensal."
+      ],
+      "outOfScope": [
+        "Precificação do item.",
+        "Integração com o sistema fiscal."
+      ],
+      "businessRules": [
+        {
+          "id": "RN-CAT-001",
+          "title": "Código de item é único e imutável",
+          "description": "O código do item é único em todo o catálogo e não pode ser alterado depois da criação. Corrigir um código significa retirar o item de circulação e criar outro, preservando o histórico de ambos, porque documentos já emitidos referenciam o código anterior e precisam continuar resolvendo para o item correto.",
+          "legalBasis": "Política interna de rastreabilidade de catálogo",
+          "exceptions": [
+            "Item criado e retirado no mesmo dia, sem nenhum documento emitido, pode ser excluído em vez de retirado."
+          ],
+          "sourceRefs": [
+            {
+              "document": "business-rules.md",
+              "section": "RN-CAT-001: Código de item é único e imutável",
+              "itemId": "RN-CAT-001"
+            }
+          ]
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "AC-EPIC-A-01",
+          "statement": "O fechamento mensal ocorre sem nenhuma divergência de item entre registros.",
+          "category": "OUTCOME",
+          "sourceStoryIds": [
+            "STORY-A",
+            "STORY-B",
+            "STORY-C"
+          ]
+        }
+      ],
+      "traceability": {
+        "rf": "RF-CAT-001",
+        "requirementIds": [
+          "RF-CAT-001",
+          "RF-CAT-002"
+        ]
+      }
+    },
+    {
+      "_comment": "EPIC-B: exercita `title` como ÚNICA fonte de rótulo humano (sem `name`). Deve publicar e renderizar com o título legível, não com o id.",
+      "id": "EPIC-B",
+      "title": "Relatórios do catálogo",
+      "priority": "MEDIUM",
+      "containedStoryIds": [
+        "STORY-C"
+      ],
+      "sourceRefs": [
+        {
+          "document": "requirements.md",
+          "section": "RF-CAT-010: Exportar o catálogo",
+          "itemId": "RF-CAT-010"
+        }
+      ],
+      "narrative": {
+        "elevatorPitch": "Para o conferente, os relatórios do catálogo — a extração do catálogo vigente em um arquivo conferível. Diferente do cenário atual, em que a extração é montada à mão a cada pedido, esta entrega permite obter o mesmo arquivo de forma repetível.",
+        "context": "Para o conferente, os relatórios do catálogo — a extração do catálogo vigente em um arquivo conferível. Diferente do cenário atual, em que a extração é montada à mão a cada pedido, esta entrega permite obter o mesmo arquivo de forma repetível.\n\nEscopo restrito à extração do catálogo vigente; relatórios analíticos ficam fora.",
+        "problem": "Cada pedido de extração do catálogo é montado manualmente, o que consome tempo do conferente e produz arquivos com recortes diferentes entre si.",
+        "deliveredValue": "Extração repetível do catálogo vigente, com o mesmo recorte em todo pedido.",
+        "actors": [
+          "Conferente"
+        ]
+      },
+      "successMetrics": [
+        {
+          "name": "Tempo de atendimento de um pedido de extração",
+          "target": "menos de 1 minuto",
+          "baseline": "40 minutos"
+        }
+      ],
+      "businessRules": [
+        {
+          "id": "RN-CAT-002",
+          "title": "Extração reflete apenas o catálogo vigente",
+          "description": "A extração inclui apenas itens em circulação na data do pedido. Itens retirados aparecem somente quando o pedido informa explicitamente uma data anterior à retirada, porque a extração é usada como base de conferência e não pode sugerir que um item retirado continua disponível.",
+          "sourceRefs": [
+            {
+              "document": "business-rules.md",
+              "section": "RN-CAT-002: Extração reflete apenas o catálogo vigente",
+              "itemId": "RN-CAT-002"
+            }
+          ]
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "AC-EPIC-B-01",
+          "statement": "O conferente obtém a extração do catálogo vigente sem montar o arquivo à mão.",
+          "category": "OUTCOME",
+          "sourceStoryIds": [
+            "STORY-C"
+          ]
+        }
+      ],
+      "traceability": {
+        "rf": "RF-CAT-010"
+      }
+    }
+  ],
+  "features": [
+    {
+      "id": "FEAT-A",
+      "name": "Manutenção de item",
+      "epicId": "EPIC-A",
+      "moduleCode": "MOD-CAT",
+      "containedStoryIds": [
+        "STORY-A",
+        "STORY-B"
+      ],
+      "touchpoints": [
+        "Tela de cadastro de item",
+        "Listagem do catálogo"
+      ],
+      "sourceRefs": [
+        {
+          "document": "modules.md",
+          "section": "Catálogo",
+          "itemId": "MOD-CAT"
+        }
+      ],
+      "narrative": {
+        "elevatorPitch": "Para a pessoa responsável pelo catálogo, a manutenção de item — criação e correção do item em uma única tela. Diferente do cenário atual, em que criação e correção vivem em planilhas distintas, esta entrega permite tratar o ciclo de vida do item num só lugar.",
+        "context": "Para a pessoa responsável pelo catálogo, a manutenção de item — criação e correção do item em uma única tela. Diferente do cenário atual, em que criação e correção vivem em planilhas distintas, esta entrega permite tratar o ciclo de vida do item num só lugar.\n\nFronteiras do módulo: não trata preço nem tributação.",
+        "problem": "Criação e correção de item vivem em planilhas distintas, o que faz o histórico do item ficar partido entre arquivos.",
+        "deliveredValue": "Ciclo de vida do item tratado numa única tela, com histórico contínuo.",
+        "actors": [
+          "Responsável pelo catálogo"
+        ]
+      },
+      "businessRules": [
+        {
+          "id": "RN-CAT-001",
+          "title": "Código de item é único e imutável",
+          "description": "O código do item é único em todo o catálogo e não pode ser alterado depois da criação. Corrigir um código significa retirar o item de circulação e criar outro, preservando o histórico de ambos, porque documentos já emitidos referenciam o código anterior.",
+          "sourceRefs": [
+            {
+              "document": "business-rules.md",
+              "section": "RN-CAT-001: Código de item é único e imutável",
+              "itemId": "RN-CAT-001"
+            }
+          ]
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "AC-FEAT-A-01",
+          "statement": "A pessoa responsável cria e corrige um item sem sair da tela de manutenção.",
+          "category": "OUTCOME",
+          "sourceStoryIds": [
+            "STORY-A",
+            "STORY-B"
+          ]
+        }
+      ],
+      "traceability": {
+        "rf": "RF-CAT-001"
+      }
+    },
+    {
+      "_comment": "FEAT-B: só `title`, e o nível feature está em title-only no metadata — logo NARRATIVE_*/HAS_BUSINESS_RULES/HAS_ACCEPTANCE_CRITERIA e LEVEL_GROUNDED_IN_SOURCE ficam inativos para ela. O rótulo humano continua exigido por CONSUMER_CONTRACT.",
+      "id": "FEAT-B",
+      "title": "Retirada de item de circulação",
+      "epicId": "EPIC-A",
+      "containedStoryIds": [
+        "STORY-C"
+      ]
+    }
+  ],
+  "stories": [
+    {
+      "_comment": "STORY-A: forma CANÔNICA v5.3 — `name`, `narrative`, acceptanceCriteria de OBJETOS, traceability OBJETO.",
+      "id": "STORY-A",
+      "name": "Cadastrar um item novo no catálogo",
+      "featureId": "FEAT-A",
+      "epicId": "EPIC-A",
+      "priority": "HIGH",
+      "sourceRefs": [
+        {
+          "document": "requirements.md",
+          "section": "RF-CAT-001: Cadastrar item",
+          "itemId": "RF-CAT-001"
+        },
+        {
+          "document": "business-rules.md",
+          "section": "RN-CAT-001: Código de item é único e imutável",
+          "itemId": "RN-CAT-001"
+        }
+      ],
+      "userStory": {
+        "asA": "responsável pelo catálogo",
+        "iWant": "cadastrar um item informando código, descrição e categoria",
+        "soThat": "o item passe a existir num registro único, sem redigitação em planilha"
+      },
+      "narrative": {
+        "elevatorPitch": "Para a pessoa responsável pelo catálogo, o cadastro de um item novo — um formulário único que cria o registro e o publica na listagem. Diferente do cenário atual, em que o item é digitado em duas planilhas, esta entrega permite criar o item uma vez só.",
+        "context": "Para a pessoa responsável pelo catálogo, o cadastro de um item novo — um formulário único que cria o registro e o publica na listagem. Diferente do cenário atual, em que o item é digitado em duas planilhas, esta entrega permite criar o item uma vez só.\n\nCapacidades entregues nesta história: informar código, descrição e categoria; recusar código já existente com mensagem explícita. Pré-condições: a pessoa tem permissão de manutenção do catálogo.",
+        "problem": "O item é digitado em duas planilhas paralelas, o que gera divergência entre elas já no momento da criação.",
+        "deliveredValue": "O item passa a ser criado uma única vez, num registro que a listagem do catálogo lê diretamente.",
+        "actors": [
+          "Responsável pelo catálogo"
+        ],
+        "mainFlow": [
+          "A pessoa informa código, descrição e categoria do item",
+          "O sistema recusa a criação quando o código já existe, explicando o motivo",
+          "O item criado passa a aparecer na listagem do catálogo"
+        ],
+        "userStoryStatement": "Como responsável pelo catálogo, quero cadastrar um item informando código, descrição e categoria, para que o item passe a existir num registro único, sem redigitação em planilha."
+      },
+      "businessRules": [
+        {
+          "id": "RN-CAT-001",
+          "title": "Código de item é único e imutável",
+          "description": "O código do item é único em todo o catálogo e não pode ser alterado depois da criação. Corrigir um código significa retirar o item de circulação e criar outro, preservando o histórico de ambos, porque documentos já emitidos referenciam o código anterior e precisam continuar resolvendo para o item correto. Exceções: item criado e retirado no mesmo dia, sem documento emitido, pode ser excluído.",
+          "legalBasis": "Política interna de rastreabilidade de catálogo",
+          "sourceRefs": [
+            {
+              "document": "business-rules.md",
+              "section": "RN-CAT-001: Código de item é único e imutável",
+              "itemId": "RN-CAT-001"
+            }
+          ],
+          "sourceTaskIds": [
+            "TASK-A-01"
+          ]
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "AC-STORY-A-RF-CAT-001-01",
+          "statement": "Quando a pessoa responsável informa um código ainda não usado, ao confirmar, o item passa a aparecer na listagem do catálogo.",
+          "category": "HAPPY_PATH",
+          "relatedRuleIds": [
+            "RN-CAT-001"
+          ],
+          "sourceStoryIds": [
+            "STORY-A"
+          ]
+        },
+        {
+          "id": "AC-STORY-A-RF-CAT-001-02",
+          "statement": "Quando a pessoa responsável informa um código já existente, ao confirmar, o item não é criado e a mensagem explica que o código está em uso.",
+          "category": "BUSINESS_RULE",
+          "relatedRuleIds": [
+            "RN-CAT-001"
+          ],
+          "sourceStoryIds": [
+            "STORY-A"
+          ]
+        }
+      ],
+      "deliveryScope": [
+        {
+          "taskId": "TASK-A-01",
+          "title": "Criação de item com código único",
+          "businessOutcome": "A pessoa responsável passa a criar o item num registro único, com recusa explícita de código repetido."
+        }
+      ],
+      "traceability": {
+        "rf": "RF-CAT-001",
+        "productRequirement": "PR-CAT-001",
+        "requirementIds": [
+          "RF-CAT-001"
+        ],
+        "ruleIds": [
+          "RN-CAT-001"
+        ],
+        "sourceTaskIds": [
+          "TASK-A-01"
+        ]
+      },
+      "tasks": [
+        {
+          "id": "TASK-A-01",
+          "storyId": "STORY-A",
+          "class": "functional",
+          "sequence": 1,
+          "title": "Criação de item com código único",
+          "type": "backend",
+          "durationEstimatedDays": 1,
+          "description": "Criar o item do catálogo a partir de código, descrição e categoria, recusando código já existente com mensagem explícita para a pessoa responsável.",
+          "traceability": [
+            {
+              "section": "RF-CAT-001: Cadastrar item",
+              "itemId": "RF-CAT-001",
+              "excerpt": "O sistema deve permitir cadastrar um item informando código, descrição e categoria, recusando código já existente."
+            }
+          ],
+          "agentExecutionContext": {
+            "selfContainedSummary": "Esta task cria o item do catálogo. Entrada: código (texto, até 20 caracteres, obrigatório), descrição (texto, até 200 caracteres, obrigatório) e categoria (um dos valores: MATERIA_PRIMA, EMBALAGEM, ACABADO). Regra RN-CAT-001: o código é único em todo o catálogo e imutável após a criação; código já existente resulta em recusa com a mensagem 'Código já está em uso por outro item do catálogo.' Pré-condições: a pessoa autenticada tem permissão de manutenção do catálogo; a categoria informada existe. Pós-condições em caso de êxito: o item existe com estado EM_CIRCULACAO, com data de criação e autor registrados, e passa a aparecer na listagem. Pós-condições em caso de recusa: nada é gravado e a listagem permanece inalterada. Decisão arquitetural relevante: a unicidade é garantida por restrição de unicidade no armazenamento, não apenas por verificação prévia em memória, porque duas criações simultâneas do mesmo código passariam pela verificação e gravariam ambas."
+          },
+          "_comment_contrato": "CAMPOS QUE EXISTIAM NO JSON E SUMIAM NO HTML (v6.1). Medido em backlog real: migrationNotes em 16/16 entidades, checkConstraints em 5/16, uniqueConstraints em 1/16 e tags em 24/24 operações — nada disso era renderizado, e nada avisava. As três formas de valor estão exercitadas aqui de propósito: uniqueConstraints como STRING pipe-separated, checkConstraints como ARRAY de strings e migrationNotes como STRING única.",
+          "apiContracts": [
+            {
+              "operationId": "criarItemCatalogo",
+              "method": "POST",
+              "path": "/v1/catalogo/item",
+              "signature": "POST /v1/catalogo/item",
+              "summary": "Criar item do catálogo",
+              "description": "Cria o item do catálogo com código único, recusando código já existente.",
+              "auth": "Bearer JWT — permissão catalogo.item:manter.",
+              "request": "Body: cdItem (string maxLength=20 obrigatório — código único do item); dsItem (string maxLength=200 obrigatório); dsCategoria (string enum=[MATERIA_PRIMA,EMBALAGEM,ACABADO] obrigatório) | Headers: Authorization (obrigatório)",
+              "responses": "201 application/json — Item criado. schema: { idItem: integer; cdItem: string; dsSituacao: string example=EM_CIRCULACAO } | 409 application/problem+json — Código já está em uso por outro item do catálogo. | 500 application/problem+json — Falha não tratada; resposta genérica, sem pilha de chamadas.",
+              "policies": "Rate: 60 req/min por usuário; 429 no excedente. Idempotency: chave de idempotência opcional no header Idempotency-Key.",
+              "openApiRef": "api-contracts.yaml#/paths/~1v1~1catalogo~1item/post",
+              "tags": ["Catálogo", "Manutenção de item"]
+            }
+          ],
+          "persistenceModel": {
+            "entities": [
+              {
+                "table": "tb_item_catalogo",
+                "purpose": "Item do catálogo, raiz de agregado. É a tabela que a listagem lê e a que a criação escreve.",
+                "boundedContext": "Catálogo",
+                "operationType": "NEW",
+                "identifierStrategy": "SEQUENCE",
+                "primaryKey": "id_item",
+                "columns": "id_item NUMBER(19) PK NOT NULL [NEW] — Chave primária gerada por sequência. | cd_item VARCHAR2(20) NOT NULL [NEW] — Código do item, único em todo o catálogo e imutável após a criação. | ds_item VARCHAR2(200) NOT NULL [NEW] — Descrição do item. | ds_categoria VARCHAR2(20) NOT NULL [NEW] — Categoria. Valores: MATERIA_PRIMA, EMBALAGEM, ACABADO. | ds_situacao VARCHAR2(20) NOT NULL [NEW] — Situação. Valores: EM_CIRCULACAO, RETIRADO. | dt_criacao DATE NOT NULL [NEW] — Data de criação, registrada pelo servidor.",
+                "relationships": "Sem chave estrangeira de saída. A retirada de item é registrada em tb_item_catalogo_hist por id_item.",
+                "indexes": "IX_ITEM_CATALOGO_SITUACAO (ds_situacao) — a listagem filtra por situação em toda consulta.",
+                "uniqueConstraints": "UK_ITEM_CATALOGO_CD (cd_item) — garante a unicidade do código no armazenamento, e não apenas por verificação prévia em memória: duas criações simultâneas do mesmo código passariam pela verificação e gravariam ambas. | UK_ITEM_CATALOGO_DS_CAT (ds_item, ds_categoria) — descrição repetida dentro da mesma categoria é erro de cadastro.",
+                "checkConstraints": [
+                  "CK_ITEM_CATALOGO_CATEGORIA — ds_categoria em (MATERIA_PRIMA, EMBALAGEM, ACABADO); domínio no banco, não só na aplicação.",
+                  "CK_ITEM_CATALOGO_SITUACAO — ds_situacao em (EM_CIRCULACAO, RETIRADO)."
+                ],
+                "migrationNotes": "Tabela NOVA: criar antes da primeira execução, com a restrição de unicidade do código na mesma migração da tabela. Migração sem a unicidade deixa a janela de duplicidade aberta em produção. Não há carga inicial de dados.",
+                "dataModelRef": "data-model.json#/boundedContexts/BC-CATALOGO/entities/tb_item_catalogo"
+              }
+            ]
+          },
+          "acceptanceScenarios": [
+            {
+              "id": "SC-A-01",
+              "category": "HAPPY_PATH",
+              "title": "Item criado com código novo",
+              "given": "não existe item com o código INS-0001 no catálogo",
+              "when": "a pessoa responsável confirma a criação de INS-0001",
+              "then": "o item é criado em circulação e aparece na listagem",
+              "testData": {
+                "request": {
+                  "method": "POST",
+                  "path": "/itens",
+                  "headers": {
+                    "Authorization": "Bearer <token-de-teste>",
+                    "Content-Type": "application/json"
+                  },
+                  "body": {
+                    "codigo": "INS-0001",
+                    "descricao": "Item de exemplo",
+                    "categoria": "MATERIA_PRIMA"
+                  }
+                },
+                "expectedResponse": {
+                  "statusCode": 201,
+                  "body": {
+                    "id": 1,
+                    "codigo": "INS-0001",
+                    "estado": "EM_CIRCULACAO"
+                  }
+                },
+                "expectedDatabaseState": {
+                  "itens": "1 linha com codigo=INS-0001 e estado=EM_CIRCULACAO"
+                }
+              },
+              "verificationSteps": [
+                "Autenticar com um usuario que tenha permissao de manutencao do catalogo.",
+                "Enviar a criacao do item com o codigo INS-0001 e conferir que a resposta e 201.",
+                "Consultar a listagem do catalogo e conferir que INS-0001 aparece com estado EM_CIRCULACAO."
+              ]
+            },
+            {
+              "id": "SC-A-02",
+              "category": "BUSINESS_RULE_VIOLATION",
+              "title": "Código já em uso é recusado",
+              "given": "já existe item com o código INS-0001 no catálogo",
+              "when": "a pessoa responsável confirma a criação de INS-0001 novamente",
+              "then": "a criação é recusada com a mensagem de código em uso e nada é gravado",
+              "testData": {
+                "request": {
+                  "method": "POST",
+                  "path": "/itens",
+                  "headers": {
+                    "Authorization": "Bearer <token-de-teste>",
+                    "Content-Type": "application/json"
+                  },
+                  "body": {
+                    "codigo": "INS-0001",
+                    "descricao": "Outro item",
+                    "categoria": "EMBALAGEM"
+                  }
+                },
+                "expectedResponse": {
+                  "statusCode": 422,
+                  "body": {
+                    "codigo": "ITEM_CODIGO_EM_USO",
+                    "mensagem": "Código já está em uso por outro item do catálogo."
+                  }
+                },
+                "expectedDatabaseState": {
+                  "itens": "inalterado — permanece 1 linha com codigo=INS-0001"
+                }
+              },
+              "verificationSteps": [
+                "Garantir que INS-0001 ja existe no catalogo.",
+                "Enviar de novo a criacao de INS-0001 e conferir que a resposta e 422 com codigo ITEM_CODIGO_EM_USO.",
+                "Conferir na base que continua existindo exatamente uma linha com codigo INS-0001."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_comment": "STORY-B: `title` como único rótulo; acceptanceCriteria de STRINGS; traceability ARRAY (legado).",
+      "id": "STORY-B",
+      "title": "Corrigir a descrição de um item já publicado",
+      "featureId": "FEAT-A",
+      "epicId": "EPIC-A",
+      "priority": "MEDIUM",
+      "sourceRefs": [
+        {
+          "document": "requirements.md",
+          "section": "RF-CAT-002: Corrigir item",
+          "itemId": "RF-CAT-002"
+        }
+      ],
+      "userStory": {
+        "asA": "responsável pelo catálogo",
+        "iWant": "corrigir a descrição de um item já publicado",
+        "soThat": "a listagem deixe de exibir a descrição errada sem que eu precise recriar o item"
+      },
+      "narrative": {
+        "elevatorPitch": "Para a pessoa responsável pelo catálogo, a correção de descrição — ajuste do texto do item sem recriar o registro. Diferente do cenário atual, em que corrigir significa criar outro item, esta entrega permite corrigir preservando o histórico.",
+        "context": "Para a pessoa responsável pelo catálogo, a correção de descrição — ajuste do texto do item sem recriar o registro. Diferente do cenário atual, em que corrigir significa criar outro item, esta entrega permite corrigir preservando o histórico.\n\nCapacidades entregues nesta história: alterar a descrição do item mantendo o código; registrar quem alterou e quando.",
+        "problem": "Corrigir a descrição de um item hoje significa criar outro item, o que duplica o registro e parte o histórico.",
+        "deliveredValue": "A descrição passa a ser corrigível no próprio item, com registro de quem alterou e quando.",
+        "actors": [
+          "Responsável pelo catálogo"
+        ],
+        "mainFlow": [
+          "A pessoa abre o item e ajusta a descrição",
+          "O sistema registra a alteração com autor e data"
+        ]
+      },
+      "businessRules": [
+        {
+          "id": "RN-CAT-001",
+          "title": "Código de item é único e imutável",
+          "description": "O código do item é único em todo o catálogo e não pode ser alterado depois da criação. A correção de descrição é permitida e preserva o código; a correção de código não é — nesse caso o item é retirado de circulação e outro é criado, porque documentos emitidos referenciam o código anterior.",
+          "sourceRefs": [
+            {
+              "document": "business-rules.md",
+              "section": "RN-CAT-001: Código de item é único e imutável",
+              "itemId": "RN-CAT-001"
+            }
+          ],
+          "sourceTaskIds": [
+            "TASK-B-01"
+          ]
+        }
+      ],
+      "acceptanceCriteria": [
+        "AC-STORY-B-01 — A pessoa responsável corrige a descrição de um item em circulação e a listagem passa a exibir o texto corrigido.",
+        "AC-STORY-B-02 — A tentativa de alterar o código de um item em circulação é recusada, com a orientação de retirar o item e criar outro."
+      ],
+      "deliveryScope": [
+        {
+          "taskId": "TASK-B-01",
+          "title": "Correção de descrição de item",
+          "businessOutcome": "A descrição passa a ser corrigível sem recriar o item."
+        }
+      ],
+      "traceability": [
+        {
+          "section": "RF-CAT-002: Corrigir item",
+          "itemId": "RF-CAT-002",
+          "excerpt": "O sistema deve permitir corrigir a descrição de um item em circulação, preservando o código e registrando autor e data."
+        },
+        {
+          "section": "RN-CAT-001",
+          "itemId": "RN-CAT-001",
+          "excerpt": "O código do item é imutável após a criação."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "TASK-B-01",
+          "storyId": "STORY-B",
+          "class": "functional",
+          "sequence": 1,
+          "title": "Correção de descrição de item",
+          "type": "backend",
+          "durationEstimatedDays": 0.5,
+          "description": "Alterar a descrição de um item em circulação preservando o código, registrando autor e data da alteração.",
+          "traceability": {
+            "rf": "RF-CAT-002",
+            "ruleIds": [
+              "RN-CAT-001"
+            ],
+            "sourceStoryIds": [
+              "STORY-B"
+            ]
+          },
+          "agentExecutionContext": {
+            "selfContainedSummary": "Esta task altera a descrição de um item já em circulação. Entrada: identificador do item e nova descrição (texto, até 200 caracteres, obrigatório). Regra RN-CAT-001: o código permanece imutável — qualquer tentativa de alterá-lo é recusada com a mensagem 'O código do item não pode ser alterado. Retire o item de circulação e crie outro.' Pré-condições: o item existe e está em circulação; a pessoa autenticada tem permissão de manutenção do catálogo. Pós-condições em caso de êxito: a descrição do item passa a ser a nova, e ficam registrados o autor e a data da alteração, sem alterar o código nem o estado. Pós-condições em caso de recusa: nada é gravado. Decisão arquitetural relevante: a alteração grava uma entrada de histórico em vez de sobrescrever o registro anterior, porque a conferência de fechamento precisa reconstituir o que a listagem exibia numa data passada."
+          },
+          "acceptanceScenarios": [
+            {
+              "id": "SC-B-01",
+              "category": "HAPPY_PATH",
+              "title": "Descrição corrigida",
+              "given": "existe item INS-0001 em circulação com descrição 'Item de exemplo'",
+              "when": "a pessoa responsável envia a descrição 'Item de exemplo corrigido'",
+              "then": "a descrição do item passa a ser a nova e o código permanece INS-0001",
+              "testData": {
+                "request": {
+                  "method": "PATCH",
+                  "path": "/itens/1",
+                  "headers": {
+                    "Authorization": "Bearer <token-de-teste>",
+                    "Content-Type": "application/json"
+                  },
+                  "body": {
+                    "descricao": "Item de exemplo corrigido"
+                  }
+                },
+                "expectedResponse": {
+                  "statusCode": 200,
+                  "body": {
+                    "id": 1,
+                    "codigo": "INS-0001",
+                    "descricao": "Item de exemplo corrigido"
+                  }
+                },
+                "expectedDatabaseState": {
+                  "itens": "codigo=INS-0001 inalterado, descricao='Item de exemplo corrigido'",
+                  "itens_historico": "1 linha nova com autor e data"
+                }
+              },
+              "verificationSteps": [
+                "Garantir que INS-0001 existe em circulacao com a descricao original.",
+                "Enviar a nova descricao e conferir que a resposta e 200 com o codigo inalterado.",
+                "Conferir que a tabela de historico ganhou uma linha com autor e data da alteracao."
+              ]
+            },
+            {
+              "id": "SC-B-02",
+              "category": "BUSINESS_RULE_VIOLATION",
+              "title": "Alteração de código recusada",
+              "given": "existe item INS-0001 em circulação",
+              "when": "a pessoa responsável tenta enviar o código INS-0002 para esse item",
+              "then": "a alteração é recusada com a orientação de retirar e recriar",
+              "testData": {
+                "request": {
+                  "method": "PATCH",
+                  "path": "/itens/1",
+                  "headers": {
+                    "Authorization": "Bearer <token-de-teste>",
+                    "Content-Type": "application/json"
+                  },
+                  "body": {
+                    "codigo": "INS-0002"
+                  }
+                },
+                "expectedResponse": {
+                  "statusCode": 422,
+                  "body": {
+                    "codigo": "ITEM_CODIGO_IMUTAVEL",
+                    "mensagem": "O código do item não pode ser alterado. Retire o item de circulação e crie outro."
+                  }
+                },
+                "expectedDatabaseState": {
+                  "itens": "inalterado — codigo permanece INS-0001"
+                }
+              },
+              "verificationSteps": [
+                "Garantir que INS-0001 existe em circulacao.",
+                "Tentar enviar um codigo diferente para o mesmo item e conferir que a resposta e 422 com codigo ITEM_CODIGO_IMUTAVEL.",
+                "Conferir na base que o codigo permanece INS-0001."
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_comment": "STORY-C: forma LEGADO v5.0 puro — sem `narrative`, sem `acceptanceCriteria`, só `businessSummary` com storyAcceptanceCriteria[]. É o caso de retrocompatibilidade: deve continuar publicando e renderizando como antes. Os validadores de negócio APONTAM as lacunas (é o comportamento correto), mas os consumidores não podem perder conteúdo.",
+      "id": "STORY-C",
+      "name": "Retirar um item de circulação",
+      "featureId": "FEAT-B",
+      "epicId": "EPIC-A",
+      "priority": "LOW",
+      "businessSummary": {
+        "problem": "Item descontinuado continua aparecendo na listagem e é escolhido por engano em novos documentos.",
+        "deliveredValue": "Item descontinuado deixa de aparecer na listagem, sem apagar o histórico de quem já o referenciou.",
+        "actors": [
+          "Responsável pelo catálogo",
+          "Conferente"
+        ],
+        "businessFlowSummary": [
+          "Selecionar o item",
+          "Confirmar a retirada",
+          "Item deixa a listagem e permanece no histórico"
+        ],
+        "storyAcceptanceCriteria": [
+          "Item retirado deixa de aparecer na listagem do catálogo.",
+          "Documento já emitido que referencia o item retirado continua resolvendo para o item correto.",
+          "A retirada registra autor e data."
+        ]
+      },
+      "tasks": [
+        {
+          "id": "TASK-C-01",
+          "storyId": "STORY-C",
+          "class": "functional",
+          "sequence": 1,
+          "title": "Retirada de item de circulação",
+          "type": "backend",
+          "durationEstimatedDays": 0.5,
+          "description": "Marcar o item como fora de circulação, preservando o registro e o histórico de referências já emitidas.",
+          "agentExecutionContext": {
+            "selfContainedSummary": "Esta task retira um item de circulação. Entrada: identificador do item. Comportamento: o item passa ao estado FORA_DE_CIRCULACAO e deixa de aparecer na listagem padrão do catálogo, mas o registro NÃO é apagado, porque documentos já emitidos o referenciam pelo código e precisam continuar resolvendo. Pré-condições: o item existe e está em circulação; a pessoa autenticada tem permissão de manutenção. Pós-condições: estado FORA_DE_CIRCULACAO gravado, com autor e data da retirada; consultas por código continuam encontrando o item; a listagem padrão deixa de exibi-lo. Decisão arquitetural relevante: retirada é mudança de estado, nunca exclusão física."
+          },
+          "acceptanceScenarios": [
+            {
+              "id": "SC-C-01",
+              "category": "HAPPY_PATH",
+              "title": "Item sai da listagem",
+              "given": "existe item INS-0001 em circulação",
+              "when": "a pessoa responsável confirma a retirada",
+              "then": "o item deixa a listagem padrão e continua encontrável por código",
+              "testData": {
+                "request": {
+                  "method": "POST",
+                  "path": "/itens/1/retirada",
+                  "headers": {
+                    "Authorization": "Bearer <token-de-teste>"
+                  },
+                  "body": {
+                    "motivo": "Descontinuado pelo fornecedor"
+                  }
+                },
+                "expectedResponse": {
+                  "statusCode": 200,
+                  "body": {
+                    "id": 1,
+                    "estado": "FORA_DE_CIRCULACAO"
+                  }
+                },
+                "expectedDatabaseState": {
+                  "itens": "codigo=INS-0001 com estado=FORA_DE_CIRCULACAO, registro preservado"
+                }
+              },
+              "verificationSteps": [
+                "Garantir que INS-0001 existe em circulacao.",
+                "Confirmar a retirada e conferir que a resposta e 200 com estado FORA_DE_CIRCULACAO.",
+                "Conferir que a listagem padrao nao exibe mais o item e que a consulta por codigo continua encontrando-o."
+              ]
+            },
+            {
+              "id": "SC-C-02",
+              "category": "INVALID_INPUT",
+              "title": "Retirada de item inexistente",
+              "given": "não existe item com o identificador 999",
+              "when": "a pessoa responsável tenta retirar o item 999",
+              "then": "a operação é recusada e nada é gravado",
+              "testData": {
+                "request": {
+                  "method": "POST",
+                  "path": "/itens/999/retirada",
+                  "headers": {
+                    "Authorization": "Bearer <token-de-teste>"
+                  },
+                  "body": {
+                    "motivo": "Descontinuado pelo fornecedor"
+                  }
+                },
+                "expectedResponse": {
+                  "statusCode": 404,
+                  "body": {
+                    "codigo": "ITEM_NAO_ENCONTRADO",
+                    "mensagem": "Item não encontrado no catálogo."
+                  }
+                },
+                "expectedDatabaseState": {
+                  "itens": "inalterado"
+                }
+              },
+              "verificationSteps": [
+                "Garantir que nao existe item com o identificador 999.",
+                "Tentar a retirada do item 999 e conferir que a resposta e 404 com codigo ITEM_NAO_ENCONTRADO.",
+                "Conferir que nenhuma linha da tabela de itens foi alterada."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

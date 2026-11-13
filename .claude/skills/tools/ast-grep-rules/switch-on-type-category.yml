@@ -1,0 +1,18 @@
+# Regra 7 — switch/case (ou match) sobre tipo ou categoria
+id: switch-on-type-category-js
+language: javascript
+severity: hint
+message: "switch sobre tipo/categoria/perfil — ramificação de comportamento por classificação de negócio. Cada case é candidato a RN própria."
+rule:
+  pattern: switch ($SUBJ) { $$$CASES }
+constraints:
+  SUBJ:
+    regex: "(?i)(tipo|type|categoria|category|kind|perfil|modalidade|plano|plan)"
+---
+id: switch-on-type-category-py
+language: python
+severity: hint
+message: "match sobre tipo/categoria/perfil — ramificação de comportamento por classificação de negócio. Cada case é candidato a RN própria."
+rule:
+  kind: match_statement
+  regex: "(?i)^match\\s+.*(tipo|type|categoria|category|kind|perfil|modalidade|plano|plan)"

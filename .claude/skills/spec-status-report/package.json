@@ -1,0 +1,19 @@
+{
+  "name": "spec-status-report",
+  "version": "2.3.0",
+  "private": true,
+  "type": "module",
+  "description": "Relatorio de status/conclusao para o cliente (Fase 13 do Eng_Proc): documentacao de negocio e tecnica, resumo de codigo com historico, execucao real de testes por natureza, medicao de cobertura (codigo/negocio/plano) e backlog da ferramenta de gestao, num unico HTML autocontido. Poliglota e compativel com artefatos de versoes anteriores do kit.",
+  "bin": {
+    "spec-status-report": "cli.mjs"
+  },
+  "scripts": {
+    "report": "node cli.mjs",
+    "collect": "node cli.mjs --collect-only",
+    "render": "node cli.mjs --render-only",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

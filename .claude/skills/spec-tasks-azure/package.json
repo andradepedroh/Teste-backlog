@@ -1,0 +1,15 @@
+{
+  "name": "spec-tasks-azure",
+  "version": "3.4.0",
+  "private": true,
+  "type": "module",
+  "description": "Publica tasks.json (spec-tasks v5+) no Azure DevOps como work items. Suporta hierarquia variável de backlog e qualquer process template ADO (Agile, Scrum, CMMI, Custom).",
+  "scripts": {
+    "push": "node cli.mjs",
+    "push:input": "node cli.mjs --input",
+    "push:env": "node --env-file=.env cli.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

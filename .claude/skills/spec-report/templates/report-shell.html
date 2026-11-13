@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<!--
+  spec-report — estrutura de referência (v3.0 — domínios).
+  A versão canônica é o atributo data-shell-version do elemento <html> abaixo:
+  generate-report.py ABORTA (exit 1) se o marcador ou qualquer placeholder faltar
+  — sinal de template desatualizado (atualizar o pacote de skills).
+  Gerar UM único arquivo HTML final com todo o CSS embutido em <style>
+  (copiar o conteúdo de report-embedded.css).
+  Placeholders preenchidos por generate-report.py:
+    TOPNAV-PLACEHOLDER   → links do menu superior (um por domínio com conteúdo)
+    SIDEBARS-PLACEHOLDER → um .sidebar-panel[data-domain] por domínio
+    DOMAINS-PLACEHOLDER  → um section.domain[data-domain] por domínio
+    MERMAID-PLACEHOLDER  → tag script do Mermaid via CDN (só quando há diagramas)
+    __DEFAULT_DOMAIN__   → domínio aberto por padrão (visao sempre que existir)
+  Roteamento por hash: #dominio ou #dominio/ancora (ex.: #fluxos/FLX-001/TEL-003).
+  Hash que não é domínio nem âncora de domínio (ex.: #main-content do skip-link)
+  não é sequestrado pelo router — o browser resolve o alvo nativamente.
+-->
+<html lang="pt-BR" data-shell-version="3.0">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Product Discovery Kit — [Nome do Projeto]</title>
+  <!-- <style> … report-embedded.css … </style> -->
+  <!-- MERMAID-PLACEHOLDER -->
+</head>
+<body data-default-domain="__DEFAULT_DOMAIN__">
+  <a class="skip-link" href="#main-content">Ir para o conteúdo</a>
+
+  <header class="topnav" aria-label="Domínios do relatório">
+    <div class="topnav-brand">
+      <span class="topnav-brand-title">Product discovery</span>
+      <span class="topnav-brand-sub">Kit HTML</span>
+    </div>
+    <nav class="topnav-links">
+      <!-- TOPNAV-PLACEHOLDER -->
+    </nav>
+  </header>
+
+  <div class="layout">
+    <nav class="nav-rail" aria-label="Índice do domínio ativo">
+      <!-- SIDEBARS-PLACEHOLDER -->
+    </nav>
+
+    <main class="doc" id="main-content">
+      <div class="doc-inner">
+        <header class="cover">
+          <h1>[Nome do Projeto]</h1>
+          <div class="meta">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            <span>Gerado em YYYY-MM-DD</span>
+            <span aria-hidden="true">·</span>
+            <span>Fonte: <code>outputs/spec/</code></span>
+          </div>
+          <span class="badge">Documentação do produto</span>
+        </header>
+
+        <!-- DOMAINS-PLACEHOLDER -->
+
+        <footer class="kit-footer">
+          <div>Eng_Proc · spec-report</div>
+          <div class="kit-footer-note">Conteúdo derivado das skills spec-* · Exclui prototype.md, frontend-decisions.md, gaps-answers.md e código-fonte.</div>
+        </footer>
+      </div>
+    </main>
+  </div>
+
+  <div class="lightbox" id="lightbox" hidden aria-modal="true" role="dialog" aria-label="Captura ampliada">
+    <img alt="Captura ampliada" />
+    <span class="lightbox-close" aria-hidden="true">×</span>
+  </div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      /* ------------------------------------------------------------------
+         Roteamento por hash: #dominio ou #dominio/ancora
+         (ex.: #fluxos/FLX-001/TEL-003 → domínio "fluxos", âncora "FLX-001/TEL-003").
+         Hash legado sem domínio (#chapter-vision) resolve pelo id do elemento.
+         ------------------------------------------------------------------ */
+      var sections = Array.prototype.slice.call(document.querySelectorAll("section.domain"));
+      var domainIds = sections.map(function (s) { return s.getAttribute("data-domain"); });
+      var DEFAULT_DOMAIN = document.body.getAttribute("data-default-domain");
+      if (domainIds.indexOf(DEFAULT_DOMAIN) < 0) DEFAULT_DOMAIN = domainIds[0];
+      var current = null;
+      var mermaidInit = false;
+
+      function renderMermaid(scope) {
+        if (typeof mermaid === "undefined") return;
+        var nodes = scope.querySelectorAll("pre.mermaid:not([data-processed])");
+        if (!nodes.length) return;
+        try {
+          if (!mermaidInit) {
+            /* securityLevel "strict": o mermaid lê o textContent do <pre> (fonte
+               escapado) e reinjeta o label via innerHTML. Em "loose" o innerHTML vai
+               cru — um label com `<img src=x onerror=…>` vindo de um .md de spec
+               envenenado executaria. Em "strict" o label passa por DOMPurify:
+               `<br/>`/`<i>` continuam válidos, event handlers e script somem.
+               Nenhum diagrama do kit usa click/callback (desativados em strict). */
+            mermaid.initialize({
+              startOnLoad: false,
+              securityLevel: "strict",
+              theme: "neutral",
+              flowchart: { curve: "basis", htmlLabels: true }
+            });
+            mermaidInit = true;
+          }
+          /* mermaid.run() devolve Promise: tratar a rejeição, senão a falha de
+             render vira unhandled rejection em vez da degradação anunciada. */
+          var p = mermaid.run({ nodes: Array.prototype.slice.call(nodes) });
+          if (p && typeof p.catch === "function") {
+            p.catch(function () { /* diagrama fica como texto — degradação aceitável */ });
+          }
+        } catch (e) { /* diagrama fica como texto — degradação aceitável */ }
+      }
+
+      function activate(domain) {
+        if (domainIds.indexOf(domain) < 0) domain = DEFAULT_DOMAIN;
+        if (current === domain) return domain;
+        current = domain;
+        Array.prototype.forEach.call(document.querySelectorAll(".topnav-link"), function (a) {
+          a.classList.toggle("active", a.getAttribute("data-domain") === domain);
+        });
+        Array.prototype.forEach.call(document.querySelectorAll(".sidebar-panel"), function (p) {
+          p.classList.toggle("active", p.getAttribute("data-domain") === domain);
+        });
+        sections.forEach(function (s) {
+          s.classList.toggle("active", s.getAttribute("data-domain") === domain);
+        });
+        var sec = document.querySelector('section.domain[data-domain="' + domain + '"]');
+        if (sec) renderMermaid(sec);
+        return domain;
+      }
+
+      function route() {
+        var raw = location.hash.slice(1);
+        var h;
+        try { h = decodeURIComponent(raw); } catch (e) { h = raw; }
+        var domain = DEFAULT_DOMAIN;
+        var anchor = null;
+        var recognized = !h;  /* hash vazio → rota default */
+        if (h) {
+          var i = h.indexOf("/");
+          var head = i < 0 ? h : h.slice(0, i);
+          if (domainIds.indexOf(head) >= 0) {
+            domain = head;
+            anchor = i < 0 ? null : h.slice(i + 1);
+            recognized = true;
+          } else {
+            var legacy = document.getElementById(h);
+            if (legacy && legacy.closest) {
+              var owner = legacy.closest("section.domain");
+              if (owner) { domain = owner.getAttribute("data-domain"); anchor = h; recognized = true; }
+            }
+          }
+        }
+        if (!recognized) {
+          /* Hash que não é domínio nem âncora dentro de section.domain — ex.: o
+             skip-link #main-content. Não sequestrar: o browser resolve o alvo.
+             Na primeira execução ainda é preciso abrir o domínio default. */
+          if (current === null) activate(DEFAULT_DOMAIN);
+          return;
+        }
+        domain = activate(domain);
+        if (anchor) {
+          var target = document.getElementById(anchor);
+          if (target) target.scrollIntoView({ block: "start" });
+        } else if (h) {
+          window.scrollTo(0, 0);
+        }
+      }
+
+      window.addEventListener("hashchange", route);
+      route();
+
+      /* ---------------- Lightbox (zoom simples de screenshots) ---------------- */
+      var lb = document.getElementById("lightbox");
+      if (lb) {
+        var lbImg = lb.querySelector("img");
+        document.addEventListener("click", function (e) {
+          var img = e.target.closest ? e.target.closest(".tela-shot img") : null;
+          if (img) {
+            lbImg.src = img.src;
+            lb.hidden = false;
+            document.body.classList.add("lightbox-open");
+            return;
+          }
+          if (!lb.hidden && (e.target === lb || e.target.closest("#lightbox"))) {
+            lb.hidden = true;
+            lbImg.src = "";
+            document.body.classList.remove("lightbox-open");
+          }
+        });
+        document.addEventListener("keydown", function (e) {
+          if (e.key === "Escape" && !lb.hidden) {
+            lb.hidden = true;
+            lbImg.src = "";
+            document.body.classList.remove("lightbox-open");
+          }
+        });
+      }
+
+      /* ------- Toolbars Expandir/Recolher (tabelas dobradas por capítulo) ------- */
+      Array.prototype.forEach.call(document.querySelectorAll("article.chapter"), function (article) {
+        var folds = article.querySelectorAll("details.md-fold--table");
+        if (!folds.length) return;
+        var toolbar = document.createElement("div");
+        toolbar.className = "chapter-toolbar";
+        toolbar.setAttribute("role", "group");
+        toolbar.setAttribute("aria-label", "Tabelas detalhadas deste capítulo");
+        var label = document.createElement("span");
+        label.className = "chapter-toolbar-label";
+        label.textContent = "Tabelas de detalhe";
+        var expand = document.createElement("button");
+        expand.type = "button";
+        expand.textContent = "Expandir todas";
+        expand.setAttribute("data-action", "expand");
+        var collapse = document.createElement("button");
+        collapse.type = "button";
+        collapse.textContent = "Recolher todas";
+        collapse.setAttribute("data-action", "collapse");
+        toolbar.appendChild(label);
+        toolbar.appendChild(expand);
+        toolbar.appendChild(collapse);
+        var header = article.querySelector("header.chapter-header");
+        if (!header) return;
+        header.appendChild(toolbar);
+        toolbar.addEventListener("click", function (e) {
+          var btn = e.target.closest("button[data-action]");
+          if (!btn) return;
+          var open = btn.getAttribute("data-action") === "expand";
+          Array.prototype.forEach.call(folds, function (d) { d.open = open; });
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

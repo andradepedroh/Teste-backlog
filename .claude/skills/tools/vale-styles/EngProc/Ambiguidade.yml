@@ -1,0 +1,37 @@
+# EngProc.Ambiguidade — termos vagos/não-testáveis em requisitos (estilo NASA ARM, PT-BR)
+# Fonte canônica do dicionário de ambiguidade da metodologia. O modo degradado
+# (TOOL_UNAVAILABLE:vale) lê este arquivo e aplica a lista manualmente via LLM.
+extends: existence
+message: "Termo não-testável: '%s' — especifique um critério mensurável (valor, unidade, prazo ou condição verificável)."
+level: warning
+ignorecase: true
+tokens:
+  - adequad[oa]s?
+  - adequadamente
+  - apropriad[oa]s?
+  - apropriadamente
+  - rápid[oa]s?
+  - rapidamente
+  - fácil
+  - fáceis
+  - facilmente
+  - amigáve(?:l|is)
+  - flexíve(?:l|is)
+  - robust[oa]s?
+  - eficientes?
+  - suficientes?
+  - suficientemente
+  - etc\.?
+  - e/ou
+  - conforme (?:o )?necessário
+  - conforme apropriado
+  - se possível
+  - em tempo hábil
+  - o mais (?:breve|rápido) possível
+  - melhor esforço
+  - vári[oa]s
+  - alguns
+  - algumas
+  - divers[oa]s
+  - geralmente
+  - normalmente

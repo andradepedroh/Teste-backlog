@@ -1,0 +1,62 @@
+/*
+ * report-theme.tokens.css — Override de tema para spec-tasks-html
+ *
+ * Este ficheiro É carregado automaticamente: lib/render-html.mjs (getCss())
+ * lê templates/report-theme.tokens.css — relativo à própria pasta desta
+ * skill — e, se existir, concatena o seu conteúdo LOGO APÓS lib/report-theme.css.
+ * Como ambos declaram as variáveis no mesmo seletor `:root`, os valores
+ * abaixo sobrepõem os do tema padrão por cascata CSS (a última declaração
+ * vence). Se o ficheiro não existir, o tema padrão é usado sem alterações.
+ *
+ * Uso: edite as variáveis abaixo diretamente aqui (ou no caminho
+ * equivalente onde a skill estiver instalada, ex.:
+ * .cursor/skills/spec-tasks-html/templates/report-theme.tokens.css).
+ * Os nomes têm de ser EXATAMENTE os usados em lib/report-theme.css
+ * (--bg, --accent, --text, ...) para produzirem efeito — nomes diferentes
+ * (ex.: --color-bg) são ignorados silenciosamente pelo CSS.
+ *
+ * Exemplo abaixo: variação "dark/teal" do tema padrão claro "Enterprise".
+ */
+
+:root {
+  /* Superfícies */
+  --bg: #0f172a;
+  --bg-surface: #1e293b;
+  --bg-elevated: #1e293b;
+  --bg-soft: #16213a;
+  --bg-hover: #223154;
+
+  /* Texto */
+  --text: #e2e8f0;
+  --text-primary: #e2e8f0;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-faint: #64748b;
+
+  /* Acento */
+  --accent: #2dd4bf;
+  --accent-hover: #14b8a6;
+  --accent-strong: #0f766e;
+  --accent-soft: rgba(45, 212, 191, 0.12);
+  --accent-fg: #04211d;
+
+  /* Bordas */
+  --border: #334155;
+  --border-strong: #475569;
+
+  /* Semânticos (tints escuros) */
+  --danger: #f87171;   --danger-soft: rgba(248, 113, 113, .12);  --danger-border: #7f1d1d;
+  --warning: #fbbf24;  --warning-soft: rgba(251, 191, 36, .12);  --warning-border: #78350f;
+  --success: #4ade80;  --success-soft: rgba(74, 222, 128, .12);  --success-border: #14532d;
+  --info: #60a5fa;     --info-soft: rgba(96, 165, 250, .12);     --info-border: #1e3a8a;
+  --purple: #c084fc;   --purple-soft: rgba(192, 132, 252, .12);  --purple-border: #581c87;
+
+  /* Tipografia */
+  --font-display: 'Outfit', system-ui, sans-serif;
+  --font-sans: 'Source Sans 3', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'Cascadia Code', 'Consolas', ui-monospace, monospace;
+
+  /* Layout */
+  --sidebar-width: 280px;
+  --content-max: 72rem;
+}

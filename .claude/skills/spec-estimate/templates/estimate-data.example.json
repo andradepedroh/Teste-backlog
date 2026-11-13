@@ -1,0 +1,199 @@
+{
+  "_schema": "spec-estimate/estimate-data v1 — objeto que alimenta cli.mjs → estimate-report.html. Preencher com os números REAIS calculados nas Layers 1-4. Campos ausentes degradam para '—'. Bandas aceitam S/M/L/XL ou green/amber/orange/red. Strings 'how*' e 'note*' podem conter HTML inline (use <pre> para fórmulas).",
+  "project": "ORBITA — Plataforma de Gestão de Sinistros de Carga",
+  "navBrand": "ORBITA · Onda 1 (M1)",
+  "eyebrow": "Estimativa preditiva & engenharia de delivery",
+  "title": "Quanto tempo, quanto custa e qual a confiança de entrega do ORBITA Onda 1",
+  "lead": "Uma leitura executiva do backlog do M1 — seis módulos, 21 tarefas de implementação e 30 de homologação — com prazo, custo e risco calculados a partir das evidências da própria especificação, em dois cenários: time humano e implementação assistida por IA.",
+  "calibration": {
+    "mode": "Full",
+    "throughput": "cold-start",
+    "engMonthlyCost": "R$ 20.000/mês",
+    "riskAppetite": "balanceado (P85 externo)",
+    "hdf": "2,0",
+    "startDate": "03/08/2026",
+    "mcIterations": "10.000"
+  },
+  "verdict": {
+    "human": {
+      "p85Date": "16/11/2026", "note": "Mediana interna (P50): 23/10/2026 · 5 pessoas · início 03/08/2026",
+      "costRange": "R$ 113–138 mil", "effort": "5,7 pessoas-mês",
+      "dci": "43", "dciBand": "orange", "dciLabel": "Baixa 🟠", "dciNote": "mitigar antes de comprometer"
+    },
+    "ia": {
+      "p85Date": "24/09/2026", "note": "2,4× mais rápido · P50: 07/09/2026 · 3 orquestradores",
+      "costRange": "R$ 78–96 mil", "costNote": "≈ 31% mais barato",
+      "dci": "34", "dciBand": "red", "dciLabel": "Crítica 🔴", "dciNote": "rápido, porém menos previsível"
+    }
+  },
+  "executiveSummary": {
+    "intro": "O M1 é um backlog enxuto em contagem, mas denso em engenharia: cada uma das 21 tarefas de implementação é de complexidade alta ou crítica (validação de CNPJ, RBAC por regional, Sigilo de Apuração, integrações com parceiros, auditoria). O núcleo de Sinistro sozinho concentra 44% do esforço.",
+    "risks": [
+      { "title": "1. Uma tarefa segura o projeto inteiro", "text": "A abertura de sinistro precisa existir antes de alertas, auditoria, painel e todas as demais funções. Se atrasa, quase tudo atrasa junto." },
+      { "title": "2. Dependemos de sistemas de terceiros sem acesso de teste", "text": "RastroLog, RegistraPlus, LogiID e o gateway de e-mail/SMS ainda não têm credenciais de homologação liberadas (GAP-TASK-006)." },
+      { "title": "3. Time começando sem histórico de ritmo", "text": "Sem dados de projetos anteriores, a estimativa carrega incerteza que só cai após o primeiro mês de trabalho real." }
+    ],
+    "recommendationNote": "<b>Recomendação de prazo:</b> pelo apetite balanceado, o compromisso externo deve usar o <b>P85</b>. Porém, com DCI em faixa \"Baixa\", <b>não recomendamos firmar prazo formal</b> antes de (1) destravar as credenciais de sandbox e (2) proteger o gargalo da abertura de sinistro. O DCI sobe para faixas defensáveis após a Sprint 1.",
+    "actions": [
+      { "text": "Destravar as credenciais de sandbox das quatro integrações com parceiros — é o fator que mais move o prazo (≈ 7 dias de impacto esperado).", "tag": "Arquitetura + TI da seguradora" },
+      { "text": "Quebrar e proteger a abertura de sinistro (TASK-001-001): isolar o núcleo transacional e desacoplar alerta, auditoria e painel por eventos." },
+      { "text": "Rodar a Sprint 1 e recalibrar este forecast com o ritmo real de entrega." }
+    ]
+  },
+  "complexity": {
+    "intro": "Medimos a complexidade de cada tarefa em Complexity Units (CU) — um número derivado das evidências da própria especificação (cenários de teste, entidades de banco, operações de API, integrações, eventos e passos de regra de negócio), nunca de linhas de código ou chute. O total funcional é 436 CU.",
+    "scores": {
+      "complexity": { "value": 83, "band": "red", "label": "Alta 🔴", "note": "toda tarefa é XL/L" },
+      "arch": { "value": 100, "band": "red", "label": "Alta 🔴", "note": "6 módulos — mas acoplamento baixo" },
+      "techRisk": { "value": 33, "band": "amber", "label": "Moderado 🟡", "note": "compliance + gaps" }
+    },
+    "byModule": [
+      { "module": "SINISTRO 44%", "cu": 192 }, { "module": "ACESSO 20%", "cu": 85.5 },
+      { "module": "NOTIFICAÇÃO 12%", "cu": 51.7 }, { "module": "SEGURADO 11%", "cu": 47.6 },
+      { "module": "AUDITORIA 10%", "cu": 44.7 }, { "module": "PAINEL 3%", "cu": 14.5 }
+    ],
+    "bands": { "S": 0, "M": 0, "L": 9, "XL": 12 },
+    "howComplexity": "<p style=\"margin:.3em 0;font-size:14.5px\">Para cada tarefa somamos sete componentes ponderados, todos extraídos do <code>tasks.json</code>:</p><pre>CU = 1,2·(cenários + regras) + 1,5·(entidades + relações)\n   + 1,4·(operações API + status + papéis) + 2,0·(integrações externas)\n   + 1,8·(eventos) + 1,1·(estados de UI) + 1,3·(passos de algoritmo ÷ 3)</pre><p style=\"margin:.5em 0 0;font-size:14.5px\">Bandas: <span class=\"pill p-green\">S ≤4</span> <span class=\"pill p-amber\">M 5–10</span> <span class=\"pill p-orange\">L 11–20</span> <span class=\"pill p-red\">XL &gt;20</span>. As 21 tarefas caem em 12 XL + 9 L — nenhuma trivial.</p>",
+    "howEffort": "<pre>46 dias-ideais (backlog)\n  × 2,0   HDF — ritmo humano real (fator do kickoff)      → 92 pessoas-dia\n  × 1,295 condições de projeto (cold-start·tooling·compliance·gaps)\n  = 119 pessoas-dia  ≈  5,67 pessoas-mês  ≈  953 horas\n\nCusto P50 = 5,67 PM × R$ 20.000 = R$ 113.460\nCusto P85 = ×1,22 = R$ 138.421     Custo P95 = ×1,42 = R$ 161.113</pre><p style=\"margin:.5em 0 0;font-size:14px;color:var(--ink-2)\">Nota: arquitetura e legado não entram no esforço (já refletidos na complexidade por tarefa) — evitamos dupla contagem. O custo depende do esforço, não do tamanho do time.</p><p style=\"margin:.6em 0 0;font-size:14px;color:var(--ink-2)\"><b>Cross-check bottom-up × top-down:</b> somando as horas por tarefa (<code>effortHours</code> da spec-tasks) chega-se a <b>92 pessoas-dia</b> manual (≈ 736 h) contra <b>119 pessoas-dia</b> do top-down — divergência <b>+29%</b>, dentro da tolerância (&lt; 40%): sem alerta. Headcount por esforço: top-down ≈ 2 e bottom-up (<code>team_sanity</code>) ≈ 2 — coerentes; a recomendação de <b>5 pessoas</b> vem da paralelização (Brooks), não do esforço. Quando a divergência estoura (o caso real de 32 devs), o alerta <code>HEADCOUNT_SANITY</code> ancora o número no bottom-up.</p>",
+    "topTasks": [
+      { "id": "TASK-002-001", "title": "Busca automatizada RastroLog", "module": "SINISTRO", "cu": 33.3, "band": "XL", "durH": 4.0, "durIA": 2.85 },
+      { "id": "TASK-010-001", "title": "Alerta multiparte com SLA", "module": "NOTIFICAÇÃO", "cu": 30.5, "band": "XL", "durH": 4.0, "durIA": 1.65 },
+      { "id": "TASK-001-001", "title": "Abertura de sinistro", "module": "SINISTRO", "cu": 29.3, "band": "XL", "durH": 4.0, "durIA": 1.65 },
+      { "id": "TASK-003-001", "title": "Atualização + movimentações", "module": "SINISTRO", "cu": 27.2, "band": "XL", "durH": 3.0, "durIA": 1.24 },
+      { "id": "TASK-008-001", "title": "Sincronização RegistraPlus", "module": "SEGURADO", "cu": 26.3, "band": "XL", "durH": 4.0, "durIA": 2.85 },
+      { "id": "TASK-006-001", "title": "Negativa/encerramento", "module": "SINISTRO", "cu": 25.3, "band": "XL", "durH": 3.0, "durIA": 1.24 },
+      { "id": "TASK-005-001", "title": "Consulta com proteção de sigilo", "module": "SINISTRO", "cu": 23.6, "band": "XL", "durH": 3.0, "durIA": 1.24 },
+      { "id": "TASK-004-001", "title": "Exclusão lógica de sinistro", "module": "SINISTRO", "cu": 22.3, "band": "XL", "durH": 2.0, "durIA": 0.83 },
+      { "id": "TASK-009-001", "title": "Consulta de ficha cadastral", "module": "SEGURADO", "cu": 21.3, "band": "XL", "durH": 2.0, "durIA": 0.83 },
+      { "id": "TASK-011-001", "title": "Acesso a sinistro sigiloso", "module": "NOTIFICAÇÃO", "cu": 21.2, "band": "XL", "durH": 3.0, "durIA": 1.24 }
+    ]
+  },
+  "dependency": {
+    "intro": "O grafo de dependências é acíclico e paraleliza bem (índice 0,78 — ~78% do trabalho pode correr em paralelo). O gargalo não é falta de paralelismo, e sim uma espinha dorsal serial curta e inegociável: acesso/RBAC → sincronização do cadastro → abertura de sinistro.",
+    "metrics": {
+      "criticalPathH": "20 dias", "criticalPathIA": "9,4 dias",
+      "pi": "0,78", "piBand": "green", "piLabel": "Bom 🟢",
+      "amdahl": "4,6×", "streams": "6"
+    },
+    "mermaid": "flowchart LR\n  ACESSO[\"TASK-012-001<br/>Acesso / RBAC\"]:::crit\n  SYNC[\"TASK-008-001<br/>Sync RegistraPlus\"]:::crit\n  CAD[\"TASK-001-001<br/>Abertura de sinistro\"]:::crit\n  RASTRO[\"TASK-002-001<br/>Busca RastroLog\"]:::bn\n  SUBSIN[\"TASK-003..006<br/>Sub-funcoes sinistro\"]\n  ALERTA[\"TASK-010-001<br/>Alerta multiparte\"]:::crit\n  SIGILO[\"TASK-011-001<br/>Acesso sigiloso\"]:::crit\n  AUD[\"TASK-017-001<br/>Log de auditoria\"]:::crit\n  PAINEL[\"TASK-020-001<br/>Painel de KPIs\"]\n  SEGURADO[\"TASK-009-001<br/>Ficha cadastral\"]\n  UAT[\"Homologacao<br/>30 UAT por epica\"]\n  ACESSO --> SYNC\n  ACESSO --> CAD\n  SYNC --> CAD\n  SYNC --> SEGURADO\n  CAD --> RASTRO\n  CAD --> SUBSIN\n  CAD --> ALERTA\n  CAD --> AUD\n  CAD --> PAINEL\n  ALERTA --> SIGILO\n  AUD --> UAT\n  SIGILO --> UAT\n  SUBSIN --> UAT\n  classDef crit fill:#fbe4e4,stroke:#c62b32,color:#8f1f24;\n  classDef bn fill:#fcf2dc,stroke:#c07d0a,color:#8a5d06;",
+    "howCritical": "<p style=\"font-size:14.5px;margin:.3em 0\">Montamos o grafo a partir de quatro tipos de dependência (sequência declarada, escrita na mesma entidade, consumo de API, e ordem imposta por regra de negócio). O <b>Critical Path Method</b> encontra a sequência mais longa; o <b>índice de paralelização = 1 − (caminho crítico ÷ trabalho total)</b>. Cada gargalo recebe um score por número de dependentes, duração, folga e centralidade arquitetural.</p>",
+    "bottlenecks": [
+      { "id": "TASK-001-001", "title": "Abertura de sinistro", "score": 100, "band": "red", "why": "Concentra 10 sucessores diretos (alerta, auditoria, painel, sub-funções); folga zero — ponto único de convergência do M1.", "action": "Isolar núcleo transacional; publicar eventos (outbox) para desacoplar." },
+      { "id": "TASK-012-001", "title": "Acesso / RBAC", "score": 100, "band": "red", "why": "Fundação de autenticação LogiID/certificado digital; nenhum endpoint seguro homologa antes dela.", "action": "Primeira entrega da Sprint 1; disponibilizar stub de RBAC." },
+      { "id": "TASK-008-001", "title": "Sync RegistraPlus", "score": 92.5, "band": "red", "why": "Fornece os CNPJs sem os quais a abertura de sinistro falha; depende de credenciais de sandbox (GAP-TASK-006).", "action": "Antecipar credenciais; ACL + contract tests com mock." },
+      { "id": "TASK-017-001", "title": "Log de auditoria", "score": 85.0, "band": "orange", "why": "Serviço transversal consumido por todos os módulos; mudanças de contrato reverberam em todo o backlog.", "action": "Congelar o contrato de evento cedo; tratar como plataforma interna." },
+      { "id": "TASK-010-001", "title": "Alerta multiparte", "score": 80.0, "band": "orange", "why": "Alta complexidade (SLA, e-mail/SMS, Sigilo) e no caminho crítico; depende do gateway.", "action": "Desacoplar por fila (RabbitMQ+DLQ); mockar gateway." }
+    ],
+    "coupling": {
+      "summary": "baixo (score 48/100 🟡)",
+      "pairs": [
+        { "pair": "SINISTRO ↔ SEGURADO", "value": 3, "band": "red", "nature": "FK por <span class=\"mono\">policyholder_cnpj</span>; abertura exige CNPJ ativo" },
+        { "pair": "SINISTRO ↔ AUDITORIA", "value": 3, "band": "red", "nature": "Todo evento gera <span class=\"mono\">aud_event</span> + Recibo de Registro" },
+        { "pair": "SINISTRO ↔ NOTIFICAÇÃO", "value": 2, "band": "amber", "nature": "<span class=\"mono\">SinistroAberto</span> dispara alerta" },
+        { "pair": "SINISTRO ↔ PAINEL", "value": 2, "band": "amber", "nature": "Eventos alimentam snapshot de KPI" },
+        { "pair": "NOTIFICAÇÃO ↔ ACESSO", "value": 2, "band": "amber", "nature": "Destinatários resolvidos por escopo de regional (RBAC)" }
+      ]
+    }
+  },
+  "team": {
+    "intro": "O tamanho mais eficiente é de cinco pessoas em dois squads alinhados a fluxo. Mais gente reduz pouco o prazo (o caminho crítico serial vira o piso) e aumenta o custo de coordenação; menos gente sobrecarrega o núcleo de Sinistro.",
+    "brooksCurve": [
+      { "n": 3, "days": 52.6, "overhead": 3.8 }, { "n": 4, "days": 40.2, "overhead": 5.6 },
+      { "n": 5, "days": 32.7, "overhead": 7.5 }, { "n": 6, "days": 27.7, "overhead": 9.4 },
+      { "n": 7, "days": 24.2, "overhead": 11.3 }, { "n": 8, "days": 22.6, "overhead": 13.1 }
+    ],
+    "squads": [
+      { "name": "Squad Núcleo Sinistro", "type": "stream-aligned", "size": "3 pessoas", "modules": "SINISTRO + SEGURADO + NOTIFICAÇÃO", "cl": 6, "clBand": "amber" },
+      { "name": "Squad Governança & Acesso", "type": "stream-aligned", "size": "2 pessoas", "modules": "ACESSO + AUDITORIA + PAINEL", "cl": 4, "clBand": "green" }
+    ],
+    "note": "<b>Sem</b> squad de plataforma/enabling no M1 (esforço ~5,7 PM &lt; limiar de 15–20 PM). Alinhamento org × arquitetura <b>CMI = 0,20 🟢</b> — não é preciso reorganizar.",
+    "howTeam": "<p style=\"font-size:14.5px;margin:.3em 0\">Lei de Brooks: comunicação cresce ao quadrado com o time. O ótimo é <code>n* = √(p/k)</code> com produtividade <code>p = 4 CU/dia</code> e custo de comunicação <code>k = 0,15</code> → <b>n* = 5</b>. A curva mostra retornos decrescentes: de 5 para 8 pessoas o prazo cai ~10 dias, mas o overhead de comunicação quase dobra.</p>",
+    "specGaps": [
+      { "skill": "Integração com APIs de parceiros em sandbox (RastroLog, RegistraPlus, LogiID, gateway)", "coverage": "30%", "coverageBand": "red", "impact": "Crítico — 3 tarefas do caminho crítico", "rec": "Alocar especialista; antecipar credenciais (GAP-TASK-006)" },
+      { "skill": "Sigilo de Apuração + RBAC por escopo de regional", "coverage": "50%", "coverageBand": "amber", "impact": "Diferenciador inegociável do M1", "rec": "Revisão de segurança dedicada; par com jurídico/compliance" }
+    ]
+  },
+  "forecast": {
+    "intro": "O prazo é uma faixa de probabilidade, não uma data única. Rodamos 10.000 simulações de Monte Carlo que sorteiam incerteza de escopo (±25%), variação de ritmo por sprint e a curva de amadurecimento do time (Tuckman: forma-se → atrita → normaliza → performa).",
+    "scenarios": [
+      { "pct": "P15 (otimista)", "humanDays": "47", "humanDate": "07/10/2026", "iaDays": "21", "iaDate": "01/09/2026" },
+      { "pct": "P50 (meta interna)", "humanDays": "59", "humanDate": "23/10/2026", "iaDays": "25", "iaDate": "07/09/2026", "highlight": "p50" },
+      { "pct": "P85 (compromisso externo)", "humanDays": "75", "humanDate": "16/11/2026", "iaDays": "38", "iaDate": "24/09/2026", "highlight": "p85" },
+      { "pct": "P95 (conservador)", "humanDays": "86", "humanDate": "01/12/2026", "iaDays": "44", "iaDate": "02/10/2026" }
+    ],
+    "compare": { "labels": ["Prazo P85 (dias)", "Custo P85 (R$ mil)"], "human": [75, 138], "ia": [38, 96] },
+    "hybridNote": "<b>Humano × IA:</b> a IA-assistida entrega ~2,4× mais rápido e ~31% mais barato, mas com <b>menor previsibilidade</b> — as integrações com parceiros têm comportamento imprevisível que o agente resolve por tentativa e erro (fator de re-tentativa 1,35) e exigem revisão humana reforçada. Recomendação: <b>abordagem híbrida</b> — IA nos módulos CRUD/consulta bem especificados e revisão humana sênior nas três integrações.",
+    "howIaCost": "<pre>Custo IA (P50) = 3 orquestradores × R$ 20.000 × 1,19 meses   (tech lead + 2 revisores)\n              + R$ 8/task × 51 tasks       (tokens)\n              + R$ 1.200 × 3 × 1,19 meses   (tooling Cursor/Claude Code)\n              + R$ 2.000 × 1,19 meses       (infra)\n              = R$ 78.503</pre><p style=\"font-size:14px;color:var(--ink-2);margin:.5em 0 0\">Duração IA por tarefa = <code>(dias_backlog ÷ velocidade) × 1,35 + dias_backlog × overhead de revisão</code>. Velocidade: backend 2,0× · integração 1,2× · testes 2,5×.</p>",
+    "dciComponents": [
+      { "name": "Confiança do forecast", "weight": "0,30", "value": "0,54" },
+      { "name": "Penalidade de gargalos", "weight": "0,20", "value": "0,085" },
+      { "name": "Saúde do time", "weight": "0,20", "value": "1,00" },
+      { "name": "Estabilidade arquitetural", "weight": "0,15", "value": "0,52" },
+      { "name": "Risco externo", "weight": "−0,10", "value": "0,08" },
+      { "name": "Risco de gaps", "weight": "−0,05", "value": "0,31" }
+    ],
+    "dciChart": [
+      { "name": "Forecast", "contribution": 16.3 }, { "name": "Gargalos", "contribution": 1.7 },
+      { "name": "Saúde time", "contribution": 20.0 }, { "name": "Arquitetura", "contribution": 7.8 },
+      { "name": "Risco ext.", "contribution": -0.8 }, { "name": "Risco gaps", "contribution": -1.5 }
+    ],
+    "dciNote": "O que mais derruba o DCI é a <b>penalidade de gargalos</b>: o projeto concentra dependências em poucas tarefas. Resolver a concentração de TASK-001-001 e liberar os gargalos externos é o caminho direto para subir a confiança. Teto de <b>70</b> por ausência de histórico (cold-start)."
+  },
+  "recommendations": [
+    { "title": "Remover os gargalos externos", "effort": "M", "what": "Obter credenciais e limites de sandbox de RastroLog, RegistraPlus, LogiID e gateway de e-mail/SMS.", "why": "fator nº 1 de prazo (≈7,2 d) e trava 3 tarefas críticas", "who": "Arquitetura + TI da seguradora", "when": "esta semana" },
+    { "title": "Quebrar e proteger a tarefa de abertura de sinistro", "effort": "S", "what": "Dividir TASK-001-001 em (a) núcleo transacional e (b) efeitos colaterais (marcação, Red Flag, evento).", "why": "reduz o risco do ponto único de convergência do M1", "who": "Tech lead", "when": "refinamento da Sprint 1" },
+    { "title": "Reduzir acoplamento por eventos", "effort": "M", "what": "Publicar eventos de domínio (outbox → RabbitMQ) para alerta, auditoria e painel.", "why": "desacopla 3 dos 10 sucessores e encurta o caminho crítico", "who": "Squad Núcleo Sinistro", "when": "antes da Sprint 2" },
+    { "title": "Desbloquear squads em paralelo", "effort": "M", "what": "Disponibilizar stub de RBAC (TASK-012-001) e mocks ACL com contract tests para as integrações.", "why": "permite trabalho paralelo enquanto o sandbox não abre", "who": "Squad Governança & Acesso", "when": "Sprint 1" },
+    { "title": "Alocar especialistas", "effort": "L", "what": "1 especialista em integração com parceiros + 1 revisor de segurança (Sigilo de Apuração/RBAC).", "why": "fecha as duas lacunas de especialização", "who": "gestão", "when": "antes da Sprint 2" },
+    { "title": "Recalibrar após a Sprint 1", "effort": "S", "what": "Gerar histórico de ritmo (delivery-history.json) e reprocessar este forecast.", "why": "remove o teto de DCI de 70 e estreita as faixas de prazo", "who": "tech lead + PO", "when": "fim da Sprint 1" }
+  ],
+  "risks": {
+    "intro": "O Schedule Risk Index é 34/100 🟡 (moderado): a soma dos impactos esperados é de ~20 dias, concentrada em itens acionáveis. Os três fatores que mais movem o P85 são credenciais de sandbox (≈7,2 d), o gargalo da abertura de sinistro (≈5,0 d) e a instabilidade das APIs de parceiros (≈2,4 d).",
+    "register": [
+      { "cat": "gap", "catBand": "red", "desc": "GAP-TASK-006 · credenciais/limites de sandbox das integrações", "prob": "0,60", "impact": "12 d", "expected": "7,2 d" },
+      { "cat": "gargalo", "catBand": "orange", "desc": "TASK-001-001 concentra 10 sucessores", "prob": "0,50", "impact": "10 d", "expected": "5,0 d" },
+      { "cat": "externo", "catBand": "amber", "desc": "Instabilidade das APIs de parceiros (RastroLog, RegistraPlus, LogiID)", "prob": "0,30", "impact": "8 d", "expected": "2,4 d" },
+      { "cat": "especialização", "catBand": "amber", "desc": "Cobertura baixa (30%) em integração com parceiros", "prob": "0,50", "impact": "5 d", "expected": "2,5 d" },
+      { "cat": "gap", "catBand": "red", "desc": "GAP-TASK-002 · storage de PDF (BLOB vs object storage)", "prob": "0,40", "impact": "5 d", "expected": "2,0 d" },
+      { "cat": "compliance", "catBand": "amber", "desc": "Sigilo de Apuração + LGPD · revisão de segurança do RBAC", "prob": "0,20", "impact": "6 d", "expected": "1,2 d" }
+    ],
+    "note": "<b>Aviso de calibração (cold-start):</b> sem histórico de produtividade, o DCI está limitado a 70 e as faixas de prazo são mais largas. Recomenda-se rodar <span class=\"mono\">spec-iterate</span> para fechar GAP-TASK-006/001/002 antes do início da implementação — são os que mais impactam prazo e scaffold. A decomposição das Ondas 2–6 está fora deste escopo e será reestimada por onda quando os gates externos destravarem."
+  },
+  "method": {
+    "formulas": "Complexity Unit  CU = 1,2·rf + 1,5·data + 1,4·api + 2,0·integ + 1,8·async + 1,1·ui + 1,3·rule\nEsforço humano   dias-ideais × HDF × EM_parcial(team·tooling·compliance·gap) → pessoas-mês\nCusto            PM × R$ 20.000  ·  P85 = ×1,22  ·  P95 = ×1,42\nDuração IA/task  (dias_backlog ÷ velocidade) × 1,35  +  dias_backlog × overhead_revisão\nBrooks           n* = √(p/k)   ·   overhead = 1 + k·[n(n−1)/2] ÷ (n·p)\nAmdahl           speedup_máx = 1 ÷ fração_serial\nDCI              0,30·fc + 0,20·(1−gargalos) + 0,20·saúde + 0,15·arquitetura − 0,10·externo − 0,05·gaps   (teto 70 em cold-start)",
+    "traceability": [
+      { "metric": "CU por tarefa", "source": "<span class=\"mono\">tasks.json</span> — cenários, entidades, apiContracts, businessRules" },
+      { "metric": "Multiplicadores de esforço", "source": "<span class=\"mono\">data-model.json</span> (BC/FK), <span class=\"mono\">tech-rules/*</span>, kickoff" },
+      { "metric": "Grafo de dependências", "source": "<span class=\"mono\">tasks.json</span> (deliveryScope, storyId) + regras de negócio" },
+      { "metric": "Acoplamento entre módulos", "source": "<span class=\"mono\">data-model.json</span> (boundedContexts, asyncChannels)" },
+      { "metric": "Riscos / gaps", "source": "<span class=\"mono\">gaps-document.md</span> (GAP-TASK-001…008)" },
+      { "metric": "Custo / calibração", "source": "kickoff (R$ 20.000/mês · HDF 2,0 · cold-start)" },
+      { "metric": "Datas", "source": "Monte Carlo 10k + dias úteis BR (início 03/08/2026)" }
+    ]
+  },
+  "allTasksIntro": "Base completa de complexidade (as 30 tarefas de homologação UAT são banda S e somam 30 pessoas-dia com HDF, executadas por épica após as funcionais).",
+  "allTasks": [
+    { "id": "TASK-001-001", "module": "SINISTRO", "type": "backend", "cu": 29.3, "band": "XL", "durH": 4.0, "durIA": 1.65 },
+    { "id": "TASK-001-002", "module": "SINISTRO", "type": "backend", "cu": 19.1, "band": "L", "durH": 3.0, "durIA": 1.24 },
+    { "id": "TASK-002-001", "module": "SINISTRO", "type": "integration", "cu": 33.3, "band": "XL", "durH": 4.0, "durIA": 2.85 },
+    { "id": "TASK-003-001", "module": "SINISTRO", "type": "backend", "cu": 27.2, "band": "XL", "durH": 3.0, "durIA": 1.24 },
+    { "id": "TASK-004-001", "module": "SINISTRO", "type": "backend", "cu": 22.3, "band": "XL", "durH": 2.0, "durIA": 0.83 },
+    { "id": "TASK-005-001", "module": "SINISTRO", "type": "backend", "cu": 23.6, "band": "XL", "durH": 3.0, "durIA": 1.24 },
+    { "id": "TASK-006-001", "module": "SINISTRO", "type": "backend", "cu": 25.3, "band": "XL", "durH": 3.0, "durIA": 1.24 },
+    { "id": "TASK-007-001", "module": "SINISTRO", "type": "backend", "cu": 12.0, "band": "L", "durH": 3.0, "durIA": 1.24 },
+    { "id": "TASK-008-001", "module": "SEGURADO", "type": "integration", "cu": 26.3, "band": "XL", "durH": 4.0, "durIA": 2.85 },
+    { "id": "TASK-009-001", "module": "SEGURADO", "type": "backend", "cu": 21.3, "band": "XL", "durH": 2.0, "durIA": 0.83 },
+    { "id": "TASK-010-001", "module": "NOTIFICAÇÃO", "type": "backend", "cu": 30.5, "band": "XL", "durH": 4.0, "durIA": 1.65 },
+    { "id": "TASK-011-001", "module": "NOTIFICAÇÃO", "type": "backend", "cu": 21.2, "band": "XL", "durH": 3.0, "durIA": 1.24 },
+    { "id": "TASK-012-001", "module": "ACESSO", "type": "backend", "cu": 21.0, "band": "XL", "durH": 4.0, "durIA": 1.65 },
+    { "id": "TASK-013-001", "module": "ACESSO", "type": "backend", "cu": 20.3, "band": "XL", "durH": 2.0, "durIA": 0.83 },
+    { "id": "TASK-014-001", "module": "ACESSO", "type": "backend", "cu": 15.9, "band": "L", "durH": 2.0, "durIA": 0.83 },
+    { "id": "TASK-015-001", "module": "ACESSO", "type": "backend", "cu": 11.1, "band": "L", "durH": 1.0, "durIA": 0.41 },
+    { "id": "TASK-016-001", "module": "ACESSO", "type": "backend", "cu": 17.1, "band": "L", "durH": 2.0, "durIA": 0.83 },
+    { "id": "TASK-017-001", "module": "AUDITORIA", "type": "backend", "cu": 16.7, "band": "L", "durH": 4.0, "durIA": 1.65 },
+    { "id": "TASK-018-001", "module": "AUDITORIA", "type": "backend", "cu": 13.4, "band": "L", "durH": 3.0, "durIA": 1.24 },
+    { "id": "TASK-019-001", "module": "AUDITORIA", "type": "backend", "cu": 14.7, "band": "L", "durH": 3.0, "durIA": 1.24 },
+    { "id": "TASK-020-001", "module": "PAINEL", "type": "backend", "cu": 14.5, "band": "L", "durH": 3.0, "durIA": 1.24 }
+  ],
+  "footer": "<b>ORBITA — Plataforma de Gestão de Sinistros de Carga · Onda 1 (M1).</b> Estimativa Preditiva & Engenharia de Delivery (Fase 7.5). Prazos e custos são faixas probabilísticas (P50/P85/P95), nunca pontos únicos. Todas as métricas derivam de evidências rastreáveis — nenhum número foi arbitrado."
+}

@@ -1,0 +1,78 @@
+---
+description: "{{ARCHITECTURE_DESCRIPTION}}"
+globs: "**/src/**"
+alwaysApply: false
+---
+
+# Arquitetura — {{PROJECT_NAME}}
+
+> Decisões **obrigatórias**. Conflito com outra rule → **esta prevalece** até alteração explícita.
+> Ver **conventions.mdc** para idioma e nomenclatura.
+
+---
+
+## Estilo Arquitetural
+
+**{{ARCHITECTURE_STYLE}}** — {{ARCHITECTURE_RATIONALE}}
+
+---
+
+## Padrão Interno — {{INTERNAL_PATTERN}}
+
+### Camadas e fluxo de dependência
+
+```
+{{LAYER_DIAGRAM}}
+```
+
+| Camada | Responsabilidade | Pode depender de |
+|--------|-----------------|------------------|
+{{LAYERS_TABLE}}
+
+**MUST:** Dependências fluem de fora para dentro — camada externa depende da interna, nunca o contrário.
+
+**MUST NOT:** `{{DOMAIN_LAYER}}` importar qualquer classe de `{{INFRA_LAYER}}` ou de frameworks externos.
+
+**MUST NOT:** `{{USECASE_LAYER}}` importar implementações concretas — apenas interfaces de porta.
+
+---
+
+## Estrutura de Pastas
+
+```
+{{FOLDER_STRUCTURE}}
+```
+
+---
+
+## Exemplo correto
+
+```{{LANGUAGE}}
+{{CORRECT_EXAMPLE}}
+```
+
+## Anti-pattern
+
+```{{LANGUAGE}}
+{{WRONG_EXAMPLE}}
+```
+
+---
+
+## Comunicação entre Módulos
+
+{{INTER_MODULE_RULES}}
+
+---
+
+## Anti-patterns
+
+{{ANTIPATTERNS_LIST}}
+
+---
+
+## Referências
+
+- **conventions.mdc** — nomenclatura, idioma, formatação
+- **database.mdc** — entidades de persistência vs domínio
+- **test-strategy.mdc** — como testar cada camada

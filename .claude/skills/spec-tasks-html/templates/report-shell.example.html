@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<!--
+  report-shell.example.html — Esqueleto de estrutura HTML para spec-tasks-html
+  Este é um exemplo da estrutura gerada por lib/render-html.mjs.
+  NÃO editar diretamente — customizar via report-theme.tokens.css e metadata.reportTitle.
+-->
+<html lang="pt-BR" class="dark-theme">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>[metadata.projectName] — Relatório de Tasks</title>
+  <!-- Tema embutido (report-theme.css) + tokens de override (report-theme.tokens.css se existir) -->
+  <style>/* CSS embutido aqui pelo render-html.mjs */</style>
+</head>
+<body>
+  <div class="doc-shell doc-layout">
+
+    <!-- Sidebar: gerada dinamicamente de metadata.backlogHierarchy.chosen -->
+    <!-- NOTA: o renderizador atual (lib/render-html.mjs) só implementa Epic → Story → Task.
+         Se doc.features existir, ele NÃO é renderizado nesta hierarquia — um aviso é emitido
+         em stderr pelo cli.mjs. -->
+    <nav class="doc-sidebar">
+      <!-- Exemplo real: chosen = ["epic","story","task"] -->
+      <section class="sidebar-group">
+        <h3 class="sidebar-group__title">Epics</h3>
+        <ul>
+          <li><a href="#epic-epic-001">EPIC-001 — Nome do Epic</a>
+            <ul>
+              <li><a href="#story-001">STORY-001 — Nome da Story</a></li>
+            </ul>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Compatibilidade legado: chosen ausente → apenas Stories -->
+      <!--
+      <section class="sidebar-group">
+        <h3 class="sidebar-group__title">Histórias e Tarefas</h3>
+        <ul>
+          <li><a href="#story-001">STORY-001</a></li>
+        </ul>
+      </section>
+      -->
+    </nav>
+
+    <!-- Conteúdo principal -->
+    <div class="doc-content">
+      <main class="doc-main" id="document-root">
+
+        <!-- Cabeçalho do documento -->
+        <header class="doc-header" id="top">
+          <p class="doc-header__kicker">Relatório de planejamento · Tasks e rastreabilidade</p>
+          <h1 class="doc-header__title">[metadata.projectName ou metadata.reportTitle]</h1>
+        </header>
+
+        <!-- Secções dinâmicas por nível ativo -->
+
+        <!-- Nível Epic (quando "epic" em chosen) -->
+        <section id="epic-epic-001" class="level-epic">
+          <h2>EPIC-001 — Nome do Epic</h2>
+          <p class="executive-summary">Resumo executivo do epic...</p>
+          <!-- Features filhas -->
+        </section>
+
+        <!-- Nível Feature: NÃO renderizado pelo lib/render-html.mjs atual, mesmo quando
+             doc.features está presente. cli.mjs emite aviso em stderr nesse caso. -->
+
+        <!-- Nível Story (quando "story" em chosen) -->
+        <section id="story-001" class="level-story">
+          <h4>STORY-001 — Nome da Story</h4>
+          <!-- User story, cenários, tasks filhas -->
+        </section>
+
+        <!-- Modo legado: apenas Stories sem hierarquia superior -->
+        <!-- (quando backlogHierarchy ausente ou chosen = ["story","task"]) -->
+
+        <!-- Secções fixas (sempre presentes) -->
+        <section id="metadata"><!-- 1. Metadados --></section>
+        <section id="completeness"><!-- 2. Completude e rastreabilidade --></section>
+        <section id="dependencies"><!-- 4. Dependências globais --></section>
+        <section id="glossary"><!-- 5. Glossário --></section>
+        <section id="refs"><!-- 6. Referências externas --></section>
+
+        <footer class="site-footer">
+          <p>Documento gerado a partir de <code>tasks.json</code> · [generatedAt]</p>
+        </footer>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

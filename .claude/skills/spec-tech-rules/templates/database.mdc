@@ -1,0 +1,76 @@
+---
+description: "{{DATABASE_DESCRIPTION}}"
+globs: "**/migration*,**/db/**,**/repository*,**/entity*,**/model*,{{DB_TOOL_GLOB}}"
+alwaysApply: false
+---
+
+# Banco de Dados — {{PROJECT_NAME}}
+
+> Ver **architecture.mdc** para separação entre entidade de domínio e entidade de persistência.
+> Ver **security.mdc** para SQL Injection e privilégio mínimo no banco.
+
+---
+
+## Convenções de Nomenclatura
+
+**MUST:** `{{NAMING_CONVENTION}}` para tabelas e colunas.
+
+{{#if MODULE_PREFIX}}
+**MUST:** Prefixo de módulo em todas as tabelas: `{{MODULE_PREFIX_TABLE}}`
+{{/if}}
+
+**MUST:** Toda tabela nova deve ter:
+- `id {{PK_TYPE}} NOT NULL DEFAULT {{PK_DEFAULT}}` como chave primária
+- `created_at {{TIMESTAMP_TYPE}} NOT NULL DEFAULT NOW()`
+- `updated_at {{TIMESTAMP_TYPE}} NOT NULL DEFAULT NOW()`
+- `deleted_at {{TIMESTAMP_TYPE}} NULL` (quando soft delete aplicável)
+
+**MUST:** FKs nomeadas: `fk_<tabela>_<coluna>`. Índices: `idx_<tabela>_<coluna(s)>`. Unique: `uq_<tabela>_<coluna>`.
+
+**MUST NOT:** PKs sequenciais (`BIGSERIAL` / `AUTO_INCREMENT`) em tabelas novas — usar `{{PK_TYPE}}`.
+
+### Tipos preferidos
+
+| Dado | Tipo | Evitar |
+|------|------|--------|
+{{TYPES_TABLE}}
+
+### Exemplo — DDL mínimo de tabela nova
+
+```sql
+{{DDL_EXAMPLE}}
+```
+
+---
+
+## Migrações — {{MIGRATION_TOOL}}
+
+**MUST:** Naming de arquivo: `{{MIGRATION_NAMING_PATTERN}}`
+
+**MUST:** Uma responsabilidade por migration — criar uma tabela OU adicionar coluna OU criar índice.
+
+**MUST:** Migrations são **imutáveis após merge em `develop`**. Correção = nova migration.
+
+**MUST NOT:** Editar arquivo de migration já aplicado.
+
+**MUST NOT:** `DROP TABLE` ou `TRUNCATE` sem aprovação explícita do tech lead registrada no PR.
+
+**MUST NOT:** Dados reais de produção em migrations ou seeds do repositório.
+
+### Configuração
+
+```{{CONFIG_FORMAT}}
+{{MIGRATION_CONFIG}}
+```
+
+### Seeds de desenvolvimento
+
+**MUST:** Seeds em `{{SEED_LOCATION}}` — dados fictícios, nunca reais.
+
+**MUST:** Seeds idempotentes — executar múltiplas vezes produz o mesmo resultado.
+
+---
+
+## Anti-patterns
+
+{{ANTIPATTERNS_LIST}}

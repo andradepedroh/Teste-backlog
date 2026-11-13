@@ -1,0 +1,364 @@
+{
+  "_comment": "Exemplo de TASK auto-suficiente v5.3 compact-prose (task de BACKEND). Traz acceptanceScenarios[] completos — HAPPY_PATH + INVALID_INPUT + BUSINESS_RULE_VIOLATION com testData concreto — porque TASK_HAS_CONCRETE_TEST_DATA é FATAL tanto na ausência quanto no preenchimento incompleto para class=functional. Para o contrato de TELA (uiContext com fields[], options[], grid e filterBehavior) ver tasks.hierarchy-example.json → STORY-001.uiContext e TASK-001-002. Para Epic/Story com narrativa, regras e critérios de aceite (Kanban ADO), ver tasks.hierarchy-example.json. Na geração, construir Story/Epic ANTES e consolidar Task→Story→Epic no mesmo passe.",
+  "id": "TASK-001-001",
+  "storyId": "STORY-001",
+  "featureId": "FEAT-001",
+  "sequence": 1,
+  "title": "Implementar endpoint POST /pedidos",
+  "description": "Criar endpoint de criação de pedido com validação de estoque e persistência transacional",
+  "type": "backend",
+  "durationEstimatedDays": 1.5,
+  "effortHours": {
+    "manual": 11.0,
+    "aiAssisted": 9.0,
+    "basis": "base 11h (2 setup + 1,5×1 API + 1,0×1 RN + 2,0×1 entidade + 1,5×3 cenários) ×1,0 backend · IA: 11/2,0×1,35 + 11×0,15 = 9,08 → 9,0"
+  },
+  "status": "PENDING",
+  
+  "business": {
+    "objective": "Expor operação de criação de pedido via API REST, permitindo que clientes criem pedidos validando disponibilidade de estoque",
+    "rationale": "Fatia mínima entregável do fluxo de vendas — permite aos consumidores (frontend web, app mobile) criar pedidos",
+    "businessFlowSteps": [
+      "1. Cliente autenticado acessa a tela de finalização de compra",
+      "2. Sistema valida disponibilidade de estoque para todos os itens do pedido",
+      "3. Sistema calcula valor total (subtotal + frete - desconto)",
+      "4. Sistema reserva estoque temporariamente",
+      "5. Sistema cria pedido com status PENDENTE_PAGAMENTO",
+      "6. Sistema publica evento PEDIDO_CRIADO para notificações",
+      "7. Sistema retorna pedido criado com link para pagamento"
+    ]
+  },
+  
+  "agentExecutionContext": {
+    "selfContainedSummary": "Implementar endpoint REST POST /pedidos que cria um novo pedido no sistema. CONTEXTO DE NEGÓCIO: Cliente finaliza compra selecionando produtos, quantidade e endereço de entrega. Sistema valida estoque disponível, calcula valor total (soma de itens + frete - desconto), reserva estoque temporariamente e cria pedido com status PENDENTE_PAGAMENTO. O pedido fica reservado por 30 minutos aguardando confirmação de pagamento. ATORES: CLIENTE (usuário final autenticado) e ADMIN (operador que pode criar pedidos manualmente). FLUXO PRINCIPAL: (1) Receber POST com clienteId, itens[]{produtoId, quantidade}, enderecoEntregaId; (2) Validar JWT e extrair sub (clienteId do requerente); (3) Verificar idempotência via Idempotency-Key header; (4) Validar estoque disponível para cada item (regra: quantidadeDisponivel >= quantidadeSolicitada); (5) Calcular valorTotal = sum(item.precoUnitario * item.quantidade) + frete - desconto; (6) Reservar estoque (decrementar TB_ESTOQUE.quantidade_disponivel, incrementar TB_ESTOQUE.quantidade_reservada); (7) Inserir TB_PEDIDO + TB_ITEM_PEDIDO em transação atômica; (8) Publicar evento PEDIDO_CRIADO; (9) Retornar 201 Created com Location header. PRÉ-CONDIÇÕES: Usuário autenticado; produtos existem no catálogo; estoque disponível para todos os itens. PÓS-CONDIÇÕES: Pedido criado com status PENDENTE_PAGAMENTO; estoque reservado; evento publicado; dataExpiracao = now()+30min. DECISÕES ARQUITETURAIS: Padrão Repository para persistência; Transaction boundary cobre reserva de estoque + insert pedido + event publish (rollback se falhar); Idempotência via Idempotency-Key (UUID v4) com TTL 24h.",
+    "criticalWarnings": [
+      "Reservar estoque DENTRO da transação (evitar race condition entre validação e reserva)",
+      "NUNCA retornar 400 para estoque insuficiente — usar 422 Unprocessable Entity",
+      "dataExpiracao deve ser SEMPRE dataCriacao + 30 minutos (não hardcoded)",
+      "Publicação de evento é parte da transação — rollback se falhar"
+    ],
+    "doNotDo": [
+      "NÃO validar estoque sem lock pessimista (causa overselling)",
+      "NÃO criar pedido sem verificar duplicação (Idempotency-Key)",
+      "NÃO calcular frete manualmente — usar FreteService"
+    ],
+    "minimumOutputToDeliver": [
+      "PedidoController com endpoint POST /pedidos",
+      "PedidoService.criar(dto, clienteId, idempotencyKey)",
+      "EstoqueService.validarEReservar(itens[])",
+      "PedidoRepository, ItemPedidoRepository, EstoqueRepository",
+      "Testes unitários: PedidoServiceTest (≥4 cenários)",
+      "Testes funcionais: POST /pedidos com RestAssured (≥6 cenários)"
+    ]
+  },
+  
+  "implementationGuidance": {
+    "architecturalDecisions": [
+      "Usar padrão Repository para acesso a dados (PedidoRepository, EstoqueRepository)",
+      "Transaction boundary (@Transactional) cobre: validação estoque + reserva + insert pedido + publish evento",
+      "Idempotência via Idempotency-Key header: armazenar SHA-256(key) em TB_IDEMPOTENCY_KEYS com TTL 24h",
+      "Lock pessimista (SELECT FOR UPDATE) ao validar estoque — previne race conditions"
+    ],
+    "dataFlow": [
+      "1. Controller Layer: Receber POST /pedidos com @Valid PedidoCriarDto",
+      "2. Controller Layer: Validar Idempotency-Key header (retornar 400 se ausente)",
+      "3. Controller Layer: Extrair clienteId do JWT via SecurityContext",
+      "4. Service Layer: Verificar idempotência (consultar TB_IDEMPOTENCY_KEYS)",
+      "5. Service Layer: Se chave existe: retornar 201 com pedido existente",
+      "6. Service Layer: Validar estoque para cada item (SELECT FOR UPDATE)",
+      "7. Service Layer: Se estoque insuficiente: lançar BusinessException(ESTOQUE_INSUFICIENTE, 422)",
+      "8. Service Layer: Calcular valorTotal via PedidoCalculoService",
+      "9. Repository Layer: Iniciar transação @Transactional",
+      "10. Repository Layer: Reservar estoque (UPDATE TB_ESTOQUE SET quantidade_disponivel -= X, quantidade_reservada += X)",
+      "11. Repository Layer: Inserir TB_PEDIDO (status=PENDENTE_PAGAMENTO, dataExpiracao=now()+30min)",
+      "12. Repository Layer: Inserir TB_ITEM_PEDIDO para cada item",
+      "13. Event Layer: Publicar evento PEDIDO_CRIADO",
+      "14. Repository Layer: Commit da transação",
+      "15. Controller Layer: Retornar 201 Created com Location header"
+    ],
+    "errorHandling": {
+      "ESTOQUE_INSUFICIENTE": {
+        "scenario": "Produto X tem estoque disponível < quantidade solicitada",
+        "action": "Lançar BusinessException(ESTOQUE_INSUFICIENTE, 422) com lista de itens sem estoque",
+        "userImpact": "Cliente vê quais produtos não têm estoque; pode ajustar quantidades"
+      },
+      "IDEMPOTENCY_KEY_DUPLICADA": {
+        "scenario": "Cliente reenvia POST com mesma Idempotency-Key (retry)",
+        "action": "Retornar 201 Created com MESMO pedido existente (não criar novo)",
+        "userImpact": "Retry é transparente — evita pedidos duplicados"
+      },
+      "TRANSACTION_ROLLBACK": {
+        "scenario": "Falha ao publicar evento ou inserir em TB_PEDIDO",
+        "action": "Rollback completo (estoque volta ao estado anterior); retornar 500",
+        "userImpact": "Cliente vê erro genérico; pode tentar novamente"
+      }
+    },
+    "observability": {
+      "structuredLogging": [
+        "Log entrada (INFO): {correlationId, clienteId, numItens, valorTotal}",
+        "Log reserva estoque (INFO): {correlationId, produtoId, qtdReservada}",
+        "Log criação (INFO): {correlationId, pedidoId, status, valorTotal}",
+        "Log erro (ERROR): {correlationId, errorCode, errorMessage}"
+      ],
+      "metrics": [
+        "Counter 'pedidos_criados_total' com labels {status, origem}",
+        "Histogram 'pedidos_criacao_duration_seconds' (P50, P95, P99)",
+        "Counter 'estoque_insuficiente_total' com labels {produtoId}"
+      ],
+      "tracing": [
+        "Span raiz: 'POST /pedidos'",
+        "Span filho: 'EstoqueService.validarEReservar'",
+        "Span filho: 'DB.transaction'",
+        "Span filho: 'EventPublisher.publish'"
+      ]
+    },
+    "testingStrategy": {
+      "unitTests": [
+        "PedidoService.criar_comEstoqueDisponivel_deveCriarPedido",
+        "PedidoService.criar_comEstoqueInsuficiente_deveLancarException",
+        "PedidoService.criar_comIdempotencyKeyDuplicada_deveRetornarExistente"
+      ],
+      "integrationTests": [
+        "POST /pedidos com estoque OK — retorna 201",
+        "POST /pedidos com estoque insuficiente — retorna 422",
+        "POST /pedidos com mesma Idempotency-Key 2x — retorna 201 ambas as vezes com mesmo pedidoId"
+      ]
+    }
+  },
+  
+  "apiContracts": [
+    {
+      "operationId": "criarPedido",
+      "method": "POST",
+      "path": "/pedidos",
+      "signature": "POST /pedidos",
+      "summary": "Criar novo pedido",
+      "description": "Endpoint para criar pedido validando estoque disponível e calculando valor total. Valida estoque, calcula frete, reserva itens e cria pedido com status PENDENTE_PAGAMENTO.",
+      "auth": "Bearer JWT — roles: CLIENTE, ADMIN. Claims: sub (clienteId), nome, email",
+      "request": "Body: enderecoEntregaId (integer required — ID do endereço de entrega cadastrado); itens (array required minItems=1 — Lista de itens do pedido, items: {produtoId: integer, quantidade: integer minimum=1}); cupomDescontoId (integer optional — ID do cupom de desconto) | Headers: Authorization (required — Bearer JWT emitido pelo exemplo.com, e.g. Bearer eyJhbGci...); Idempotency-Key (required — UUID v4 para evitar duplicação, e.g. a1b2c3d4-e5f6-7890-abcd-ef1234567890); X-Correlation-Id (optional — Correlation id, gerado se ausente)",
+      "responses": "201 application/json — Pedido criado com sucesso. schema: { id: integer example=789; status: string enum=[PENDENTE_PAGAMENTO] example=PENDENTE_PAGAMENTO; valorTotal: number example=159.90; dataExpiracao: string format=date-time example=2026-05-14T21:05:00Z; linkPagamento: string format=uri example=/pedidos/789/pagamento } headers: Location (URI do pedido criado, e.g. /pedidos/789); X-Correlation-Id | 400 application/problem+json — Requisição malformada — payload inválido segundo Bean Validation (RFC 7807). schema: { type: string example=https://api.example.com/errors/validation-error; title: string example=Requisição malformada; status: integer example=400; detail: string example=Campo itens é obrigatório; instance: string; errors: array<{field: string, message: string}> } | 422 application/problem+json — Estoque insuficiente. schema: { type: string example=https://api.example.com/errors/estoque-insuficiente; title: string example=Estoque insuficiente; status: integer example=422; detail: string example=Estoque insuficiente para 2 produto(s); itensIndisponiveis: array<{produtoId: integer, quantidadeSolicitada: integer, quantidadeDisponivel: integer}> } | 500 application/problem+json — Erro interno — falha não tratada (logada com correlationId)",
+      "policies": "Rate: TOKEN_BUCKET limit/CPF: 100 req/min limit/IP: 300 req/min. Caching: cacheable=False (operação de escrita). Idempotency: required (Idempotency-Key header UUID v4 + TB_IDEMPOTENCY_KEYS com TTL 24h).",
+      "openApiRef": "api-contracts.yaml#/paths/~1pedidos/post",
+      "tags": ["Pedidos"]
+    }
+  ],
+  
+  "persistenceModel": {
+    "entities": [
+      {
+        "table": "TB_PEDIDO",
+        "purpose": "Armazena pedidos de clientes com status e valores calculados",
+        "boundedContext": "Gestão de Pedidos",
+        "operationType": "NEW",
+        "identifierStrategy": "SEQUENCE",
+        "primaryKey": "id",
+        "columns": "id BIGINT PK NOT NULL [NEW] — PK gerada por sequence. | cliente_id BIGINT NOT NULL [NEW] — FK para TB_CLIENTE. | status VARCHAR(40) NOT NULL [NEW] default=PENDENTE_PAGAMENTO — Status do pedido. Valores: PENDENTE_PAGAMENTO, PAGO, ENVIADO, ENTREGUE, CANCELADO. | valor_total DECIMAL(10,2) NOT NULL [NEW] — Valor total do pedido (itens + frete - desconto). | data_criacao TIMESTAMP NOT NULL [NEW] default=CURRENT_TIMESTAMP — Data/hora de criação. | data_expiracao TIMESTAMP NOT NULL [NEW] — data_criacao + 30 minutos. Cálculo: data_criacao + INTERVAL '30' MINUTE.",
+        "relationships": "MANY_TO_ONE → TB_CLIENTE (cliente_id → id) onDelete=RESTRICT — Cada pedido pertence a um único cliente",
+        "indexes": "IDX_PEDIDO_CLIENTE_STATUS BTREE(cliente_id, status) — Listar pedidos por cliente",
+        "dataModelRef": "data-model.json#/tableName/TB_PEDIDO"
+      }
+    ]
+  },
+  
+  "businessRules": [
+    {
+      "id": "RN-ESTOQUE-001",
+      "title": "Validação de estoque disponível",
+      "description": "Pedido só pode ser criado se TODOS os itens solicitados têm estoque disponível. Para cada item: quantidade_disponivel >= quantidade_solicitada. A validação deve usar lock pessimista (SELECT FOR UPDATE) para evitar race conditions. Se qualquer item não tiver estoque suficiente, o pedido inteiro é rejeitado (transação não-divisível).",
+      "implementation": {
+        "validationPoint": "POST /pedidos — antes de criar registro em TB_PEDIDO",
+        "algorithm": [
+          "1. Para cada item em dto.itens: SELECT quantidade_disponivel FROM TB_ESTOQUE WHERE produto_id = item.produtoId FOR UPDATE",
+          "2. Verificar se quantidade_disponivel >= item.quantidade",
+          "3. Se QUALQUER item falhar: lançar BusinessException(ESTOQUE_INSUFICIENTE, 422) com lista de itens indisponíveis",
+          "4. Se TODOS passaram: prosseguir com reserva"
+        ],
+        "errorMessages": {
+          "ESTOQUE_INSUFICIENTE": "Estoque insuficiente para produto {produtoNome}. Disponível: {qtd}, solicitado: {qtd}"
+        }
+      },
+      "testScenarios": [
+        {
+          "id": "TS-RN-ESTOQUE-001-01",
+          "category": "HAPPY_PATH",
+          "description": "Todos os itens têm estoque — pedido criado",
+          "given": "Produto A com estoque 10, Produto B com estoque 5",
+          "then": "POST /pedidos com 2x Produto A e 3x Produto B retorna 201"
+        },
+        {
+          "id": "TS-RN-ESTOQUE-001-02",
+          "category": "BUSINESS_RULE_VIOLATION",
+          "description": "Estoque insuficiente — pedido rejeitado",
+          "given": "Produto A com estoque 1",
+          "then": "POST /pedidos com 5x Produto A retorna 422"
+        }
+      ],
+      "traceability": {"requirementId": "RF-PED-001"}
+    }
+  ],
+  
+  "acceptanceScenarios": [
+    {
+      "id": "AS-TASK-001-001-01",
+      "category": "HAPPY_PATH",
+      "title": "Criar pedido com estoque disponível para todos os itens",
+      "given": "Cliente 42 autenticado com perfil CLIENTE, endereço de entrega 7 cadastrado, produto 100 com quantidade_disponivel = 10 e produto 200 com quantidade_disponivel = 5 em TB_ESTOQUE",
+      "when": "O cliente envia POST /pedidos com 2 unidades do produto 100 e 3 unidades do produto 200",
+      "then": [
+        "O sistema responde 201 Created com o pedido criado e o header Location",
+        "O pedido é gravado com status PENDENTE_PAGAMENTO e data_expiracao = data_criacao + 30 minutos",
+        "O estoque dos dois produtos é decrementado e a quantidade reservada é incrementada"
+      ],
+      "testData": {
+        "request": {
+          "method": "POST",
+          "path": "/pedidos",
+          "headers": {
+            "Authorization": "Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiI0MiJ9.assinatura",
+            "Idempotency-Key": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "Content-Type": "application/json"
+          },
+          "body": {
+            "enderecoEntregaId": 7,
+            "itens": [
+              { "produtoId": 100, "quantidade": 2 },
+              { "produtoId": 200, "quantidade": 3 }
+            ]
+          }
+        },
+        "expectedResponse": {
+          "statusCode": 201,
+          "headers": { "Location": "/pedidos/789" },
+          "body": {
+            "id": 789,
+            "status": "PENDENTE_PAGAMENTO",
+            "valorTotal": 159.9,
+            "dataExpiracao": "2026-05-14T21:05:00Z",
+            "linkPagamento": "/pedidos/789/pagamento"
+          }
+        },
+        "expectedDatabaseState": {
+          "TB_PEDIDO": "1 registro novo: id=789, cliente_id=42, status=PENDENTE_PAGAMENTO, valor_total=159.90, data_expiracao=data_criacao+30min",
+          "TB_ITEM_PEDIDO": "2 registros novos: (pedido_id=789, produto_id=100, quantidade=2) e (pedido_id=789, produto_id=200, quantidade=3)",
+          "TB_ESTOQUE": "produto 100: quantidade_disponivel 10→8 e quantidade_reservada +2; produto 200: quantidade_disponivel 5→2 e quantidade_reservada +3"
+        },
+        "expectedEvents": [
+          { "name": "PEDIDO_CRIADO", "payload": { "pedidoId": 789, "clienteId": 42, "valorTotal": 159.9 } }
+        ]
+      },
+      "verificationSteps": [
+        "Preparar TB_ESTOQUE com produto 100 = 10 unidades e produto 200 = 5 unidades disponíveis",
+        "Executar o POST /pedidos com o payload acima e o header Idempotency-Key",
+        "Conferir status 201, o header Location e o corpo da resposta",
+        "Consultar TB_PEDIDO, TB_ITEM_PEDIDO e TB_ESTOQUE e comparar com expectedDatabaseState"
+      ],
+      "relatedRules": ["RN-ESTOQUE-001"]
+    },
+    {
+      "id": "AS-TASK-001-001-02",
+      "category": "INVALID_INPUT",
+      "title": "Rejeitar pedido sem itens (lista vazia)",
+      "given": "Cliente 42 autenticado com perfil CLIENTE e endereço de entrega 7 cadastrado, com o catálogo e o estoque em estado normal",
+      "when": "O cliente envia POST /pedidos com a lista de itens vazia",
+      "then": [
+        "O sistema responde 400 Bad Request no formato problem+json",
+        "A resposta identifica o campo itens como inválido",
+        "Nenhum registro é criado e nenhum estoque é reservado"
+      ],
+      "testData": {
+        "request": {
+          "method": "POST",
+          "path": "/pedidos",
+          "headers": {
+            "Authorization": "Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiI0MiJ9.assinatura",
+            "Idempotency-Key": "b2c3d4e5-f6a7-8901-bcde-f23456789012",
+            "Content-Type": "application/json"
+          },
+          "body": { "enderecoEntregaId": 7, "itens": [] }
+        },
+        "expectedResponse": {
+          "statusCode": 400,
+          "body": {
+            "type": "https://api.example.com/errors/validation-error",
+            "title": "Requisição malformada",
+            "status": 400,
+            "detail": "Campo itens deve conter ao menos 1 item",
+            "errors": [{ "field": "itens", "message": "deve conter ao menos 1 item" }]
+          }
+        },
+        "expectedDatabaseState": {
+          "TB_PEDIDO": "inalterado — nenhum registro criado",
+          "TB_ITEM_PEDIDO": "inalterado — nenhum registro criado",
+          "TB_ESTOQUE": "inalterado — nenhuma reserva efetuada"
+        }
+      },
+      "verificationSteps": [
+        "Registrar as contagens de TB_PEDIDO e as quantidades de TB_ESTOQUE antes da chamada",
+        "Executar o POST /pedidos com itens = []",
+        "Conferir status 400 e o campo apontado em errors[]",
+        "Reconferir as contagens e quantidades: devem estar inalteradas"
+      ]
+    },
+    {
+      "id": "AS-TASK-001-001-03",
+      "category": "BUSINESS_RULE_VIOLATION",
+      "title": "Rejeitar pedido quando o estoque é insuficiente (RN-ESTOQUE-001)",
+      "given": "Cliente 42 autenticado com perfil CLIENTE, endereço de entrega 7 cadastrado e produto 100 com quantidade_disponivel = 1 em TB_ESTOQUE",
+      "when": "O cliente envia POST /pedidos solicitando 5 unidades do produto 100",
+      "then": [
+        "O sistema responde 422 Unprocessable Entity (nunca 400) no formato problem+json",
+        "A resposta lista o produto indisponível com a quantidade solicitada e a disponível",
+        "O pedido inteiro é rejeitado e nenhuma reserva parcial de estoque é feita"
+      ],
+      "testData": {
+        "request": {
+          "method": "POST",
+          "path": "/pedidos",
+          "headers": {
+            "Authorization": "Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiI0MiJ9.assinatura",
+            "Idempotency-Key": "c3d4e5f6-a7b8-9012-cdef-345678901234",
+            "Content-Type": "application/json"
+          },
+          "body": { "enderecoEntregaId": 7, "itens": [{ "produtoId": 100, "quantidade": 5 }] }
+        },
+        "expectedResponse": {
+          "statusCode": 422,
+          "body": {
+            "type": "https://api.example.com/errors/estoque-insuficiente",
+            "title": "Estoque insuficiente",
+            "status": 422,
+            "detail": "Estoque insuficiente para 1 produto(s)",
+            "itensIndisponiveis": [
+              { "produtoId": 100, "quantidadeSolicitada": 5, "quantidadeDisponivel": 1 }
+            ]
+          }
+        },
+        "expectedDatabaseState": {
+          "TB_PEDIDO": "inalterado — nenhum registro criado",
+          "TB_ITEM_PEDIDO": "inalterado — nenhum registro criado",
+          "TB_ESTOQUE": "produto 100 permanece com quantidade_disponivel = 1 e quantidade_reservada inalterada"
+        }
+      },
+      "verificationSteps": [
+        "Ajustar TB_ESTOQUE para deixar o produto 100 com 1 unidade disponível",
+        "Executar o POST /pedidos solicitando 5 unidades do produto 100",
+        "Conferir status 422 e o conteúdo de itensIndisponiveis",
+        "Confirmar em TB_ESTOQUE que não houve reserva parcial"
+      ],
+      "relatedRules": ["RN-ESTOQUE-001"]
+    }
+  ],
+
+  "validation": {
+    "businessCriteria": [
+      "Pedido criado apenas se todos os itens têm estoque",
+      "Status inicial sempre PENDENTE_PAGAMENTO",
+      "Data de expiração = data_criacao + 30 minutos"
+    ],
+    "technicalCriteria": [
+      "HTTP 201 Created com Location header",
+      "HTTP 422 para estoque insuficiente",
+      "Transação atômica (rollback se falha)"
+    ]
+  }
+}

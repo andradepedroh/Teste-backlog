@@ -1,0 +1,52 @@
+# Harness Elo v2 — verificação da zona imutável no PR (Decisão 67).
+#
+# PARA O PROJETO, não para o template. Ligue uma vez no repositório onde o harness mora (o repositório
+# de docs, em multi-repo):
+#
+#   1. Pipelines › New pipeline › Azure Repos Git › <repositório> › Existing YAML file, apontando para
+#      este arquivo (.claude/templates/pipeline-verificar-zona.yml). Não copie: a atualização do harness
+#      atualiza este YAML junto.
+#   2. Repos › Branches › main › Branch policies › Build validation › + o pipeline criado, como
+#      obrigatório.
+#
+# O que ele faz: confere cada arquivo da zona imutável contra o `harness-zona.lock.json` que veio no
+# pacote do harness. Falha se algo foi editado, apagado ou criado na zona, se a versão do manifesto
+# não bate com a do `harness.json`, se o manifesto mudou no PR sem a versão mudar, ou se o
+# `.harness-template` foi versionado. Agente novo em `.claude/agents/` e skill nova em
+# `.claude/skills/<nome>/` (nome que o pacote não tem) são do projeto: saem como aviso. Uma atualização
+# do harness passa, e o log diz de qual versão para qual — o revisor confere que veio do pacote.
+
+trigger:
+  branches:
+    include: [main]
+
+pool:
+  vmImage: windows-latest
+
+steps:
+  - checkout: self
+    fetchDepth: 0        # o --base precisa da branch de destino do PR
+    clean: true
+
+  - task: UseNode@1
+    inputs:
+      version: 24.x
+
+  - pwsh: |
+      # Sempre com base quando há base: sem ela o manifesto regenerado junto com a zona engana a
+      # verificação. No PR a base é a branch de destino; no push na main é o commit anterior
+      # (HEAD~1 — num merge, o primeiro pai, que é a main de antes). Só o primeiro commit do
+      # repositório roda sem base, e então vale a verificação contra o próprio manifesto.
+      $alvo = "$env:SYSTEM_PULLREQUEST_TARGETBRANCH" -replace '^refs/heads/', ''
+      $argumentos = @()
+      if ($alvo) {
+        $argumentos += @('--base', "origin/$alvo")
+      } else {
+        git rev-parse --verify --quiet 'HEAD~1^{commit}' | Out-Null
+        if ($LASTEXITCODE -eq 0) { $argumentos += @('--base', 'HEAD~1') }
+        else { Write-Host 'Primeiro commit do repositório: verificando sem --base.' }
+        $global:LASTEXITCODE = 0
+      }
+      node .claude/ferramentas/verificar-zona.mjs @argumentos
+      if ($LASTEXITCODE -ne 0) { throw 'A zona imutável do harness diverge do pacote — ver acima.' }
+    displayName: Zona imutável do harness

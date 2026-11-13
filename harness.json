@@ -1,0 +1,27 @@
+{
+  "nome": "harness-elo-v2",
+  "versao": "2.6.0",
+  "kitVersao": "eng-proc-spec — base upstream 2026-09-29 (reconstruída do zip recebido, Decisão 64), mantido neste harness desde 2026-09-09 (Decisão 30)",
+  "runtime": {
+    "rotulo": "Claude Code",
+    "cli": "claude",
+    "semCli": "Se você usa o app de desktop, isto é esperado e não é problema."
+  },
+  "zonaImutavel": [
+    "CLAUDE.md",
+    "harness-zona.lock.json",
+    ".claude/hooks/",
+    ".claude/ferramentas/",
+    ".claude/settings.json",
+    ".claude/templates/",
+    ".claude/rules/harness/",
+    ".claude/agents/",
+    ".claude/skills/"
+  ],
+  "zonaMutavel": [
+    "inputs/",
+    "outputs/",
+    ".claude/rules/",
+    ".cursor/rules/"
+  ]
+}

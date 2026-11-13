@@ -1,0 +1,75 @@
+---
+description: "{{INTEGRATIONS_DESCRIPTION}}"
+globs: "**/client/**,**/integration/**,**/adapter/**,**/external/**"
+alwaysApply: false
+---
+
+# Integrações Externas — {{PROJECT_NAME}}
+
+> Ver **architecture.mdc** — adapters ficam em `{{ADAPTER_LAYER_PATH}}`.
+> Ver **security.mdc** Camada E para SSRF e upload.
+
+---
+
+## Sistemas Integrados
+
+| Sistema | URL Base | Autenticação | Credencial (env var) | Módulo/Adapter responsável |
+|---------|----------|-------------|---------------------|---------------------------|
+{{INTEGRATIONS_TABLE}}
+
+---
+
+## Anti-Corruption Layer
+
+**MUST:** Toda integração encapsulada em adapter dedicado em `{{ADAPTER_LAYER_PATH}}` — nunca chamada HTTP direta de use case ou controller.
+
+**MUST:** Adapter traduz modelo externo → modelo interno. Domínio e use case nunca importam DTO externo.
+
+```{{LANGUAGE}}
+// ✅ MUST — adapter isola o modelo externo
+{{ACL_CORRECT_EXAMPLE}}
+```
+
+```{{LANGUAGE}}
+// ❌ MUST NOT — HTTP direto no use case
+{{ACL_WRONG_EXAMPLE}}
+```
+
+---
+
+## Resiliência
+
+**MUST:** Circuit breaker em toda integração externa — implementação: `{{CIRCUIT_BREAKER_LIB}}`
+
+**MUST:** Timeout explícito configurado por integração — sem timeout infinito.
+
+**MUST:** Retry com backoff exponencial para erros `5xx` e timeouts — **nunca** para erros `4xx`.
+
+```{{CONFIG_FORMAT}}
+{{RESILIENCE_CONFIG}}
+```
+
+---
+
+## PII em Integrações
+
+{{#if INTEGRATIONS_WITH_PII}}
+As seguintes integrações retornam dados pessoais: `{{PII_INTEGRATIONS}}`
+
+**MUST:** Mascarar antes de logar: `{{PII_MASKING_EXAMPLE}}`
+
+**MUST NOT:** Logar response body completo de integrações com PII.
+{{else}}
+Nenhuma integração mapeada retorna PII. Revisar se houver mudança de escopo.
+{{/if}}
+
+---
+
+## Anti-patterns
+
+- Chamada HTTP de API externa no use case ou controller — viola Anti-Corruption Layer
+- Sem circuit breaker — cascading failure quando API externa cai
+- Timeout não configurado — threads presas indefinidamente
+- DTO externo vazando para o domínio ou UI
+- Credencial de API logada em debug
+- Retry em 4xx — jamais vai resolver

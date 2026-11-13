@@ -1,0 +1,91 @@
+---
+description: "{{OBSERVABILITY_DESCRIPTION}}"
+globs: "**/main/**,**/application*.yml,**/logback*,**/logging*"
+alwaysApply: false
+---
+
+# Observabilidade — {{PROJECT_NAME}}
+
+> Apps empurram toda telemetria via OTLP — não expõem endpoint de scraping direto.
+> Ver **security.mdc** Camada C para PII em logs.
+
+---
+
+## Stack
+
+| Sinal | Coleta | Destino |
+|-------|--------|---------|
+| Traces | OTEL SDK (auto-instrumentation) | {{TRACES_DESTINATION}} |
+| Métricas | OTEL SDK + {{METRICS_LIBRARY}} | {{METRICS_DESTINATION}} |
+| Logs | {{LOG_LIBRARY}} JSON → OTLP | {{LOGS_DESTINATION}} |
+
+---
+
+## Variáveis de Ambiente
+
+```bash
+# .env.example — obrigatórias em todo ambiente
+OTEL_SERVICE_NAME={{SERVICE_NAME_PLACEHOLDER}}
+OTEL_EXPORTER_OTLP_ENDPOINT={{OTLP_ENDPOINT}}
+OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+OTEL_METRICS_EXPORTER=otlp
+OTEL_TRACES_EXPORTER=otlp
+OTEL_LOGS_EXPORTER=otlp
+OTEL_ENVIRONMENT=local  # local | dev | homolog | prod
+```
+
+---
+
+## Logs Estruturados
+
+**MUST:** Formato JSON com `traceId` e `spanId` injetados automaticamente.
+
+**MUST:** Nível em produção: `{{PROD_LOG_LEVEL}}` — nunca `DEBUG` em prod.
+
+**MUST NOT:** PII em logs (CPF, e-mail, senha, token) — ver **security.mdc** Camada C.
+
+```json
+// ✅ MUST — log correto
+{{LOG_CORRECT_EXAMPLE}}
+```
+
+```
+// ❌ MUST NOT — sem trace-id e com PII
+{{LOG_WRONG_EXAMPLE}}
+```
+
+---
+
+## Health Checks
+
+**MUST:** `{{HEALTH_ENDPOINT}}` exposto e configurado no Dockerfile.
+
+**MUST:** Liveness e readiness separados — dependências críticas ({{CRITICAL_DEPS}}) refletidas no readiness.
+
+```dockerfile
+{{HEALTHCHECK_DOCKERFILE}}
+```
+
+---
+
+{{#if BUSINESS_METRICS}}
+## Métricas de Negócio
+
+| Métrica | Nome | Tags |
+|---------|------|------|
+{{BUSINESS_METRICS_TABLE}}
+
+```{{LANGUAGE}}
+{{BUSINESS_METRICS_EXAMPLE}}
+```
+{{/if}}
+
+---
+
+## Anti-patterns
+
+- `{{PRINT_STATEMENT}}` em código de produção — usar logger estruturado
+- Logs sem `traceId` — impossibilita correlação com traces
+- `DEBUG` ativo em produção — volume incontrolável e risco de vazar dados sensíveis
+- PII em logs em texto claro — ver **security.mdc** Camada C
+- Health check que faz operação pesada de banco — deve ser leve e rápido

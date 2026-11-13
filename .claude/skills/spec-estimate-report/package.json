@@ -1,0 +1,17 @@
+{
+  "name": "spec-estimate-report",
+  "version": "1.3.0",
+  "private": true,
+  "type": "module",
+  "description": "Relatório HTML consolidado (negócio → estimativa) do pipeline spec-*. A IA produz report-data.json; o cli.mjs injeta no shell congelado.",
+  "scripts": {
+    "report": "node cli.mjs",
+    "report:input": "node cli.mjs --input",
+    "report:stdout": "node cli.mjs --stdout",
+    "report:example": "node cli.mjs --input templates/report-data.example.json --output /tmp/spec-estimate-report.example.html",
+    "test": "node --test tests/regression.test.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

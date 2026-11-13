@@ -1,0 +1,114 @@
+---
+description: "{{CONVENTIONS_DESCRIPTION}}"
+alwaysApply: true
+---
+
+# Convenções de Código — {{PROJECT_NAME}}
+
+> Fonte canônica de nomenclatura e formatação. Em conflito com outra rule → **esta prevalece para identificadores e idioma**.
+
+---
+
+## Idioma
+
+**Código (identificadores, variáveis, funções, classes, arquivos, comentários, logs):** {{CODE_LANGUAGE}}
+
+**Interface com o usuário (labels, mensagens visíveis, validações, toasts, aria-labels):** {{UI_LANGUAGE}}
+
+**MUST NOT:** {{CODE_LANGUAGE_VIOLATION_EXAMPLE}}
+
+---
+
+## Nomenclatura
+
+| Artefato | Padrão | Exemplo |
+|----------|--------|---------|
+{{NAMING_TABLE}}
+
+---
+
+## Formatação
+
+**Ferramenta:** {{FORMATTER_TOOL}}
+
+**MUST:** `{{FORMATTER_COMMAND}}` antes de commitar — CI bloqueia em formato divergente.
+
+{{FORMATTER_CONFIG}}
+
+---
+
+## Injeção de Dependência e Módulos
+
+{{DI_RULES}}
+
+---
+
+{{#if SOLID}}
+## SOLID — Regras Obrigatórias
+
+**SRP — Single Responsibility:** cada classe/módulo tem uma única razão para mudar.
+**MUST NOT:** service com > {{MAX_SERVICE_LINES}} linhas que faz múltiplas coisas — decompor.
+
+**OCP — Open/Closed:** aberto para extensão, fechado para modificação.
+**MUST:** usar interfaces/abstrações em vez de `if/else` para variar comportamento.
+
+**LSP — Liskov Substitution:** subtipos são substituíveis pelos tipos base sem quebrar o comportamento.
+**MUST NOT:** override de método que muda a semântica do contrato da interface.
+
+**ISP — Interface Segregation:** interfaces pequenas e específicas, não interfaces gordas.
+**MUST NOT:** interface com métodos que alguns implementadores deixam vazios ou lançam `UnsupportedOperationException`.
+
+**DIP — Dependency Inversion:** depender de abstrações, nunca de implementações concretas.
+**MUST:** classes de alto nível recebem dependências via construtor como interfaces — não instanciam implementações.
+
+```{{LANGUAGE}}
+{{SOLID_DIP_EXAMPLE}}
+```
+{{/if}}
+
+{{#if CLEAN_CODE}}
+## Clean Code — Regras Obrigatórias
+
+**MUST:** nomes expressivos — o nome revela intenção sem precisar de comentário.
+**MUST NOT:** variáveis `temp`, `aux`, `data`, `obj`, `result` sem contexto.
+
+**MUST:** funções fazem uma coisa — se precisa de "e" para descrever o que faz, decompor.
+**MUST NOT:** função com > {{MAX_FUNCTION_LINES}} linhas sem justificativa.
+
+**MUST NOT:** comentário que explica *o que* o código faz — código deve ser auto-explicativo.
+**MUST:** comentário apenas para explicar *por que* uma decisão não-óbvia foi tomada.
+
+**MUST NOT:** código comentado sem issue linkado — usar `// TODO [PROJ-NNN]: ...` ou deletar.
+
+**MUST NOT:** números mágicos no código — extrair para constante nomeada.
+```{{LANGUAGE}}
+{{CLEAN_CODE_MAGIC_NUMBER_EXAMPLE}}
+```
+{{/if}}
+
+---
+
+## Naming de Testes
+
+**MUST:** nome descreve: **contexto** + **condição** + **resultado esperado**.
+
+```{{LANGUAGE}}
+{{TEST_NAMING_CORRECT}}
+```
+
+```{{LANGUAGE}}
+// ❌ MUST NOT
+{{TEST_NAMING_WRONG}}
+```
+
+---
+
+## Checklist de PR
+
+{{PR_CHECKLIST}}
+
+---
+
+## Anti-patterns
+
+{{ANTIPATTERNS_LIST}}

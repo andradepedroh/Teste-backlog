@@ -1,0 +1,67 @@
+{
+  "_comment": "Mapeamento de referência de níveis de backlog para Work Item Types por process template ADO. IMPORTANTE: o campo \"wit\" abaixo é só documentação — o código NÃO lê metadata.azureDevOps.workItemTypes.<nível>.wit. O nome real do Work Item Type usado em cada criação vem EXCLUSIVAMENTE das variáveis de ambiente AZURE_DEVOPS_WIT_EPIC/FEATURE/USER_STORY/TASK (ver seção environmentOverrides). O único subcampo de workItemTypes.<nível> que o código lê é \"publish\" (nível feature) para decidir se publica ou não a Feature.",
+  "processTemplates": {
+    "Agile": {
+      "description": "Process template Agile da Microsoft — mais comum",
+      "workItemTypes": {
+        "epic":    { "wit": "Epic",       "publish": false, "notes": "Geralmente pré-criado manualmente" },
+        "feature": { "wit": "Feature",    "publish": true  },
+        "story":   { "wit": "User Story", "publish": true  },
+        "task":    { "wit": "Task",       "publish": true  }
+      },
+      "hierarchyAllowed": [
+        "Epic → Feature",
+        "Feature → User Story",
+        "User Story → Task",
+        "Epic → User Story (sem Feature)"
+      ]
+    },
+    "Scrum": {
+      "description": "Process template Scrum da Microsoft",
+      "workItemTypes": {
+        "epic":    { "wit": "Epic",                   "publish": false },
+        "feature": { "wit": "Feature",                "publish": true  },
+        "story":   { "wit": "Product Backlog Item",   "publish": true  },
+        "task":    { "wit": "Task",                   "publish": true  }
+      },
+      "hierarchyAllowed": [
+        "Epic → Feature",
+        "Feature → Product Backlog Item",
+        "Product Backlog Item → Task"
+      ]
+    },
+    "CMMI": {
+      "description": "Capability Maturity Model Integration process template",
+      "workItemTypes": {
+        "epic":    { "wit": "Epic",         "publish": false },
+        "feature": { "wit": "Feature",      "publish": true  },
+        "story":   { "wit": "Requirement",  "publish": true  },
+        "task":    { "wit": "Task",         "publish": true  }
+      },
+      "hierarchyAllowed": [
+        "Epic → Feature",
+        "Feature → Requirement",
+        "Requirement → Task"
+      ]
+    },
+    "Custom": {
+      "description": "Processo customizado — preencher com os WITs reais do seu processo",
+      "workItemTypes": {
+        "epic":    { "wit": "SEU-WIT-EPIC",    "publish": false },
+        "feature": { "wit": "SEU-WIT-FEATURE", "publish": true  },
+        "story":   { "wit": "SEU-WIT-STORY",   "publish": true  },
+        "task":    { "wit": "SEU-WIT-TASK",    "publish": true  }
+      },
+      "hierarchyAllowed": ["Verificar nas configurações do processo ADO"]
+    }
+  },
+  "environmentOverrides": {
+    "description": "Única fonte real do nome do Work Item Type usado nas criações — não há override via metadata.azureDevOps.workItemTypes.<nível>.wit (esse campo é ignorado pelo código; use-o só como anotação/referência ao preencher o .env).",
+    "variables": {
+      "AZURE_DEVOPS_WIT_EPIC": "Epic",
+      "AZURE_DEVOPS_WIT_FEATURE": "Feature",
+      "AZURE_DEVOPS_WIT_USER_STORY": "User Story",
+      "AZURE_DEVOPS_WIT_TASK": "Task"
+    }
+  }
+}

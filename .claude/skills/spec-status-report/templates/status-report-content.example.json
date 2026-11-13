@@ -1,0 +1,228 @@
+{
+  "_leia": [
+    "Camada EDITORIAL do relatório: o que nenhum coletor pode produzir — o veredito, a",
+    "leitura do consultor, a pauta de decisões do cliente e o texto de cada bloco de",
+    "pergunta. Grave em outputs/spec/status/status-report-content.json.",
+    "",
+    "TUDO é opcional. Cada chave ausente suprime o bloco correspondente; nenhuma delas",
+    "deixa campo em branco no HTML. Comece pelo 'verdict' e pelas 'dimensions' — são o",
+    "que separa um relatório de status de uma entrega de fechamento de escopo.",
+    "",
+    "Chaves em inglês ou em português são aceitas (verdict/veredito, decisions/pauta…)."
+  ],
+
+  "version": "Versão 1.0",
+  "confidentialLabel": "Confidencial — uso restrito às partes",
+
+  "cover": {
+    "eyebrow": "Relatório de conclusão de escopo",
+    "sub": "Implementação, testes e auditoria concluídos — pacote em condição de entrega.",
+    "logos": [
+      { "name": "Executora", "role": "fornecedor" },
+      { "name": "Contratante", "role": "cliente" }
+    ]
+  },
+
+  "layers": [
+    {
+      "time": "5 minutos",
+      "title": "A situação e as decisões",
+      "body": "Esta aba, do topo até a pauta. Responde onde o projeto está, o que foi entregue em números e o que depende de decisão do cliente.",
+      "links": [
+        { "href": "#visao/visao-veredito", "label": "Situação por dimensão" },
+        { "href": "#visao/visao-pauta", "label": "Pauta de decisões" }
+      ]
+    },
+    {
+      "time": "30 minutos",
+      "title": "O que foi entregue e o que falta decidir",
+      "body": "Some as abas **Negócio entregue** e **Riscos e decisões**.",
+      "links": [{ "href": "#negocio/negocio-aceite", "label": "Critérios de aceite" }]
+    },
+    {
+      "time": "Dossiê completo",
+      "title": "Evidência técnica e anexos",
+      "body": "Todas as abas com as seções dobráveis abertas. Use «Preparar dossiê completo para PDF» no topo.",
+      "links": [{ "href": "#anexos/anexos-indice", "label": "Anexos" }]
+    }
+  ],
+
+  "verdict": {
+    "level": "warn",
+    "title": "Ação necessária",
+    "paragraphs": [
+      "Das **46 operações**, **34 têm código confirmado**, 5 têm implementação parcial e 7 não tiveram artefato localizado pela varredura.",
+      "**3 operações não têm evidência de código nem de teste.** Estão na [pauta de fechamento](#riscos/riscos-pauta) com plano definido."
+    ]
+  },
+
+  "dimensions": [
+    {
+      "name": "Escopo entregue",
+      "level": "warn",
+      "verdict": "3 sem evidência",
+      "why": "34 das 46 operações têm código confirmado e 26 reúnem código e teste de ponta a ponta.",
+      "owner": "Equipe executora",
+      "evidence": "Ver critérios de aceite × situação",
+      "evidenceHref": "#negocio/negocio-aceite"
+    },
+    {
+      "name": "Qualidade do produto",
+      "level": "warn",
+      "verdict": "Atenção",
+      "why": "Os testes unitários passam integralmente. Cobertura de linhas em 62,4%, contra a referência de 80%.",
+      "ownerLabel": "Depende de",
+      "owner": "Equipe executora, com decisão do Dono do Produto",
+      "evidence": "Ver falhas por causa-raiz",
+      "evidenceHref": "#testes/testes-causas"
+    },
+    {
+      "name": "Segurança",
+      "level": "ok",
+      "verdict": "Liberado para homologação",
+      "why": "A re-auditoria da Fase 11 decidiu «APROVADO COM PLANO DE AÇÃO», com índice de saúde ~94%.",
+      "owner": "Equipe executora",
+      "evidence": "Ver placar da auditoria",
+      "evidenceHref": "#tecnico/tecnico-seguranca"
+    },
+    {
+      "name": "Ambiente de validação",
+      "level": "crit",
+      "verdict": "Ação necessária",
+      "why": "34 das 40 falhas dependem do ambiente e da massa de dados.",
+      "ownerLabel": "Depende de",
+      "owner": "provisionamento pela infraestrutura do cliente",
+      "evidence": "Ver o que cada providência destrava",
+      "evidenceHref": "#riscos/riscos-pauta"
+    },
+    {
+      "name": "Fechamento contratual",
+      "level": "warn",
+      "verdict": "Pendente",
+      "why": "Backlog em 82%. 4 GAPs aguardam decisão e os termos seguem sem assinatura.",
+      "ownerLabel": "Depende de",
+      "owner": "decisões do cliente e assinatura das partes",
+      "evidence": "Ver pauta de fechamento",
+      "evidenceHref": "#riscos/riscos-pauta"
+    }
+  ],
+
+  "milestones": [
+    { "date": "2026-04-08", "label": "Abertura do épico", "meaning": "Registro do subprojeto no tracker — início formal.", "level": "info" },
+    { "date": "2026-05-31", "label": "Alteração de escopo", "meaning": "Itens de mudança formalizados.", "level": "warn" },
+    { "date": "2026-07-13", "label": "Auditoria de código", "meaning": "Primeira passagem da Fase 11.", "level": "crit" },
+    { "date": "2026-07-17", "label": "Re-auditoria — liberada", "meaning": "Verificação finding a finding; liberada para homologação.", "level": "ok" },
+    { "date": "2026-08-05", "label": "Emissão deste relatório", "meaning": "Data de corte dos dados deste documento.", "level": "info" }
+  ],
+
+  "goals": [
+    { "key": "cobertura", "target": "80% de linhas", "source": "rule de teste do projeto" },
+    { "key": "aprovacao", "target": "100%", "source": "patamar de liberação da Fase 11" }
+  ],
+
+  "decisions": [
+    {
+      "title": "Provisionar o usuário técnico de leitura",
+      "unlocks": "É a causa isolada de **21 das 40 falhas**.",
+      "owner": "Infraestrutura do cliente",
+      "level": "crit"
+    },
+    {
+      "title": "Decidir o contrato de erro do credor inexistente",
+      "unlocks": "Define se o teste muda ou se entra alteração de escopo.",
+      "owner": "Dono do Produto",
+      "options": [
+        { "label": "Código específico `NLP-CREDOR-INEXISTENTE`, como o teste espera", "recommended": true },
+        { "label": "Genérico `REGRA_NEGOCIO`, como o produto responde hoje" }
+      ],
+      "recommendation": "Recomendamos o código específico: o genérico impede o integrador de tratar o caso."
+    }
+  ],
+
+  "consultant": {
+    "paragraphs": [
+      "Parágrafo de abertura da leitura do consultor — o que os números não dizem sozinhos.",
+      "**A mensagem central** vai aqui, em uma frase que o patrocinador consiga repetir."
+    ],
+    "sections": [
+      { "title": "O que foi entregue", "hint": "recorte de negócio", "body": "- Item um\n- Item dois\n" },
+      { "title": "Decisões tomadas na condução do trabalho", "body": "| Decisão | Motivo | Alternativa descartada |\n|---|---|---|\n| … | … | … |\n" },
+      { "title": "Recomendações técnicas da equipe", "body": "- Recomendação um\n" }
+    ]
+  },
+
+  "asks": {
+    "leitura": { "q": "Quanto tempo você tem", "a": "Três caminhos de leitura, do mais curto ao mais completo. Cada um é autocontido." },
+    "kpis": { "q": "O que este projeto entregou, em números", "a": "**46 operações** governadas por **502 regras**, verificadas por **859 casos de teste**." },
+    "falhas": { "q": "O que as falhas indicam", "a": "As **40 falhas** foram rastreadas até 6 causas verificadas. **Nenhuma é defeito de código do produto.**" },
+    "pauta": { "q": "O que depende de decisão ou de providência do cliente", "a": "**7 itens.** O primeiro converte 21 das 40 falhas em aprovações sem alterar código." },
+    "negocio.aceite": { "q": "Cada operação tem o que é preciso para ser homologada", "a": "**26 das 46** reúnem código confirmado e teste de ponta a ponta." },
+    "tecnico.api": { "q": "Que superfície o integrador enxerga", "a": "**38 endpoints**, cada um declarando de onde vem o que se sabe dele." },
+    "gestao.sprints": { "q": "Qual foi o ritmo de entrega, sprint a sprint", "a": "O ritmo **mediano é de 8 itens por sprint**." }
+  },
+
+  "callouts": {
+    "kpis": [
+      {
+        "title": "De onde vem cada meta",
+        "kind": "warn",
+        "body": "As metas exibidas ao lado dos indicadores **não são contratuais** — são as referências de engenharia adotadas pelo projeto. **Pactuar as metas de qualidade é um dos pontos da pauta de fechamento.**"
+      }
+    ],
+    "negocio.aceite": [
+      {
+        "title": "Como usar esta matriz na homologação",
+        "kind": "read",
+        "body": "As linhas com código e teste E2E confirmados podem ser homologadas contra o roteiro de teste de negócio. As demais precisam de evidência complementar ou de decisão de que o critério não se aplica."
+      }
+    ]
+  },
+
+  "notes": {
+    "kpis": "Todo número desta página é rastreável a um artefato. Onde a fonte não existe, o campo aparece como ausente."
+  },
+
+  "architecture": {
+    "title": "Ecossistema, com o caminho síncrono e o assíncrono",
+    "sub": "Linha cheia = chamada síncrona; tracejada = fluxo assíncrono.",
+    "width": 940,
+    "height": 300,
+    "legend": [
+      { "label": "Caminho síncrono", "color": "#1f4e79" },
+      { "label": "Caminho assíncrono", "color": "#b07d2b" }
+    ],
+    "nodes": [
+      { "id": "integrador", "label": "Integrador", "sub": "cliente externo", "x": 20, "y": 40 },
+      { "id": "gateway", "label": "Gateway de borda", "sub": "autentica e limita", "x": 230, "y": 40 },
+      { "id": "modulo", "label": "Módulo da aplicação", "sub": "regra e orquestração", "x": 440, "y": 40 },
+      { "id": "engine", "label": "Motor legado", "sub": "documento contábil", "x": 650, "y": 40 },
+      { "id": "fila", "label": "Fila de mensagens", "sub": "lote assíncrono", "x": 440, "y": 190 },
+      { "id": "banco", "label": "Banco compartilhado", "sub": "persistência", "x": 650, "y": 190 }
+    ],
+    "edges": [
+      { "from": "integrador", "to": "gateway", "kind": "sync" },
+      { "from": "gateway", "to": "modulo", "kind": "sync" },
+      { "from": "modulo", "to": "engine", "kind": "sync" },
+      { "from": "modulo", "to": "fila", "kind": "async" },
+      { "from": "engine", "to": "banco", "kind": "sync" },
+      { "from": "fila", "to": "banco", "kind": "async" }
+    ]
+  },
+
+  "repo": {
+    "provider": "azure",
+    "base": "https://dev.azure.com",
+    "org": "minha-org",
+    "project": "MeuProjeto",
+    "branch": "main"
+  },
+
+  "revisions": [
+    { "version": "1.0", "date": "05/08/2026", "author": "Equipe executora", "change": "Emissão inicial — fechamento de escopo." }
+  ],
+
+  "signatures": [
+    { "who": "Nome do responsável", "role": "Pelo fornecedor" },
+    { "who": "Nome do responsável", "role": "Pelo cliente" }
+  ]
+}

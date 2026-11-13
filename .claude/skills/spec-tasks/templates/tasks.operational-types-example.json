@@ -1,0 +1,1042 @@
+{
+  "_comment": "Exemplos de workItemType (EloCore SS3/SS4) — ENABLER de nivel 2 (dentro de features[]), ENABLER de nivel 3, SPIKE, TECHNICAL_DEBT e BUG (dentro de stories[]). Cada item valida contra #/definitions/Feature ou #/definitions/Story. Conteudo ilustrativo minimo — para o nivel de detalhe de auto-suficiencia exigido em producao (agentExecutionContext, apiContracts, persistenceModel, acceptanceScenarios com testData), ver tasks.example-completo.json. FRAGMENTO, nao documento completo: EPIC-001 e FEAT-PEDIDO-CRIACAO sao referenciados como pais ja existentes num tasks.json real, mas nao estao definidos aqui — por isso validate-tasks-business.mjs roda contra este arquivo isolado reporta NO_DANGLING_PARENT/LEVEL_USAGE_COHERENT (esperado; mesma natureza de tasks.transversal-story-example.json).",
+  "features": [
+    {
+      "_comment": "ENABLER de nivel 2 — filho direto do Epico, habilita trabalho comum a mais de uma Feature do mesmo Epico (EloCore SS1.5). Estruturalmente uma Feature (contem stories[] propria); semanticamente uma demanda operacional, nao uma entrega tatica homologavel por negocio.",
+      "id": "FEAT-ENABLER-002",
+      "epicId": "EPIC-001",
+      "name": "Enabler — Pipeline de deploy compartilhado para as features do modulo de Pedidos",
+      "workItemType": "ENABLER",
+      "adoWorkItemType": "Enabler",
+      "narrative": {
+        "elevatorPitch": "Estruturar um pipeline de deploy compartilhado (build, testes automatizados, publicacao) para todas as features do modulo de Pedidos, reduzindo o tempo de entrega e o risco de cada feature configurar seu proprio processo de forma inconsistente.",
+        "context": "Sem um pipeline compartilhado, cada feature do modulo de Pedidos precisaria configurar seu proprio processo de build e deploy, duplicando esforco e criando inconsistencia entre ambientes. Este enabler entrega a esteira unica (build, testes, publicacao em homologacao e producao) que as features FEAT-PEDIDO-CRIACAO e FEAT-PEDIDO-CANCELAMENTO, ambas do EPIC-001, vao reutilizar.",
+        "problem": "Sem o pipeline compartilhado, cada feature leva dias extras configurando build/deploy do zero, e divergencias entre configuracoes geram falhas so detectadas em producao.",
+        "deliveredValue": "Esteira de deploy unica, testada e documentada, que qualquer feature do Epico pode reutilizar sem retrabalho, reduzindo o tempo de entrega e o risco de configuracao divergente.",
+        "actors": [
+          "Equipe de engenharia"
+        ]
+      },
+      "businessRules": [
+        {
+          "id": "RN-ENABLER-002-01",
+          "title": "Pipeline como pre-requisito de publicacao",
+          "description": "Nenhuma feature do modulo de Pedidos pode ser publicada em producao sem passar pelo pipeline compartilhado desta demanda — builds fora da esteira nao sao aceitos como entrega valida.",
+          "sourceStoryIds": []
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "AC-ENABLER-002-01",
+          "statement": "As features FEAT-PEDIDO-CRIACAO e FEAT-PEDIDO-CANCELAMENTO publicam usando o mesmo pipeline, sem configuracao propria de build/deploy."
+        }
+      ],
+      "touchpoints": [
+        "Pipeline de CI/CD",
+        "Ambiente de homologacao",
+        "Ambiente de producao"
+      ]
+    }
+  ],
+  "stories": [
+    {
+      "_comment": "ENABLER de nivel 3 — serve apenas a uma Feature (nao a varias). Entra em stories[] normalmente, com featureId.",
+      "id": "STORY-ENABLER-003",
+      "featureId": "FEAT-PEDIDO-CRIACAO",
+      "name": "Enabler — Estruturar modelo de dados de Pedido",
+      "priority": "HIGH",
+      "workItemType": "ENABLER",
+      "adoWorkItemType": "Enabler",
+      "narrative": {
+        "elevatorPitch": "Modelar e criar as tabelas de Pedido e ItemPedido, com os indices e constraints necessarios, para que a feature de criacao de pedido tenha uma base de dados solida antes da implementacao das regras de negocio.",
+        "context": "A feature de criacao de pedido depende de uma estrutura de dados que ainda nao existe. Este enabler cria as tabelas TB_PEDIDO e TB_ITEM_PEDIDO, os relacionamentos entre elas e os indices de consulta por cliente e por status, servindo apenas a esta feature.",
+        "problem": "Sem o modelo de dados estruturado, a implementacao da feature de criacao de pedido nao tem onde persistir a informacao, bloqueando todo o trabalho de negocio.",
+        "deliveredValue": "Base de dados pronta (tabelas, relacionamentos, indices) sobre a qual a feature de criacao de pedido pode implementar as regras de negocio sem retrabalho de modelagem.",
+        "actors": [
+          "Equipe de engenharia"
+        ]
+      },
+      "businessRules": [
+        {
+          "id": "RN-ENABLER-003-01",
+          "title": "Estrutura de dados como pre-requisito",
+          "description": "Nenhuma task de implementacao das regras de criacao de pedido pode iniciar antes de TB_PEDIDO e TB_ITEM_PEDIDO estarem criadas e migradas no ambiente de desenvolvimento.",
+          "sourceTaskIds": []
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "AC-ENABLER-003-01",
+          "statement": "TB_PEDIDO e TB_ITEM_PEDIDO existem no ambiente de desenvolvimento com os relacionamentos e indices definidos."
+        }
+      ],
+      "deliveryScope": [
+        {
+          "taskId": "TASK-ENABLER-003-01",
+          "title": "Criar tabelas TB_PEDIDO e TB_ITEM_PEDIDO",
+          "businessOutcome": "Estrutura de dados disponivel para a feature de criacao de pedido."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "TASK-ENABLER-003-01",
+          "storyId": "STORY-ENABLER-003",
+          "type": "backend",
+          "title": "Criar tabelas TB_PEDIDO e TB_ITEM_PEDIDO com indices e constraints",
+          "description": "Criar via migration as tabelas TB_PEDIDO e TB_ITEM_PEDIDO com os relacionamentos, indices e constraints necessarios para a feature de criacao de pedido.",
+          "agentExecutionContext": {
+            "selfContainedSummary": "Criar, via migration versionada, a estrutura de persistencia que a feature de criacao de pedido vai consumir. TB_PEDIDO recebe id (PK por sequence), cliente_id (FK para TB_CLIENTE), status (dominio PENDENTE_PAGAMENTO, RESERVADO, PAGO, CANCELADO; default PENDENTE_PAGAMENTO) e criado_em (timestamp de criacao). TB_ITEM_PEDIDO recebe id (PK por sequence), pedido_id (FK para TB_PEDIDO.id com onDelete=CASCADE), produto_id (FK para TB_PRODUTO.id sem cascade), quantidade (inteiro, check quantidade > 0) e preco_unitario (DECIMAL(10,2)). Alem das tabelas, a migration cria o indice composto (cliente_id, status) em TB_PEDIDO, que existe para suportar a listagem de pedidos por cliente e status sem full scan. Pre-condicao: TB_CLIENTE e TB_PRODUTO ja existem no schema. Pos-condicao: as duas tabelas, as duas FKs, o indice composto e a check constraint estao aplicados e verificados por insercao de teste. Este enabler NAO implementa nenhuma regra de negocio de pedido — validacao de estoque, calculo de total e reserva pertencem as tasks da story de criacao de pedido. A entrega aqui e exclusivamente estrutural, e e o que desbloqueia aquelas tasks.",
+            "minimumOutputToDeliver": [
+              "Migration criando TB_PEDIDO e TB_ITEM_PEDIDO",
+              "Indice composto (cliente_id, status) em TB_PEDIDO",
+              "FK TB_ITEM_PEDIDO.pedido_id -> TB_PEDIDO.id com onDelete=CASCADE"
+            ]
+          },
+          "implementationGuidance": {
+            "architecturalDecisions": [
+              "Chave primaria de TB_PEDIDO e TB_ITEM_PEDIDO como SEQUENCE/UUID, conforme padrao de identificadores do projeto.",
+              "FK TB_ITEM_PEDIDO.pedido_id -> TB_PEDIDO.id com onDelete=CASCADE, para que a exclusao logica de um pedido remova seus itens.",
+              "Indice composto (cliente_id, status) em TB_PEDIDO para suportar a listagem de pedidos por cliente e status sem full scan."
+            ],
+            "dataFlow": [
+              "1. Criar arquivo de migration versionado no diretorio de migrations do projeto.",
+              "2. Definir TB_PEDIDO com colunas id, cliente_id, status, criado_em.",
+              "3. Definir TB_ITEM_PEDIDO com colunas id, pedido_id, produto_id, quantidade, preco_unitario.",
+              "4. Declarar FK TB_ITEM_PEDIDO.pedido_id -> TB_PEDIDO.id com onDelete=CASCADE.",
+              "5. Declarar FK TB_ITEM_PEDIDO.produto_id -> TB_PRODUTO.id (sem cascade).",
+              "6. Criar indice composto (cliente_id, status) em TB_PEDIDO.",
+              "7. Criar constraint de quantidade > 0 em TB_ITEM_PEDIDO.",
+              "8. Rodar a migration no ambiente de desenvolvimento.",
+              "9. Validar os relacionamentos com uma insercao de teste (pedido + 1 item).",
+              "10. Documentar a migration no changelog do modulo de Pedidos."
+            ],
+            "errorHandling": {
+              "MIGRATION_JA_APLICADA": {
+                "scenario": "A migration ja foi executada anteriormente no ambiente.",
+                "action": "A ferramenta de migration deve pular a execucao (idempotencia via controle de versao de schema).",
+                "userImpact": "Nenhum — nao ha usuario final envolvido nesta etapa de infraestrutura."
+              },
+              "FK_VIOLADA_EM_TESTE": {
+                "scenario": "Insercao de teste referencia produto_id inexistente em TB_PRODUTO.",
+                "action": "A constraint de FK rejeita a insercao; corrigir o dado de teste para um produto existente.",
+                "userImpact": "Nenhum — validacao de desenvolvimento antes do merge."
+              },
+              "QUANTIDADE_INVALIDA": {
+                "scenario": "Insercao de teste tenta gravar quantidade <= 0 em TB_ITEM_PEDIDO.",
+                "action": "A constraint de check rejeita a insercao no nivel de banco.",
+                "userImpact": "Garante integridade de dados para as features que dependem desta estrutura."
+              }
+            },
+            "observability": {
+              "structuredLogging": [
+                "Log de execucao de migration (INFO): nome do arquivo, timestamp, resultado.",
+                "Log de falha de migration (ERROR): nome do arquivo, mensagem de erro do banco.",
+                "Log de rollback de migration (WARN), se aplicavel."
+              ],
+              "metrics": [
+                "Contagem de migrations aplicadas com sucesso no pipeline de CI.",
+                "Duracao da execucao da migration.",
+                "Contagem de falhas de migration por ambiente."
+              ],
+              "tracing": []
+            },
+            "testingStrategy": {
+              "unitTests": [],
+              "integrationTests": [
+                "Migration aplica sem erro em banco limpo.",
+                "Insercao de pedido + item respeita as FKs e constraints criadas.",
+                "Exclusao de um pedido remove seus itens via cascade."
+              ]
+            }
+          },
+          "validation": {
+            "technicalCriteria": [
+              "TB_PEDIDO e TB_ITEM_PEDIDO existem apos a migration.",
+              "FK e indice composto criados conforme especificado."
+            ]
+          },
+          "persistenceModel": {
+            "entities": [
+              {
+                "table": "TB_PEDIDO",
+                "purpose": "Tabela de pedidos criada por este enabler.",
+                "boundedContext": "Gestao de Pedidos",
+                "operationType": "NEW",
+                "identifierStrategy": "SEQUENCE (SEQ_PEDIDO)",
+                "primaryKey": "id",
+                "columns": "id BIGINT PK NOT NULL [NEW] - PK gerada por sequence. | cliente_id BIGINT NOT NULL [NEW] - FK para TB_CLIENTE.id. | status VARCHAR(40) NOT NULL [NEW] default=PENDENTE_PAGAMENTO dominio=PENDENTE_PAGAMENTO,RESERVADO,PAGO,CANCELADO - Status do pedido. | criado_em TIMESTAMP NOT NULL [NEW] default=CURRENT_TIMESTAMP - Momento da criacao do pedido.",
+                "relationships": "MANY_TO_ONE -> TB_CLIENTE (cliente_id -> id) onDelete=RESTRICT - Cada pedido pertence a um cliente",
+                "indexes": "IDX_PEDIDO_CLIENTE_STATUS BTREE(cliente_id, status) - Listar pedidos por cliente e status sem full scan",
+                "dataModelRef": "data-model.json#/tableName/TB_PEDIDO"
+              },
+              {
+                "table": "TB_ITEM_PEDIDO",
+                "purpose": "Itens do pedido, criada por este enabler.",
+                "boundedContext": "Gestao de Pedidos",
+                "operationType": "NEW",
+                "identifierStrategy": "SEQUENCE (SEQ_ITEM_PEDIDO)",
+                "primaryKey": "id",
+                "columns": "id BIGINT PK NOT NULL [NEW] - PK gerada por sequence. | pedido_id BIGINT NOT NULL [NEW] - FK para TB_PEDIDO.id, onDelete=CASCADE. | produto_id BIGINT NOT NULL [NEW] - FK para TB_PRODUTO.id, sem cascade. | quantidade INTEGER NOT NULL [NEW] check=quantidade>0 - Quantidade pedida do produto. | preco_unitario DECIMAL(10,2) NOT NULL [NEW] - Preco unitario congelado no momento do pedido.",
+                "relationships": "MANY_TO_ONE -> TB_PEDIDO (pedido_id -> id) onDelete=CASCADE - Excluir o pedido remove os itens | MANY_TO_ONE -> TB_PRODUTO (produto_id -> id) onDelete=RESTRICT - Produto nao pode ser removido com itens vinculados",
+                "checkConstraints": "CK_ITEM_PEDIDO_QTD: quantidade > 0",
+                "dataModelRef": "data-model.json#/tableName/TB_ITEM_PEDIDO"
+              }
+            ]
+          },
+          "acceptanceScenarios": [
+            {
+              "id": "AS-TASK-ENABLER-003-01-01",
+              "category": "HAPPY_PATH",
+              "title": "Migration aplica em banco limpo e cria as duas tabelas com FK, indice e check",
+              "given": "Schema com TB_CLIENTE e TB_PRODUTO existentes e sem TB_PEDIDO nem TB_ITEM_PEDIDO.",
+              "when": "A migration V12__create_tb_pedido.sql e executada pelo runner de migrations.",
+              "then": [
+                "TB_PEDIDO existe com as 4 colunas declaradas e PK em id",
+                "TB_ITEM_PEDIDO existe com as 5 colunas declaradas e PK em id",
+                "IDX_PEDIDO_CLIENTE_STATUS existe sobre (cliente_id, status)",
+                "CK_ITEM_PEDIDO_QTD existe sobre quantidade"
+              ],
+              "testData": {
+                "request": {
+                  "method": "MIGRATE",
+                  "path": "db/migrations/V12__create_tb_pedido.sql",
+                  "headers": {
+                    "X-Correlation-Id": "mig-enabler-003-01"
+                  },
+                  "body": "CREATE TABLE TB_PEDIDO (...); CREATE TABLE TB_ITEM_PEDIDO (...); CREATE INDEX IDX_PEDIDO_CLIENTE_STATUS ...;"
+                },
+                "expectedResponse": {
+                  "statusCode": 0,
+                  "body": {
+                    "migration": "V12__create_tb_pedido",
+                    "status": "APPLIED",
+                    "durationMs": 180
+                  }
+                },
+                "expectedDatabaseState": {
+                  "TB_PEDIDO": "tabela existente, 0 linhas, PK=id, indice IDX_PEDIDO_CLIENTE_STATUS presente",
+                  "TB_ITEM_PEDIDO": "tabela existente, 0 linhas, PK=id, FK pedido_id->TB_PEDIDO.id ON DELETE CASCADE, check quantidade>0",
+                  "SCHEMA_VERSION": "linha V12 registrada como aplicada"
+                }
+              },
+              "verificationSteps": [
+                "Rodar a migration num banco limpo e conferir exit code 0",
+                "Consultar o catalogo do banco e conferir colunas e tipos das duas tabelas",
+                "Conferir a existencia do indice IDX_PEDIDO_CLIENTE_STATUS e da check CK_ITEM_PEDIDO_QTD"
+              ],
+              "relatedRules": [
+                "RN-ENABLER-DADOS-001"
+              ]
+            },
+            {
+              "id": "AS-TASK-ENABLER-003-01-02",
+              "category": "BUSINESS_RULE_VIOLATION",
+              "title": "Check constraint rejeita item com quantidade zero",
+              "given": "Migration aplicada e um pedido de id 1 existente em TB_PEDIDO.",
+              "when": "Uma insercao direta tenta gravar em TB_ITEM_PEDIDO um item com quantidade = 0.",
+              "then": [
+                "O banco rejeita a insercao pela constraint CK_ITEM_PEDIDO_QTD",
+                "Nenhuma linha e gravada em TB_ITEM_PEDIDO"
+              ],
+              "testData": {
+                "request": {
+                  "method": "SQL",
+                  "path": "TB_ITEM_PEDIDO",
+                  "headers": {
+                    "X-Correlation-Id": "mig-enabler-003-02"
+                  },
+                  "body": "INSERT INTO TB_ITEM_PEDIDO (pedido_id, produto_id, quantidade, preco_unitario) VALUES (1, 10, 0, 25.00);"
+                },
+                "expectedResponse": {
+                  "statusCode": 23514,
+                  "body": {
+                    "sqlState": "23514",
+                    "constraint": "CK_ITEM_PEDIDO_QTD",
+                    "message": "new row violates check constraint"
+                  }
+                },
+                "expectedDatabaseState": {
+                  "TB_ITEM_PEDIDO": "0 linhas — insercao rejeitada pela constraint"
+                }
+              },
+              "verificationSteps": [
+                "Registrar a contagem de TB_ITEM_PEDIDO antes da tentativa",
+                "Executar o INSERT com quantidade=0 e capturar o sqlState retornado",
+                "Conferir que a contagem permanece 0 e que o sqlState e 23514"
+              ],
+              "relatedRules": [
+                "RN-ENABLER-DADOS-001"
+              ]
+            },
+            {
+              "id": "AS-TASK-ENABLER-003-01-03",
+              "category": "INVALID_INPUT",
+              "title": "FK rejeita item apontando para pedido inexistente",
+              "given": "Migration aplicada e nenhum pedido de id 999 em TB_PEDIDO.",
+              "when": "Uma insercao direta tenta gravar em TB_ITEM_PEDIDO um item com pedido_id = 999.",
+              "then": [
+                "O banco rejeita a insercao por violacao de chave estrangeira",
+                "Nenhuma linha e gravada em TB_ITEM_PEDIDO"
+              ],
+              "testData": {
+                "request": {
+                  "method": "SQL",
+                  "path": "TB_ITEM_PEDIDO",
+                  "headers": {
+                    "X-Correlation-Id": "mig-enabler-003-03"
+                  },
+                  "body": "INSERT INTO TB_ITEM_PEDIDO (pedido_id, produto_id, quantidade, preco_unitario) VALUES (999, 10, 2, 25.00);"
+                },
+                "expectedResponse": {
+                  "statusCode": 23503,
+                  "body": {
+                    "sqlState": "23503",
+                    "constraint": "FK_ITEM_PEDIDO_PEDIDO",
+                    "message": "insert or update violates foreign key constraint"
+                  }
+                },
+                "expectedDatabaseState": {
+                  "TB_ITEM_PEDIDO": "0 linhas — insercao rejeitada pela FK"
+                }
+              },
+              "verificationSteps": [
+                "Confirmar que nao existe pedido de id 999 em TB_PEDIDO",
+                "Executar o INSERT com pedido_id=999 e capturar o sqlState retornado",
+                "Conferir que a contagem de TB_ITEM_PEDIDO permanece 0 e que o sqlState e 23503"
+              ],
+              "relatedRules": [
+                "RN-ENABLER-DADOS-001"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_comment": "SPIKE — investigacao temporaria com timebox, sem entrega direta de valor ao usuario final.",
+      "id": "STORY-SPIKE-001",
+      "featureId": "FEAT-PEDIDO-CRIACAO",
+      "name": "Spike — Viabilidade de calculo de frete via servico externo em tempo real",
+      "priority": "HIGH",
+      "workItemType": "SPIKE",
+      "adoWorkItemType": "Spike",
+      "spikeDetails": {
+        "question": "O servico externo de calculo de frete suporta o volume de requisicoes esperado (pico de 200 req/s no checkout) com latencia aceitavel (p95 < 300ms), e qual e o comportamento de fallback quando o servico esta indisponivel?",
+        "timebox": "3 dias",
+        "expectedOutcome": "RECOMMENDATION"
+      },
+      "narrative": {
+        "elevatorPitch": "Investigar se o servico externo de calculo de frete suporta o volume e a latencia exigidos pelo checkout, e recomendar se a integracao deve ser sincrona, assincrona com cache, ou substituida por um provedor alternativo.",
+        "context": "A feature de criacao de pedido precisa exibir o valor do frete no checkout. Existe incerteza sobre se o servico externo escolhido suporta o volume de pico sem degradar a experiencia do usuario, e sobre o que fazer quando o servico externo falha. Este spike testa o servico sob carga simulada e documenta o comportamento observado de latencia e indisponibilidade.",
+        "problem": "Sem essa investigacao, a equipe corre o risco de desenhar a integracao de frete de forma sincrona e descobrir em producao que o servico externo nao aguenta o volume de pico, degradando o checkout inteiro.",
+        "deliveredValue": "Recomendacao fundamentada (sincrono / assincrono com cache / provedor alternativo) que orienta o desenho da feature de calculo de frete, evitando retrabalho de arquitetura apos a implementacao.",
+        "actors": [
+          "Equipe de engenharia"
+        ]
+      },
+      "businessRules": [
+        {
+          "id": "RN-SPIKE-001-01",
+          "title": "Spike nao implementa solucao definitiva",
+          "description": "O resultado deste spike e uma recomendacao documentada, nao codigo de producao. A implementacao da integracao de frete e uma story separada, criada apos a recomendacao ser aceita.",
+          "sourceTaskIds": []
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "AC-SPIKE-001-01",
+          "statement": "Existe um documento de recomendacao com os dados de latencia/volume observados e a opcao de integracao recomendada."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "TASK-SPIKE-001-01",
+          "storyId": "STORY-SPIKE-001",
+          "type": "documentation",
+          "title": "Testar servico de frete sob carga simulada e documentar recomendacao",
+          "description": "Executar teste de carga contra o servico externo de calculo de frete, simular indisponibilidade e produzir um relatorio de recomendacao de arquitetura de integracao. Nao ha codigo de producao a entregar.",
+          "estimatedEffort": "3 dias (timebox)",
+          "agentExecutionContext": {
+            "selfContainedSummary": "Investigacao com timebox para decidir a arquitetura de integracao com o servico externo de calculo de frete, antes de comprometer a implementacao. Executar teste de carga de 200 req/s sustentado por 10 minutos contra o ambiente de HOMOLOGACAO do provedor (nunca contra producao de terceiros sem autorizacao), medindo p50, p95 e p99 de latencia e a taxa de erro. Em seguida, simular indisponibilidade total forcando timeout de 2s no cliente HTTP — a simulacao nao depende do provedor cooperar — e registrar o codigo e a mensagem de erro que chegam ao cliente. Como a homologacao e um ambiente compartilhado, repetir a medicao em pelo menos duas janelas de horario distintas e reportar a variacao. As tres perguntas a fechar sao: (1) o servico sustenta o volume com p95 abaixo de 300ms? (2) qual o comportamento observado em indisponibilidade? (3) qual das tres opcoes — integracao sincrona, assincrona com cache, ou provedor alternativo — se sustenta nos dados coletados? A entrega e o relatorio de recomendacao; nao ha codigo de producao nesta task, e por isso ela e class=spike e fica isenta dos gates de contrato tecnico.",
+            "minimumOutputToDeliver": [
+              "Relatorio com p50/p95/p99 de latencia observados sob 200 req/s",
+              "Descricao do comportamento observado em indisponibilidade simulada",
+              "Recomendacao (sincrono / assincrono com cache / provedor alternativo) com justificativa"
+            ]
+          },
+          "implementationGuidance": {
+            "architecturalDecisions": [
+              "Ferramenta de teste de carga: usar a ferramenta ja padronizada no projeto para testes de carga (ex.: k6, Gatling) — nao introduzir ferramenta nova sem justificativa.",
+              "O teste de carga roda contra o ambiente de homologacao do servico externo (nunca contra producao de terceiros sem autorizacao).",
+              "A simulacao de indisponibilidade usa timeout forcado no cliente HTTP, nao dependendo do provedor externo cooperar com o teste."
+            ],
+            "dataFlow": [
+              "1. Configurar o script de carga para 200 req/s sustentado por 10 minutos contra o endpoint de calculo de frete.",
+              "2. Executar o script contra o ambiente de homologacao do servico externo.",
+              "3. Coletar p50/p95/p99 de latencia e taxa de erro durante a execucao.",
+              "4. Configurar um segundo cenario com timeout forcado apos 2s para simular indisponibilidade.",
+              "5. Executar o cenario de indisponibilidade e registrar o codigo/mensagem de erro retornado ao cliente.",
+              "6. Consolidar os dados coletados nas duas execucoes.",
+              "7. Avaliar se p95 < 300ms foi atingido no cenario de carga normal.",
+              "8. Comparar as tres opcoes de integracao (sincrona, assincrona com cache, provedor alternativo) contra os dados coletados.",
+              "9. Redigir o relatorio de recomendacao com a justificativa baseada nos dados.",
+              "10. Compartilhar o relatorio com a equipe de engenharia para decisao sobre a story de implementacao subsequente."
+            ],
+            "errorHandling": {
+              "SERVICO_INDISPONIVEL_DURANTE_TESTE": {
+                "scenario": "O servico externo fica indisponivel durante a janela de teste, antes da simulacao planejada.",
+                "action": "Registrar o horario e reagendar a execucao; nao contar como dado do cenario de indisponibilidade simulada.",
+                "userImpact": "Nenhum — atividade de investigacao, sem usuario final envolvido."
+              },
+              "LATENCIA_INSTAVEL": {
+                "scenario": "A latencia varia significativamente entre execucoes (ambiente de homologacao compartilhado).",
+                "action": "Repetir o teste em pelo menos 2 janelas de horario diferentes e reportar a variacao observada no relatorio.",
+                "userImpact": "Nenhum."
+              },
+              "TIMEOUT_NAO_REPRODUZ": {
+                "scenario": "O timeout forcado nao produz um erro claro do lado do cliente para documentar.",
+                "action": "Ajustar o cliente HTTP de teste para logar a excecao completa e o codigo de erro antes de repetir a simulacao.",
+                "userImpact": "Nenhum."
+              }
+            },
+            "observability": {
+              "structuredLogging": [
+                "Log de inicio/fim da execucao do teste de carga (INFO): timestamp, duracao, req/s configurado.",
+                "Log de cada erro observado durante o teste (WARN): codigo/mensagem retornado pelo servico externo.",
+                "Log de conclusao com o resumo de p50/p95/p99 (INFO)."
+              ],
+              "metrics": [
+                "p50/p95/p99 de latencia do servico externo sob carga.",
+                "Taxa de erro observada durante o teste de carga.",
+                "Tempo de deteccao de indisponibilidade no cenario de timeout forcado."
+              ],
+              "tracing": []
+            },
+            "testingStrategy": {
+              "unitTests": [],
+              "integrationTests": [
+                "Script de carga executa 200 req/s por 10 minutos sem erro de configuracao.",
+                "Cenario de timeout forcado produz um erro documentavel do lado do cliente."
+              ]
+            }
+          },
+          "validation": {
+            "businessCriteria": [
+              "Existe uma recomendacao clara e justificada para orientar o desenho da integracao de frete."
+            ]
+          },
+          "class": "spike",
+          "spike": {
+            "question": "O servico externo de frete sustenta 200 req/s com p95 < 300ms, e qual arquitetura de integracao adotar diante do comportamento em indisponibilidade?",
+            "timeboxDays": 3,
+            "exitCriteria": [
+              "p50/p95/p99 e taxa de erro medidos sob 200 req/s por 10 minutos, em 2 janelas de horario distintas",
+              "Comportamento em indisponibilidade documentado com o codigo e a mensagem de erro observados no cliente",
+              "Recomendacao unica entre sincrono, assincrono com cache ou provedor alternativo, justificada pelos dados coletados"
+            ],
+            "closesGapId": "GAP-014"
+          }
+        }
+      ]
+    },
+    {
+      "_comment": "TECHNICAL_DEBT — limitacao tecnica acumulada, com impacto atual e melhoria esperada.",
+      "id": "STORY-TECHDEBT-001",
+      "featureId": "FEAT-PEDIDO-CRIACAO",
+      "name": "Technical Debt — Consulta de pedidos sem paginacao carrega toda a tabela em memoria",
+      "priority": "MEDIUM",
+      "workItemType": "TECHNICAL_DEBT",
+      "adoWorkItemType": "Technical Debt",
+      "technicalDebtDetails": {
+        "limitation": "O endpoint de listagem de pedidos foi implementado sem paginacao: carrega todos os registros de TB_PEDIDO do cliente em memoria antes de retornar a resposta.",
+        "currentImpact": "Clientes com mais de 5.000 pedidos historicos sofrem timeout na listagem, e o consumo de memoria da aplicacao cresce proporcionalmente ao volume de pedidos do maior cliente, aumentando o risco de OutOfMemory sob carga.",
+        "improvementAfterFix": "A listagem passa a retornar paginas de tamanho fixo, com tempo de resposta constante independente do volume total de pedidos do cliente, eliminando o risco de OutOfMemory por este endpoint."
+      },
+      "narrative": {
+        "elevatorPitch": "Reestruturar o endpoint de listagem de pedidos para retornar resultados paginados em vez de carregar toda a tabela em memoria, eliminando o risco de timeout e de esgotamento de memoria para clientes com grande volume de pedidos.",
+        "context": "O endpoint de listagem de pedidos foi implementado sem paginacao como solucao de curto prazo durante a primeira entrega da feature. Hoje, clientes com mais de 5.000 pedidos historicos sofrem timeout, e o consumo de memoria da aplicacao cresce com o volume de pedidos do maior cliente. Este debito precisa ser pago antes que o volume de pedidos cresca mais e o risco de indisponibilidade aumente.",
+        "problem": "Clientes com grande volume de pedidos historicos sofrem timeout na listagem, e a aplicacao corre risco de indisponibilidade por esgotamento de memoria sob carga.",
+        "deliveredValue": "Listagem de pedidos com tempo de resposta constante e consumo de memoria previsivel, independente do volume historico de pedidos do cliente.",
+        "actors": [
+          "Equipe de engenharia",
+          "Clientes com grande volume de pedidos"
+        ]
+      },
+      "businessRules": [
+        {
+          "id": "RN-TECHDEBT-001-01",
+          "title": "Paginacao obrigatoria em listagens de alto volume",
+          "description": "Todo endpoint de listagem que pode retornar mais de 100 registros deve implementar paginacao com tamanho de pagina limitado, para evitar timeout e esgotamento de memoria.",
+          "sourceTaskIds": []
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "AC-TECHDEBT-001-01",
+          "statement": "A listagem de pedidos retorna paginas de tamanho fixo e o tempo de resposta nao cresce com o volume historico do cliente."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "TASK-TECHDEBT-001-01",
+          "storyId": "STORY-TECHDEBT-001",
+          "type": "backend",
+          "title": "Implementar paginacao no endpoint de listagem de pedidos",
+          "description": "Substituir a consulta sem paginacao do endpoint de listagem de pedidos por uma versao paginada com page/pageSize, eliminando o carregamento total da tabela em memoria.",
+          "agentExecutionContext": {
+            "selfContainedSummary": "Pagar o debito de paginacao no endpoint de listagem de pedidos. A consulta atual e SELECT * FROM TB_PEDIDO WHERE cliente_id = ? sem LIMIT nem OFFSET: todo o historico do cliente e carregado em memoria, e clientes com grande volume sofrem timeout. Substituir por uma consulta paginada com os query params page (inteiro >= 1) e pageSize (default 20, maximo 100, limitado silenciosamente quando excedido), ordenada por criado_em DESC, retornando no corpo os itens da pagina e o total de registros para o cliente calcular o numero de paginas. Criar o indice composto (cliente_id, criado_em DESC) em TB_PEDIDO, se ainda nao existir, para que o ORDER BY nao caia em sort em memoria. Pre-condicao: TB_PEDIDO ja existe com cliente_id e criado_em. Pos-condicao: o tempo de resposta da listagem permanece na mesma ordem de grandeza independentemente do volume historico do cliente, comprovado por teste de regressao com um cliente de 5.000 pedidos. A paginacao e offset-based por consistencia com os demais endpoints de listagem do modulo; mudar para cursor-based seria um desvio de padrao e nao esta no escopo desta task.",
+            "minimumOutputToDeliver": [
+              "Endpoint de listagem de pedidos aceitando page/pageSize e retornando total de registros",
+              "Indice composto (cliente_id, criado_em DESC) em TB_PEDIDO",
+              "Teste de regressao comprovando tempo de resposta constante independente do volume"
+            ]
+          },
+          "implementationGuidance": {
+            "architecturalDecisions": [
+              "Paginacao baseada em page/pageSize (offset-based), consistente com os demais endpoints de listagem do modulo.",
+              "pageSize default=20, max=100, validado no controller antes de chegar a camada de persistencia.",
+              "Indice composto (cliente_id, criado_em DESC) para suportar o ORDER BY da listagem sem sort em memoria."
+            ],
+            "dataFlow": [
+              "1. Receber page e pageSize como query params no endpoint de listagem.",
+              "2. Validar pageSize <= 100; se maior, limitar a 100.",
+              "3. Calcular o offset a partir de page e pageSize.",
+              "4. Executar a query com LIMIT pageSize OFFSET offset, ordenada por criado_em DESC.",
+              "5. Executar uma segunda query (ou window function) para obter o total de registros do cliente.",
+              "6. Montar a resposta com os itens da pagina e o total, para o cliente calcular o numero de paginas.",
+              "7. Criar o indice composto (cliente_id, criado_em DESC) em TB_PEDIDO, se ainda nao existir.",
+              "8. Validar em ambiente de desenvolvimento com um cliente de teste com mais de 5.000 pedidos.",
+              "9. Medir o tempo de resposta antes e depois da mudanca para o mesmo cliente de teste.",
+              "10. Atualizar a documentacao do endpoint (parametros e formato de resposta paginada)."
+            ],
+            "errorHandling": {
+              "PAGE_INVALIDA": {
+                "scenario": "Cliente envia page <= 0 ou nao numerico.",
+                "action": "Retornar 400 com mensagem indicando que page deve ser um inteiro >= 1.",
+                "userImpact": "Erro claro em vez de comportamento indefinido na paginacao."
+              },
+              "PAGE_SIZE_ACIMA_DO_LIMITE": {
+                "scenario": "Cliente solicita pageSize > 100.",
+                "action": "Limitar silenciosamente a 100 e retornar a pagina com esse tamanho.",
+                "userImpact": "Protege a aplicacao de paginas excessivamente grandes sem quebrar a chamada do cliente."
+              },
+              "PAGINA_FORA_DO_INTERVALO": {
+                "scenario": "Cliente solicita uma page maior que o total de paginas disponiveis.",
+                "action": "Retornar 200 com lista vazia de itens e o total de registros correto.",
+                "userImpact": "Comportamento previsivel ao navegar alem da ultima pagina."
+              }
+            },
+            "observability": {
+              "structuredLogging": [
+                "Log de cada listagem (INFO): correlationId, clienteId mascarado, page, pageSize, tempo de resposta.",
+                "Log de pageSize limitado a 100 (WARN): correlationId, valor solicitado.",
+                "Log de erro de parametro invalido (WARN): correlationId, valor recebido."
+              ],
+              "metrics": [
+                "Histogram pedidos_listagem_duration_seconds por page/pageSize.",
+                "Counter pedidos_listagem_total por resultado (sucesso/erro).",
+                "Gauge ou histogram do total de registros retornado por cliente, para acompanhar volume."
+              ],
+              "tracing": [
+                "Span da consulta paginada com atributos page, pageSize, total."
+              ]
+            },
+            "performanceConsiderations": [
+              "Tempo de resposta deve permanecer estavel (mesma ordem de grandeza) independente do volume historico total de pedidos do cliente."
+            ],
+            "testingStrategy": {
+              "unitTests": [
+                "calcula_offset_corretamente_a_partir_de_page_e_pageSize",
+                "limita_pageSize_a_100_quando_solicitado_maior"
+              ],
+              "integrationTests": [
+                "listagem_com_5000_pedidos_responde_em_tempo_constante (RED sem paginacao, GREEN com paginacao).",
+                "listagem_de_pagina_alem_do_total_retorna_lista_vazia_com_total_correto."
+              ]
+            }
+          },
+          "validation": {
+            "businessCriteria": [
+              "Clientes com grande volume de pedidos historicos conseguem listar seus pedidos sem timeout."
+            ],
+            "technicalCriteria": [
+              "Tempo de resposta da listagem nao cresce com o volume total de pedidos do cliente."
+            ]
+          },
+          "persistenceModel": {
+            "entities": [
+              {
+                "table": "TB_PEDIDO",
+                "purpose": "Tabela consultada pela listagem paginada; esta task apenas acrescenta um indice.",
+                "boundedContext": "Gestao de Pedidos",
+                "operationType": "ALTER",
+                "identifierStrategy": "SEQUENCE (SEQ_PEDIDO)",
+                "primaryKey": "id",
+                "columns": "id BIGINT PK NOT NULL [EXISTING] - PK do pedido. | cliente_id BIGINT NOT NULL [EXISTING] - Filtro da listagem. | status VARCHAR(40) NOT NULL [EXISTING] - Exibido na linha da listagem. | criado_em TIMESTAMP NOT NULL [EXISTING] - Chave de ordenacao (DESC) da listagem paginada.",
+                "indexes": "IDX_PEDIDO_CLIENTE_CRIADO BTREE(cliente_id, criado_em DESC) [NEW] - Suporta o ORDER BY da paginacao sem sort em memoria",
+                "migrationNotes": "Somente criacao de indice; nenhuma coluna e adicionada ou alterada. Criar como CONCURRENTLY se o banco suportar, para nao travar a tabela em producao.",
+                "dataModelRef": "data-model.json#/tableName/TB_PEDIDO"
+              }
+            ]
+          },
+          "acceptanceScenarios": [
+            {
+              "id": "AS-TASK-TECHDEBT-001-01-01",
+              "category": "HAPPY_PATH",
+              "title": "Listagem paginada retorna a primeira pagina e o total de registros",
+              "given": "Cliente 4021 autenticado com 5.000 pedidos em TB_PEDIDO.",
+              "when": "GET /v1/pedidos?page=1&pageSize=20 e chamado.",
+              "then": [
+                "Retorna 200 com exatamente 20 itens ordenados por criado_em DESC",
+                "O corpo traz total = 5000",
+                "O tempo de resposta fica na mesma ordem de grandeza de um cliente com 20 pedidos"
+              ],
+              "testData": {
+                "request": {
+                  "method": "GET",
+                  "path": "/v1/pedidos?page=1&pageSize=20",
+                  "headers": {
+                    "Authorization": "Bearer <jwt-cliente-4021>",
+                    "X-Correlation-Id": "td-001-01"
+                  }
+                },
+                "expectedResponse": {
+                  "statusCode": 200,
+                  "body": {
+                    "items": "20 pedidos do cliente 4021, mais recentes primeiro",
+                    "page": 1,
+                    "pageSize": 20,
+                    "total": 5000
+                  }
+                },
+                "expectedDatabaseState": {
+                  "TB_PEDIDO": "5000 linhas do cliente 4021 — consulta somente leitura, nada muda"
+                }
+              },
+              "verificationSteps": [
+                "Conferir que vieram exatamente 20 itens na resposta",
+                "Conferir que o campo total traz 5000 e a ordenacao e criado_em DESC",
+                "Comparar o tempo de resposta com o de um cliente de 20 pedidos (mesma ordem de grandeza)"
+              ],
+              "relatedRules": [
+                "RN-LISTAGEM-PAGINACAO-001"
+              ]
+            },
+            {
+              "id": "AS-TASK-TECHDEBT-001-01-02",
+              "category": "INVALID_INPUT",
+              "title": "page menor que 1 e rejeitada com 400",
+              "given": "Cliente 4021 autenticado com token valido e com 5.000 pedidos em TB_PEDIDO, endpoint de listagem ja paginado.",
+              "when": "GET /v1/pedidos?page=0&pageSize=20 e chamado.",
+              "then": [
+                "Retorna 400",
+                "A mensagem indica que page deve ser inteiro maior ou igual a 1",
+                "Nenhuma consulta paginada e executada"
+              ],
+              "testData": {
+                "request": {
+                  "method": "GET",
+                  "path": "/v1/pedidos?page=0&pageSize=20",
+                  "headers": {
+                    "Authorization": "Bearer <jwt-cliente-4021>",
+                    "X-Correlation-Id": "td-001-02"
+                  }
+                },
+                "expectedResponse": {
+                  "statusCode": 400,
+                  "body": {
+                    "code": "PAGE_INVALIDA",
+                    "message": "O parametro page deve ser um inteiro maior ou igual a 1."
+                  }
+                },
+                "expectedDatabaseState": {
+                  "TB_PEDIDO": "inalterada — requisicao rejeitada na validacao de entrada"
+                }
+              },
+              "verificationSteps": [
+                "Chamar o endpoint com page=0 e capturar o status",
+                "Conferir status 400 e code PAGE_INVALIDA no corpo",
+                "Conferir no log que nenhuma consulta paginada foi executada"
+              ],
+              "relatedRules": [
+                "RN-LISTAGEM-PAGINACAO-001"
+              ]
+            },
+            {
+              "id": "AS-TASK-TECHDEBT-001-01-03",
+              "category": "BUSINESS_RULE_VIOLATION",
+              "title": "pageSize acima de 100 e limitado a 100 sem quebrar a chamada",
+              "given": "Cliente 4021 autenticado com token valido e com 5.000 pedidos em TB_PEDIDO, limite de pageSize configurado em 100.",
+              "when": "GET /v1/pedidos?page=1&pageSize=500 e chamado.",
+              "then": [
+                "Retorna 200 com exatamente 100 itens",
+                "O corpo traz pageSize = 100",
+                "Um WARN de pageSize limitado e registrado com o correlationId"
+              ],
+              "testData": {
+                "request": {
+                  "method": "GET",
+                  "path": "/v1/pedidos?page=1&pageSize=500",
+                  "headers": {
+                    "Authorization": "Bearer <jwt-cliente-4021>",
+                    "X-Correlation-Id": "td-001-03"
+                  }
+                },
+                "expectedResponse": {
+                  "statusCode": 200,
+                  "body": {
+                    "items": "100 pedidos",
+                    "page": 1,
+                    "pageSize": 100,
+                    "total": 5000
+                  }
+                },
+                "expectedDatabaseState": {
+                  "TB_PEDIDO": "inalterada — consulta somente leitura"
+                }
+              },
+              "verificationSteps": [
+                "Chamar o endpoint com pageSize=500 e capturar o status",
+                "Conferir que vieram 100 itens e que o corpo traz pageSize=100",
+                "Conferir o log WARN de pageSize limitado com o mesmo correlationId"
+              ],
+              "relatedRules": [
+                "RN-LISTAGEM-PAGINACAO-001"
+              ]
+            }
+          ],
+          "apiContracts": [
+            {
+              "operationId": "listarPedidos",
+              "method": "GET",
+              "path": "/v1/pedidos",
+              "signature": "GET /v1/pedidos",
+              "summary": "Listar pedidos do cliente, paginado",
+              "description": "Lista os pedidos do cliente autenticado, ordenados por criado_em DESC, com paginacao offset-based. Substitui a versao sem paginacao que carregava o historico inteiro em memoria.",
+              "auth": "Bearer JWT - roles: CLIENTE, ADMIN. Claims: sub (clienteId). O CLIENTE so enxerga os proprios pedidos; o filtro por cliente_id vem do claim, nunca do query param.",
+              "request": "Query: page (integer optional default=1 min=1 - numero da pagina); pageSize (integer optional default=20 min=1 max=100 - itens por pagina, valores acima de 100 sao limitados a 100) | Headers: Authorization (required - Bearer JWT); X-Correlation-Id (optional - correlacao de log)",
+              "responses": "200 application/json - Pagina de pedidos. schema: { items: array de { id: integer; status: string; valorTotal: number; criadoEm: string date-time }; page: integer; pageSize: integer; total: integer } | 400 application/problem+json - page < 1 ou nao numerico (code=PAGE_INVALIDA) | 401 application/problem+json - token ausente ou invalido | 500 application/problem+json - Erro interno",
+              "policies": "Rate: TOKEN_BUCKET limit/cliente: 120 req/min. Caching: cacheable=False (dado do proprio usuario). Idempotency: nao se aplica (GET).",
+              "openApiRef": "api-contracts.yaml#/paths/~1v1~1pedidos/get",
+              "tags": [
+                "Pedidos"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "_comment": "BUG — defeito observado em producao/homologacao, com passos de reproducao e resultado atual vs esperado.",
+      "id": "STORY-BUG-001",
+      "featureId": "FEAT-PEDIDO-CRIACAO",
+      "name": "Bug — Cancelamento de pedido nao libera o estoque reservado",
+      "priority": "CRITICAL",
+      "workItemType": "BUG",
+      "adoWorkItemType": "Bug",
+      "bugReport": {
+        "observedBehavior": "Ao cancelar um pedido com status RESERVADO, a quantidade reservada em TB_ESTOQUE nao e devolvida — o produto permanece indisponivel para outros clientes mesmo apos o cancelamento.",
+        "reproductionSteps": [
+          "Criar um pedido com 1 unidade de um produto com estoque disponivel = 1 (fica reservado = 1, disponivel = 0).",
+          "Cancelar o pedido criado no passo 1.",
+          "Consultar o estoque do produto."
+        ],
+        "currentResult": "O estoque disponivel do produto permanece em 0 apos o cancelamento — a reserva nao foi liberada.",
+        "expectedResult": "O estoque disponivel do produto deveria voltar a 1 apos o cancelamento, liberando a unidade reservada."
+      },
+      "narrative": {
+        "elevatorPitch": "Corrigir o cancelamento de pedido para que a quantidade reservada em estoque seja devolvida corretamente, evitando que produtos fiquem indisponiveis para venda por causa de pedidos ja cancelados.",
+        "context": "Foi observado em homologacao que, ao cancelar um pedido com status RESERVADO, a rotina de cancelamento atualiza o status do pedido mas nao chama a devolucao de estoque — a reserva permanece ativa indefinidamente. Isso reduz artificialmente o estoque disponivel de produtos cujos pedidos foram cancelados, podendo levar a perda de vendas por falta de estoque que na realidade esta disponivel.",
+        "problem": "Produtos com pedidos cancelados ficam com estoque disponivel reduzido incorretamente, podendo bloquear vendas legitimas por falta de estoque que na realidade existe.",
+        "deliveredValue": "Estoque disponivel reflete corretamente as reservas ativas apos o cancelamento, eliminando a perda de vendas por indisponibilidade artificial.",
+        "actors": [
+          "Clientes",
+          "Equipe de operacoes de estoque"
+        ]
+      },
+      "businessRules": [
+        {
+          "id": "RN-BUG-001-01",
+          "title": "Cancelamento sempre libera a reserva de estoque",
+          "description": "Todo cancelamento de pedido com status RESERVADO deve, na mesma transacao, devolver a quantidade reservada de cada item ao estoque disponivel do produto correspondente.",
+          "sourceTaskIds": []
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "AC-BUG-001-01",
+          "statement": "Apos cancelar um pedido RESERVADO, o estoque disponivel do produto e incrementado pela quantidade que estava reservada naquele pedido."
+        }
+      ],
+      "tasks": [
+        {
+          "id": "TASK-BUG-001-01",
+          "storyId": "STORY-BUG-001",
+          "type": "backend",
+          "title": "Corrigir cancelamento de pedido para devolver estoque reservado",
+          "description": "Corrigir a rotina de cancelamento de pedido para que, ao mudar o status para CANCELADO, a quantidade reservada de cada item seja devolvida ao estoque disponivel na mesma transacao.",
+          "agentExecutionContext": {
+            "selfContainedSummary": "Corrigir o defeito em que cancelar um pedido nao devolve o estoque reservado. Comportamento observado hoje: ao mudar o status de RESERVADO para CANCELADO, a rotina grava o novo status e encerra, deixando TB_ESTOQUE.reservado inflado e TB_ESTOQUE.disponivel abaixo do real — produtos ficam invendaveis apos cancelamentos. Correcao: dentro da MESMA transacao do cancelamento e antes do commit, iterar os itens do pedido em TB_ITEM_PEDIDO e, para cada um, incrementar TB_ESTOQUE.disponivel e decrementar TB_ESTOQUE.reservado na quantidade do item, reutilizando a rotina de ajuste de estoque ja usada na criacao do pedido (aplicada de forma inversa) em vez de duplicar a logica. A operacao e idempotente: pedido que ja esta CANCELADO e rejeitado com 409 e nao tem o estoque devolvido de novo. Se algum item apontar para produto sem registro em TB_ESTOQUE, abortar a transacao inteira com 500 — nunca cancelar parcialmente. Pre-condicao: pedido em status RESERVADO com itens. Pos-condicao: status CANCELADO e estoque restaurado ao valor anterior a criacao do pedido, ou nada mudou. O teste de regressao vai RED sem a correcao e GREEN com ela.",
+            "minimumOutputToDeliver": [
+              "Cancelamento devolvendo a quantidade reservada ao estoque disponivel na mesma transacao",
+              "Teste de regressao RED (reproduz o bug) -> GREEN (comprova a correcao)"
+            ]
+          },
+          "implementationGuidance": {
+            "architecturalDecisions": [
+              "A devolucao de estoque deve ocorrer na MESMA transacao da mudanca de status do pedido, para nao deixar o estoque inconsistente em caso de falha parcial.",
+              "Reutilizar a mesma rotina de ajuste de estoque usada na criacao do pedido (inversa: incrementar disponivel, decrementar reservado), em vez de duplicar a logica.",
+              "Idempotencia: um pedido ja CANCELADO nao deve ter seu estoque devolvido de novo se a rotina for chamada mais de uma vez."
+            ],
+            "dataFlow": [
+              "1. Receber a requisicao de cancelamento do pedido com status atual RESERVADO.",
+              "2. Abrir a transacao de cancelamento.",
+              "3. Buscar os itens do pedido em TB_ITEM_PEDIDO.",
+              "4. Para cada item, buscar o registro correspondente em TB_ESTOQUE pelo produto_id.",
+              "5. Incrementar TB_ESTOQUE.disponivel na quantidade do item.",
+              "6. Decrementar TB_ESTOQUE.reservado na quantidade do item.",
+              "7. Atualizar o status do pedido para CANCELADO.",
+              "8. Commitar a transacao (status do pedido e ajuste de estoque juntos).",
+              "9. Se o pedido nao estiver em status RESERVADO, rejeitar o cancelamento (idempotencia — nao reprocessar estoque de pedido ja CANCELADO).",
+              "10. Registrar o cancelamento e o ajuste de estoque associado para auditoria."
+            ],
+            "errorHandling": {
+              "PEDIDO_JA_CANCELADO": {
+                "scenario": "Cancelamento e chamado para um pedido que ja esta com status CANCELADO.",
+                "action": "Retornar 409 sem tocar no estoque novamente, evitando devolucao duplicada.",
+                "userImpact": "Evita que o estoque seja incrementado mais de uma vez pelo mesmo cancelamento."
+              },
+              "PRODUTO_SEM_REGISTRO_DE_ESTOQUE": {
+                "scenario": "O produto do item do pedido nao tem registro correspondente em TB_ESTOQUE (dado inconsistente).",
+                "action": "Abortar a transacao de cancelamento e retornar 500 com log detalhado para investigacao — nao cancelar parcialmente.",
+                "userImpact": "Evita que o pedido fique CANCELADO com o estoque de algum item nao devolvido."
+              },
+              "FALHA_NO_COMMIT": {
+                "scenario": "A transacao falha ao commitar a mudanca de status + ajuste de estoque.",
+                "action": "Fazer rollback completo — nem o status do pedido nem o estoque mudam.",
+                "userImpact": "Garante que o pedido e o estoque nunca ficam em estados inconsistentes entre si."
+              }
+            },
+            "observability": {
+              "structuredLogging": [
+                "Log de cancelamento com devolucao de estoque (INFO): correlationId, pedidoId, itens e quantidades devolvidas.",
+                "Log de tentativa de cancelamento em pedido ja CANCELADO (WARN): correlationId, pedidoId.",
+                "Log de falha de commit da transacao de cancelamento (ERROR): correlationId, pedidoId, mensagem de erro."
+              ],
+              "metrics": [
+                "Counter pedidos_cancelados_total.",
+                "Counter estoque_devolvido_total por produto.",
+                "Counter cancelamento_rejeitado_total por motivo (ex.: ja cancelado)."
+              ],
+              "tracing": [
+                "Span do cancelamento incluindo o ajuste de estoque como etapa filha."
+              ]
+            },
+            "testingStrategy": {
+              "unitTests": [
+                "cancelamento_incrementa_disponivel_e_decrementa_reservado_por_item",
+                "cancelamento_de_pedido_ja_cancelado_nao_altera_estoque"
+              ],
+              "integrationTests": [
+                "fluxo_completo_criar_reservar_cancelar_restaura_estoque_original (RED sem a correcao, GREEN com a correcao).",
+                "cancelamento_com_falha_de_commit_nao_altera_status_nem_estoque (rollback)."
+              ]
+            }
+          },
+          "validation": {
+            "businessCriteria": [
+              "Produtos com pedidos cancelados voltam a ficar disponiveis para venda imediatamente."
+            ],
+            "technicalCriteria": [
+              "TB_ESTOQUE.disponivel e TB_ESTOQUE.reservado refletem corretamente o cancelamento na mesma transacao."
+            ]
+          },
+          "persistenceModel": {
+            "entities": [
+              {
+                "table": "TB_ESTOQUE",
+                "purpose": "Saldo de estoque ajustado pelo cancelamento.",
+                "boundedContext": "Gestao de Estoque",
+                "operationType": "EXISTING_REF",
+                "identifierStrategy": "SEQUENCE (SEQ_ESTOQUE)",
+                "primaryKey": "id",
+                "columns": "id BIGINT PK NOT NULL [EXISTING] - Chave do registro de estoque. | produto_id BIGINT NOT NULL [EXISTING] - Produto correspondente ao item do pedido. | disponivel INTEGER NOT NULL [EXISTING] check=disponivel>=0 - Incrementado na quantidade do item ao cancelar. | reservado INTEGER NOT NULL [EXISTING] check=reservado>=0 - Decrementado na quantidade do item ao cancelar.",
+                "relationships": "MANY_TO_ONE -> TB_PRODUTO (produto_id -> id) onDelete=RESTRICT - Cada saldo refere um produto",
+                "dataModelRef": "data-model.json#/tableName/TB_ESTOQUE"
+              },
+              {
+                "table": "TB_ITEM_PEDIDO",
+                "purpose": "Fonte das quantidades a devolver ao estoque no cancelamento.",
+                "boundedContext": "Gestao de Pedidos",
+                "operationType": "EXISTING_REF",
+                "identifierStrategy": "SEQUENCE (SEQ_ITEM_PEDIDO)",
+                "primaryKey": "id",
+                "columns": "id BIGINT PK NOT NULL [EXISTING] - Chave do item. | pedido_id BIGINT NOT NULL [EXISTING] - Pedido sendo cancelado. | produto_id BIGINT NOT NULL [EXISTING] - Produto cujo saldo sera ajustado. | quantidade INTEGER NOT NULL [EXISTING] check=quantidade>0 - Quantidade exata a devolver ao disponivel.",
+                "relationships": "MANY_TO_ONE -> TB_PEDIDO (pedido_id -> id) onDelete=CASCADE - Itens do pedido cancelado",
+                "dataModelRef": "data-model.json#/tableName/TB_ITEM_PEDIDO"
+              }
+            ]
+          },
+          "acceptanceScenarios": [
+            {
+              "id": "AS-TASK-BUG-001-01-01",
+              "category": "HAPPY_PATH",
+              "title": "Cancelar pedido RESERVADO devolve a quantidade exata ao estoque disponivel",
+              "given": "Pedido 7788 do cliente 4021 em status RESERVADO com 1 item do produto 10 na quantidade 3; TB_ESTOQUE do produto 10 com disponivel=47 e reservado=3.",
+              "when": "POST /v1/pedidos/7788/cancelamento e chamado pelo cliente dono do pedido.",
+              "then": [
+                "Retorna 200 com o pedido em status CANCELADO",
+                "TB_ESTOQUE do produto 10 passa a disponivel=50 e reservado=0",
+                "A mudanca de status e o ajuste de estoque ocorrem na mesma transacao"
+              ],
+              "testData": {
+                "request": {
+                  "method": "POST",
+                  "path": "/v1/pedidos/7788/cancelamento",
+                  "headers": {
+                    "Authorization": "Bearer <jwt-cliente-4021>",
+                    "X-Correlation-Id": "bug-001-01"
+                  },
+                  "body": {
+                    "motivo": "DESISTENCIA_DO_CLIENTE"
+                  }
+                },
+                "expectedResponse": {
+                  "statusCode": 200,
+                  "body": {
+                    "pedidoId": 7788,
+                    "status": "CANCELADO",
+                    "itensDevolvidos": [
+                      {
+                        "produtoId": 10,
+                        "quantidade": 3
+                      }
+                    ]
+                  }
+                },
+                "expectedDatabaseState": {
+                  "TB_PEDIDO": "pedido 7788 com status=CANCELADO",
+                  "TB_ESTOQUE": "produto 10 com disponivel=50 e reservado=0",
+                  "TB_ITEM_PEDIDO": "inalterada — o item permanece para historico"
+                }
+              },
+              "verificationSteps": [
+                "Ler TB_ESTOQUE do produto 10 antes do cancelamento (disponivel=47, reservado=3)",
+                "Chamar o cancelamento e conferir status 200 com status=CANCELADO",
+                "Ler TB_ESTOQUE de novo e conferir disponivel=50 e reservado=0 na mesma transacao"
+              ],
+              "relatedRules": [
+                "RN-ESTOQUE-DEVOLUCAO-001"
+              ]
+            },
+            {
+              "id": "AS-TASK-BUG-001-01-02",
+              "category": "BUSINESS_RULE_VIOLATION",
+              "title": "Cancelar pedido ja CANCELADO nao devolve estoque de novo",
+              "given": "Pedido 7788 ja em status CANCELADO; TB_ESTOQUE do produto 10 com disponivel=50 e reservado=0.",
+              "when": "POST /v1/pedidos/7788/cancelamento e chamado uma segunda vez.",
+              "then": [
+                "Retorna 409",
+                "TB_ESTOQUE do produto 10 permanece disponivel=50 e reservado=0",
+                "Um WARN de cancelamento repetido e registrado"
+              ],
+              "testData": {
+                "request": {
+                  "method": "POST",
+                  "path": "/v1/pedidos/7788/cancelamento",
+                  "headers": {
+                    "Authorization": "Bearer <jwt-cliente-4021>",
+                    "X-Correlation-Id": "bug-001-02"
+                  },
+                  "body": {
+                    "motivo": "DESISTENCIA_DO_CLIENTE"
+                  }
+                },
+                "expectedResponse": {
+                  "statusCode": 409,
+                  "body": {
+                    "code": "PEDIDO_JA_CANCELADO",
+                    "message": "O pedido 7788 ja esta cancelado."
+                  }
+                },
+                "expectedDatabaseState": {
+                  "TB_ESTOQUE": "produto 10 inalterado (disponivel=50, reservado=0) — sem devolucao duplicada"
+                }
+              },
+              "verificationSteps": [
+                "Confirmar que o pedido 7788 ja esta em status CANCELADO",
+                "Chamar o cancelamento de novo e conferir status 409 com code PEDIDO_JA_CANCELADO",
+                "Conferir que o saldo do produto 10 permanece disponivel=50 (nao subiu para 53)"
+              ],
+              "relatedRules": [
+                "RN-ESTOQUE-DEVOLUCAO-001"
+              ]
+            },
+            {
+              "id": "AS-TASK-BUG-001-01-03",
+              "category": "INVALID_INPUT",
+              "title": "Item apontando para produto sem registro de estoque aborta o cancelamento inteiro",
+              "given": "Pedido 7799 em status RESERVADO com um item do produto 99, que nao tem registro em TB_ESTOQUE.",
+              "when": "POST /v1/pedidos/7799/cancelamento e chamado.",
+              "then": [
+                "Retorna 500 com log detalhado do produto sem estoque",
+                "O pedido 7799 permanece em status RESERVADO",
+                "Nenhum saldo de estoque e alterado (rollback completo)"
+              ],
+              "testData": {
+                "request": {
+                  "method": "POST",
+                  "path": "/v1/pedidos/7799/cancelamento",
+                  "headers": {
+                    "Authorization": "Bearer <jwt-cliente-4021>",
+                    "X-Correlation-Id": "bug-001-03"
+                  },
+                  "body": {
+                    "motivo": "DESISTENCIA_DO_CLIENTE"
+                  }
+                },
+                "expectedResponse": {
+                  "statusCode": 500,
+                  "body": {
+                    "code": "PRODUTO_SEM_REGISTRO_DE_ESTOQUE",
+                    "message": "Nao foi possivel concluir o cancelamento."
+                  }
+                },
+                "expectedDatabaseState": {
+                  "TB_PEDIDO": "pedido 7799 ainda em status RESERVADO — rollback completo",
+                  "TB_ESTOQUE": "nenhuma linha alterada"
+                }
+              },
+              "verificationSteps": [
+                "Confirmar que o produto 99 nao tem registro em TB_ESTOQUE",
+                "Chamar o cancelamento do pedido 7799 e conferir status 500",
+                "Conferir que o pedido 7799 continua RESERVADO e que nenhum saldo de estoque mudou"
+              ],
+              "relatedRules": [
+                "RN-ESTOQUE-DEVOLUCAO-001"
+              ]
+            }
+          ],
+          "apiContracts": [
+            {
+              "operationId": "cancelarPedido",
+              "method": "POST",
+              "path": "/v1/pedidos/{pedidoId}/cancelamento",
+              "signature": "POST /v1/pedidos/{pedidoId}/cancelamento",
+              "summary": "Cancelar pedido e devolver o estoque reservado",
+              "description": "Cancela um pedido em status RESERVADO e devolve, na mesma transacao, a quantidade reservada de cada item ao estoque disponivel.",
+              "auth": "Bearer JWT - roles: CLIENTE, ADMIN. Claims: sub (clienteId). O CLIENTE so cancela pedido proprio; ownership verificado no servidor.",
+              "request": "Path: pedidoId (integer required - ID do pedido a cancelar) | Body: motivo (string required enum=[DESISTENCIA_DO_CLIENTE, ERRO_DE_PEDIDO, PRAZO_EXCEDIDO] - motivo do cancelamento) | Headers: Authorization (required - Bearer JWT); X-Correlation-Id (optional - correlacao de log)",
+              "responses": "200 application/json - Pedido cancelado e estoque devolvido. schema: { pedidoId: integer; status: string enum=[CANCELADO]; itensDevolvidos: array de { produtoId: integer; quantidade: integer } } | 403 application/problem+json - pedido de outro cliente | 404 application/problem+json - pedido inexistente | 409 application/problem+json - pedido ja CANCELADO (code=PEDIDO_JA_CANCELADO), sem devolucao duplicada | 500 application/problem+json - item sem registro de estoque; transacao revertida (code=PRODUTO_SEM_REGISTRO_DE_ESTOQUE)",
+              "policies": "Rate: TOKEN_BUCKET limit/cliente: 30 req/min. Caching: cacheable=False. Idempotency: natural — o 409 em pedido ja CANCELADO garante que o estoque nao e devolvido duas vezes.",
+              "openApiRef": "api-contracts.yaml#/paths/~1v1~1pedidos~1{pedidoId}~1cancelamento/post",
+              "tags": [
+                "Pedidos"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

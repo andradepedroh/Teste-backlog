@@ -1,0 +1,34 @@
+{
+  "_comentario": "O que cada camada TEM que achar na entrega desta fixture. A parte determinística é cobrada pelo validacao.test.mjs; a dos modelos, pela calibração manual descrita no LEIA-ME.md.",
+  "task": "TASK-FIX-001",
+  "dimensoes": ["regras-negocio", "testes", "seguranca", "performance", "observabilidade", "rules-tecnicas"],
+  "deterministico": {
+    "CUMPRE": ["MSG-ESTOQUE_INSUFICIENTE"],
+    "NAO_CUMPRE": ["MSG-ESTOQUE_INSUFICIENTE-TESTE", "MSG-LIMITE_ITENS", "MSG-LIMITE_ITENS-TESTE"]
+  },
+  "modelos": {
+    "regras-negocio": [
+      { "id": "RN-EST-001", "veredito": "NAO_CUMPRE", "porque": "compara o estoque com zero, não com a quantidade pedida" },
+      { "id": "RN-LIM-002", "veredito": "NAO_CUMPRE", "porque": "não limita o pedido a 10 itens" },
+      { "id": "AS-FIX-001-02", "veredito": "NAO_CUMPRE", "porque": "pedir 3 unidades com estoque 1 é aceito" }
+    ],
+    "testes": [
+      { "id": "RN-EST-001", "veredito": "NAO_CUMPRE", "porque": "assert.rejects sem conferir a mensagem" },
+      { "id": "RN-LIM-002", "veredito": "NAO_CUMPRE", "porque": "não há teste do limite" }
+    ],
+    "seguranca": [
+      { "achado": "CPF e e-mail do cliente no log", "arquivo": "src/pedidos/pedido.service.js", "severidadeMinima": "ALTO" }
+    ],
+    "performance": [
+      { "achado": "uma consulta de estoque por item, existindo buscarEstoques", "arquivo": "src/pedidos/pedido.service.js", "severidadeMinima": "ALTO" }
+    ],
+    "observabilidade": [
+      { "achado": "erro da gravação engolido no catch", "arquivo": "src/pedidos/pedido.service.js", "severidadeMinima": "ALTO" },
+      { "achado": "CPF e e-mail do cliente no log", "arquivo": "src/pedidos/pedido.service.js", "severidadeMinima": "ALTO" }
+    ],
+    "rules-tecnicas": [
+      { "achado": "fetch dentro do componente", "arquivo": "src/components/ResumoPedido.jsx", "severidadeMinima": "ALTO" },
+      { "achado": "formatação de dinheiro no JSX", "arquivo": "src/components/ResumoPedido.jsx", "severidadeMinima": "ALTO" }
+    ]
+  }
+}

@@ -1,0 +1,105 @@
+---
+description: "{{AUTH_DESCRIPTION}}"
+globs: "**/security/**,**/auth/**,**/filter/**,**/middleware/**"
+alwaysApply: false
+---
+
+# Auth — {{PROJECT_NAME}}
+
+> Ver **security.mdc** para regras universais de senha, tokens, MFA e headers.
+
+---
+
+## Autenticação — {{AUTH_MECHANISM}}
+
+**MUST:** Todo endpoint protegido exige `{{AUTH_TOKEN_HEADER}}` válido — validado em `{{AUTH_VALIDATION_LOCATION}}`.
+
+**MUST NOT:** Lógica de validação de token duplicada em cada controller — centralizar no `{{AUTH_FILTER_NAME}}`.
+
+{{AUTH_MECHANISM_RULES}}
+
+---
+
+## Autorização — {{AUTHZ_MODEL}}
+
+### Roles definidas neste projeto
+
+| Role | O que pode fazer |
+|------|-----------------|
+{{ROLES_TABLE}}
+
+**MUST:** Verificação de role em `{{AUTHZ_ENFORCEMENT_LAYER}}` — nunca confiar só no frontend.
+
+**MUST NOT:** `{{HARDCODED_ROLE_CHECK_EXAMPLE}}` — lógica de role espalhada em use cases.
+
+---
+
+{{#if RATE_LIMITING}}
+## Rate Limiting
+
+**Implementação:** `{{RATE_LIMIT_TOOL}}`
+
+| Endpoint | Limite | Janela |
+|----------|--------|--------|
+{{RATE_LIMIT_TABLE}}
+
+```{{LANGUAGE}}
+{{RATE_LIMIT_EXAMPLE}}
+```
+{{/if}}
+
+---
+
+{{#if IDEMPOTENCY}}
+## Idempotência
+
+**Endpoints que exigem:** `{{IDEMPOTENCY_ENDPOINTS}}`
+
+**MUST:** Header `Idempotency-Key` (UUID v4 gerado pelo cliente).
+
+**MUST:** Chave armazenada em Redis com TTL `{{IDEMPOTENCY_TTL}}`.
+
+**MUST:** Reenvio com mesma chave → retorna resposta original sem re-executar.
+
+```{{LANGUAGE}}
+{{IDEMPOTENCY_EXAMPLE}}
+```
+{{/if}}
+
+---
+
+{{#if AUDIT}}
+## Trilha de Auditoria
+
+**MUST:** Registrar após commit da operação — nunca antes.
+
+| Operação | Entidade | Action |
+|----------|---------|--------|
+{{AUDIT_TABLE}}
+
+**MUST NOT:** PII bruta em `metadata` (CPF, nome completo, e-mail).
+
+```{{LANGUAGE}}
+{{AUDIT_EXAMPLE}}
+```
+{{/if}}
+
+---
+
+## CORS
+
+**MUST:** Origens permitidas explicitamente por ambiente — sem `*` em produção.
+
+```{{LANGUAGE}}
+{{CORS_CONFIG}}
+```
+
+---
+
+## Anti-patterns
+
+- Token em `localStorage` — usar cookie `httpOnly; Secure; SameSite=Strict`
+- Autorização apenas no frontend — backend sempre verifica
+- Logar tokens, senhas ou dados de autenticação
+- Endpoint admin sem verificação de role
+- Credencial hardcoded em código ou `.yml`

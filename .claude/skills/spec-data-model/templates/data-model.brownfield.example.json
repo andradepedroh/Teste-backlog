@@ -1,0 +1,170 @@
+{
+  "_comment": "Exemplo brownfield — estruturas existentes sendo alteradas. Cada ALTER documenta o estado atual e o delta.",
+  "skillVersion": "spec-data-model-1.4",
+  "schemaVersion": "data-model/v1",
+  "generatedAt": "2026-01-01T00:00:00Z",
+  "outputLanguage": "pt-BR",
+  "projectName": "Projeto Exemplo Brownfield",
+  "changelog": [
+    { "version": "1.2", "date": "2026-09-09", "summary": "Acrescenta as entidades EnderecoEntrega (relacionamento ONE_TO_ONE com Pedido) e Produto (relacionamento MANY_TO_MANY com Pedido), para o exemplo passar a exercitar as quatro cardinalidades de relationships[].type no diagrama de entidades", "structural": true },
+    { "version": "1.1", "date": "2026-09-09", "summary": "Acrescenta a entidade EventoRastreamento (projeção da API da transportadora, dataOwnership EXTERNAL_PROJECTION) e os relacionamentos Pedido→Cliente (MANY_TO_ONE) e Pedido→EventoRastreamento (ONE_TO_MANY), para o exemplo passar a exercitar arestas no diagrama de entidades", "structural": true },
+    { "version": "1.0", "date": "2026-01-01", "summary": "Versão inicial do modelo — ALTER em Pedido para o módulo de rastreamento, mais referência ao cadastro externo de Cliente", "structural": true }
+  ],
+  "boundedContexts": [
+    {
+      "id": "BC-PEDIDOS",
+      "name": "Pedidos",
+      "description": "Domínio de pedidos — estrutura existente recebendo novos campos para o módulo de rastreamento",
+      "moduleIds": ["MOD-PEDIDOS", "MOD-RASTREAMENTO"],
+      "entities": [
+        {
+          "name": "Cliente",
+          "operationType": "EXISTING_REF",
+          "purpose": "Referência ao cadastro de cliente usado por Pedido — mantido inteiramente fora deste projeto",
+          "dataOwnership": {
+            "mode": "EXTERNAL_LOADED",
+            "source": "CRM legado — carga batch noturna via ETL",
+            "notes": "—"
+          },
+          "tableName": "tb_cliente",
+          "currentStateIfAlter": {
+            "description": "Tabela existente, carregada pelo ETL do CRM. Nenhuma coluna deste projeto grava nela.",
+            "existingColumns": ["id", "nome", "documento", "atualizado_em"],
+            "existingIndexes": ["idx_cliente_documento"]
+          },
+          "columns": [
+            { "name": "id", "type": "UUID", "nullable": false, "unique": true, "operationType": "EXISTING", "notes": "PK do CRM — somente leitura aqui" }
+          ],
+          "primaryKey": ["id"],
+          "relationships": [],
+          "traceability": []
+        },
+        {
+          "name": "Pedido",
+          "operationType": "ALTER",
+          "purpose": "Pedido existente — recebe campo de rastreamento e índice de busca por data",
+          "dataOwnership": {
+            "mode": "HYBRID",
+            "source": "codigo_rastreamento é escrito pelo webhook da transportadora; as demais colunas são nossas",
+            "notes": "As colunas id, cliente_id, valor_total, status e criado_em são escritas por este sistema. A coluna codigo_rastreamento é escrita pela integração da transportadora (webhook assíncrono) e apenas lida por nós."
+          },
+          "tableName": "tb_pedido",
+          "currentStateIfAlter": {
+            "description": "Tabela existente com colunas id, cliente_id, valor_total, status, criado_em",
+            "existingColumns": ["id", "cliente_id", "valor_total", "status", "criado_em"],
+            "existingIndexes": ["idx_pedido_cliente_id"]
+          },
+          "columns": [
+            { "name": "id", "type": "UUID", "nullable": false, "unique": true, "operationType": "EXISTING", "notes": "PK existente — não alterar" },
+            { "name": "codigo_rastreamento", "type": "VARCHAR(50)", "nullable": true, "unique": true, "operationType": "ALTER_ADD", "notes": "Novo campo para integração com transportadora", "businessRuleRef": "RN-RASTREAMENTO-001" },
+            { "name": "status", "type": "VARCHAR(30)", "nullable": false, "unique": false, "operationType": "ALTER_MODIFY", "notes": "ANTES: VARCHAR(20) — DEPOIS: VARCHAR(30) para suportar novos estados" }
+          ],
+          "primaryKey": ["id"],
+          "indexes": [
+            { "name": "idx_pedido_criado_em", "columns": ["criado_em"], "unique": false, "purpose": "Novo índice para busca por período — operação ALTER_ADD" }
+          ],
+          "relationships": [
+            { "targetEntity": "Cliente", "type": "MANY_TO_ONE", "foreignKey": "cliente_id", "cascade": "RESTRICT", "nullable": false },
+            { "targetEntity": "EventoRastreamento", "type": "ONE_TO_MANY", "foreignKey": "pedido_id", "cascade": "CASCADE", "nullable": false },
+            { "targetEntity": "EnderecoEntrega", "type": "ONE_TO_ONE", "foreignKey": "pedido_id", "cascade": "CASCADE", "nullable": false },
+            { "targetEntity": "Produto", "type": "MANY_TO_MANY" }
+          ],
+          "migrationNotes": "1. Adicionar coluna codigo_rastreamento (nullable inicialmente). 2. Ampliar VARCHAR de status de 20 para 30. 3. Criar índice idx_pedido_criado_em. Migration reversível: DROP COLUMN codigo_rastreamento; ALTER COLUMN status TYPE VARCHAR(20); DROP INDEX idx_pedido_criado_em.",
+          "traceability": [{ "section": "§ Módulo MOD-RASTREAMENTO", "itemId": "RF-RASTREAMENTO-003", "excerpt": "O sistema deve registrar o código de rastreamento de cada pedido" }]
+        },
+        {
+          "name": "EventoRastreamento",
+          "operationType": "NEW",
+          "purpose": "Evento de rastreamento do pedido, projetado sob demanda a partir da API de consulta da transportadora — histórico de status de entrega exibido ao cliente",
+          "dataOwnership": {
+            "mode": "EXTERNAL_PROJECTION",
+            "source": "API de consulta de rastreamento da transportadora — consultada sob demanda, sem cópia integral da base do provedor",
+            "notes": "Cada linha é a projeção, no momento da consulta, de um evento retornado pela API da transportadora; não há sincronização periódica nem garantia de que o histórico completo do provedor esteja refletido aqui."
+          },
+          "tableName": "tb_evento_rastreamento",
+          "identifierStrategy": "UUID",
+          "columns": [
+            { "name": "id", "type": "UUID", "nullable": false, "unique": true, "operationType": "NEW", "notes": "PK — gerado por nós ao projetar o evento, não vem da transportadora" },
+            { "name": "pedido_id", "type": "UUID", "nullable": false, "unique": false, "operationType": "NEW", "notes": "FK para Pedido" },
+            { "name": "status_transportadora", "type": "VARCHAR(50)", "nullable": false, "unique": false, "operationType": "NEW", "notes": "Status bruto retornado pela API da transportadora, sem tradução" },
+            { "name": "ocorrido_em", "type": "TIMESTAMP WITH TIME ZONE", "nullable": false, "unique": false, "operationType": "NEW", "notes": null }
+          ],
+          "primaryKey": ["id"],
+          "relationships": [],
+          "traceability": [{ "section": "§ Módulo MOD-RASTREAMENTO", "itemId": "RF-RASTREAMENTO-004", "excerpt": "O sistema deve exibir ao cliente o histórico de eventos de rastreamento retornados pela transportadora" }]
+        },
+        {
+          "name": "EnderecoEntrega",
+          "operationType": "NEW",
+          "purpose": "Endereço de entrega deste pedido — retrato imutável capturado no momento da compra, para auditoria e reenvio; não é o cadastro de endereços do cliente",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "—",
+            "notes": "—"
+          },
+          "tableName": "tb_endereco_entrega",
+          "identifierStrategy": "UUID",
+          "columns": [
+            { "name": "id", "type": "UUID", "nullable": false, "unique": true, "operationType": "NEW", "notes": "PK" },
+            { "name": "pedido_id", "type": "UUID", "nullable": false, "unique": true, "operationType": "NEW", "notes": "FK para Pedido — UNIQUE garante no máximo um endereço por pedido, o que faz da relação 1:1" },
+            { "name": "logradouro", "type": "VARCHAR(255)", "nullable": false, "unique": false, "operationType": "NEW", "notes": null },
+            { "name": "numero", "type": "VARCHAR(20)", "nullable": true, "unique": false, "operationType": "NEW", "notes": null },
+            { "name": "cidade", "type": "VARCHAR(120)", "nullable": false, "unique": false, "operationType": "NEW", "notes": null },
+            { "name": "uf", "type": "CHAR(2)", "nullable": false, "unique": false, "operationType": "NEW", "notes": null },
+            { "name": "cep", "type": "VARCHAR(9)", "nullable": false, "unique": false, "operationType": "NEW", "notes": null }
+          ],
+          "primaryKey": ["id"],
+          "indexes": [
+            { "name": "idx_endereco_entrega_pedido_id", "columns": ["pedido_id"], "unique": true, "purpose": "Garante um único endereço de entrega por pedido — é o unique que torna a relação 1:1, não apenas 1:N" }
+          ],
+          "relationships": [],
+          "migrationNotes": "Nova tabela — CREATE TABLE tb_endereco_entrega com FK única (UNIQUE) para tb_pedido(id).",
+          "traceability": [{ "section": "§ Módulo MOD-PEDIDOS", "itemId": "RF-PEDIDOS-010", "excerpt": "O sistema deve registrar o endereço de entrega vigente no momento em que o pedido foi realizado" }]
+        },
+        {
+          "name": "Produto",
+          "operationType": "NEW",
+          "purpose": "Produto do catálogo — um pedido pode conter vários produtos e um produto pode aparecer em vários pedidos; a resolução física via tabela de junção (com quantidade e preço praticado) fica para a fase de tasks/migrations, fora do escopo deste modelo lógico",
+          "dataOwnership": {
+            "mode": "OWNED",
+            "source": "—",
+            "notes": "—"
+          },
+          "tableName": "tb_produto",
+          "identifierStrategy": "UUID",
+          "columns": [
+            { "name": "id", "type": "UUID", "nullable": false, "unique": true, "operationType": "NEW", "notes": "PK" },
+            { "name": "sku", "type": "VARCHAR(50)", "nullable": false, "unique": true, "operationType": "NEW", "notes": null },
+            { "name": "nome", "type": "VARCHAR(255)", "nullable": false, "unique": false, "operationType": "NEW", "notes": null },
+            { "name": "preco", "type": "DECIMAL(10,2)", "nullable": false, "unique": false, "operationType": "NEW", "notes": null }
+          ],
+          "primaryKey": ["id"],
+          "relationships": [],
+          "traceability": [{ "section": "§ Módulo MOD-PEDIDOS", "itemId": "RF-PEDIDOS-011", "excerpt": "O sistema deve manter um catálogo de produtos que podem compor os pedidos" }]
+        }
+      ],
+      "enumerations": [],
+      "asyncChannels": [
+        {
+          "kind": "TOPIC",
+          "name": "pedido.rastreamento.atualizado",
+          "direction": "OUTBOUND",
+          "operationType": "NEW",
+          "payloadSummary": "Publicado quando o código de rastreamento é associado ao pedido. Campos: pedidoId, codigoRastreamento, atualizadoEm.",
+          "retryAndIdempotency": "Produtor garante at-least-once; consumidores devem ser idempotentes por pedidoId."
+        }
+      ]
+    }
+  ],
+  "migrationsState": [
+    { "id": "20250310142000", "content": "Criação da tabela tb_pedido com colunas id, cliente_id, valor_total, status, criado_em", "appliedIn": "PROD", "declaredAt": "2025-03-12" },
+    { "id": "20251005091500", "content": "Criação do índice idx_pedido_cliente_id", "appliedIn": "PROD", "declaredAt": "2025-10-06" }
+  ],
+  "openQuestions": [
+    {
+      "description": "Não está especificado o tamanho máximo do campo codigo_rastreamento — assumido 50 caracteres conforme transportadoras comuns. Confirmar com responsável de negócio.",
+      "affectedEntity": "Pedido",
+      "requiredInformation": "Tamanho máximo do código de rastreamento e transportadoras suportadas"
+    }
+  ]
+}

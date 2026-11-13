@@ -1,0 +1,84 @@
+---
+description: "{{MESSAGING_DESCRIPTION}}"
+globs: "**/messaging/**,**/queue/**,**/consumer*,**/publisher*,**/listener*"
+alwaysApply: false
+---
+
+# Mensageria — {{PROJECT_NAME}}
+
+> Broker: **{{BROKER}}**
+> Ver **architecture.mdc** para onde ficam consumers e publishers nas camadas.
+> Ver **security.mdc** para credenciais e TLS.
+
+---
+
+## Naming
+
+**MUST:** {{EXCHANGE_OR_TOPIC_TYPE}} nomeados: `{{EXCHANGE_NAMING_PATTERN}}`
+Exemplos com os domínios deste projeto: `{{EXCHANGE_EXAMPLES}}`
+
+**MUST:** Queues nomeadas: `{{QUEUE_NAMING_PATTERN}}`
+Exemplos: `{{QUEUE_EXAMPLES}}`
+
+**MUST:** DLQ nomeada: `{{DLQ_NAMING_PATTERN}}`
+
+---
+
+## Consumer — Regras Obrigatórias
+
+**MUST:** Consumer **idempotente** — processar a mesma mensagem duas vezes produz o mesmo resultado.
+
+**MUST:** Implementar idempotência com `{{IDEMPOTENCY_KEY_FIELD}}` armazenado em `{{IDEMPOTENCY_STORAGE}}`.
+
+**MUST:** `{{ACK_MODE}}` — nunca auto-ack em consumers de negócio.
+
+**MUST:** Erro não-recuperável → `{{NACK_TO_DLQ}}` — mensagem vai para DLQ.
+
+**MUST:** Erro transitório → `{{RETRY_MECHANISM}}` com limite de `{{MAX_RETRIES}}` tentativas.
+
+```{{LANGUAGE}}
+{{CONSUMER_EXAMPLE}}
+```
+
+---
+
+## Publisher — Regras Obrigatórias
+
+**MUST:** Publicar **após** commit da operação de domínio — nunca dentro da transação antes do commit.
+
+**MUST:** Usar `{{TRANSACTIONAL_PUBLISH_MECHANISM}}` para garantir publicação somente após commit.
+
+**MUST NOT:** Publicar dentro de `{{TRANSACTION_ANNOTATION}}` antes do commit — risco de evento com rollback posterior.
+
+```{{LANGUAGE}}
+{{PUBLISHER_EXAMPLE}}
+```
+
+---
+
+## DLQ
+
+**MUST:** Toda queue de negócio tem DLQ correspondente.
+
+**MUST:** TTL na DLQ configurado: `{{DLQ_TTL}}`.
+
+**MUST:** Alerta quando mensagem chega na DLQ — ver **observability.mdc**.
+
+---
+
+## Retry
+
+**MUST:** Backoff exponencial: `{{RETRY_BACKOFF_CONFIG}}`
+
+**MUST NOT:** Retry em erros de negócio (4xx equivalente) — apenas erros transitórios de infraestrutura.
+
+---
+
+## Anti-patterns
+
+- Auto-ack em consumer de negócio — perde mensagem em crash
+- Consumer não-idempotente — duplica operação em redelivery
+- Publicar evento antes do commit da transação
+- Queue sem DLQ — mensagens rejeitadas desaparecem
+- Nomes sem contexto de domínio (`fila1`, `eventos`, `messages`)
+- Consumer que faz operação longa sem heartbeat — timeout de conexão derruba consumer

@@ -1,0 +1,784 @@
+{
+  "_comment": "Exemplo canônico do CONTRATO DE UI (extraído de tasks.hierarchy-example.json para leitura barata ao gerar tasks de frontend): STORY-001.uiContext — fields[] com options[] transcritas e optionsSource, máscaras, validations[] com mensagem de erro, grid{} (columns[], defaultSort, pagination, rowActions, emptyState) e filterBehavior{} (applyOn, combination, clearAll, persistence) — + TASK-001-002 (type: frontend). O exemplo canônico de BACKEND é tasks.example-completo.json; a hierarquia completa Epic/Feature/Story/Task continua em tasks.hierarchy-example.json.",
+  "metadata": {
+    "schemaVersion": "tasks/v5.3",
+    "outputLanguage": "pt-BR",
+    "backlogHierarchy": {
+      "levels": [
+        "epic",
+        "feature",
+        "story",
+        "task"
+      ],
+      "suggested": [
+        "epic",
+        "feature",
+        "story",
+        "task"
+      ],
+      "chosen": [
+        "epic",
+        "feature",
+        "story",
+        "task"
+      ],
+      "rationale": "Exemplo didatico cobrindo a cadeia completa de niveis de backlog.",
+      "decidedAt": "2026-07-07",
+      "decidedBy": "agent"
+    },
+    "effortSummary": {
+      "hoursPerDay": 8,
+      "method": "bottom-up grounded (spec-tasks)",
+      "manualHoursTotal": 26.5,
+      "aiAssistedHoursTotal": 23.5,
+      "manualDaysTotal": 3.3,
+      "aiAssistedDaysTotal": 2.9,
+      "byType": {
+        "backend": {
+          "manual": 10,
+          "aiAssisted": 8.5
+        },
+        "frontend": {
+          "manual": 16.5,
+          "aiAssisted": 15
+        }
+      }
+    },
+    "compactProse": {
+      "enabled": true,
+      "scope": [
+        "apiContracts",
+        "persistenceModel"
+      ],
+      "notes": "apiContracts e persistenceModel usam strings ricas - ver tasks.format-reference.md."
+    },
+    "azureDevOps": {
+      "processTemplateName": "Custom",
+      "workItemTypes": {
+        "epic": {
+          "wit": "Epic",
+          "publish": true
+        },
+        "feature": {
+          "wit": "Feature",
+          "publish": true
+        },
+        "story": {
+          "wit": "User Story",
+          "publish": true
+        },
+        "task": {
+          "wit": "Task",
+          "publish": true
+        }
+      }
+    }
+  },
+  "stories": [
+    {
+      "id": "STORY-001",
+      "featureId": "FEAT-001",
+      "epicId": "EPIC-001",
+      "name": "RF-MOD-EXEMPLO-001 - Criar pedido com validacao de estoque",
+      "priority": "HIGH",
+      "adoWorkItemType": "User Story",
+      "userStory": {
+        "asA": "cliente autenticado",
+        "iWant": "criar um pedido informando itens e endereco",
+        "soThat": "receber os produtos sem ligar para o suporte"
+      },
+      "narrative": {
+        "elevatorPitch": "Como cliente autenticado, quero criar um pedido informando itens e endereco, para receber os produtos com confirmacao imediata de que o pedido e viavel, sem precisar acionar o suporte por telefone.",
+        "context": "O cliente finaliza a compra no checkout. O sistema deve validar o estoque, calcular os totais e criar o pedido em estado pendente de pagamento, reservando os itens por tempo limitado. E a menor fatia entregavel do fluxo de vendas com valor de negocio direto.",
+        "problem": "Sem validacao automatica de estoque, pedidos sao criados sem itens disponiveis e acabam cancelados depois, gerando retrabalho e insatisfacao.",
+        "deliveredValue": "Confirmacao imediata de que o pedido e viavel, com reserva de estoque e link de pagamento, reduzindo cancelamentos e chamadas ao suporte.",
+        "actors": [
+          "Cliente final"
+        ],
+        "mainFlow": [
+          "Cliente envia itens e endereco",
+          "Sistema valida estoque e calcula o total",
+          "Sistema cria o pedido e retorna o link de pagamento"
+        ],
+        "userStoryStatement": "Como cliente autenticado, quero criar um pedido informando itens e endereco, para receber os produtos sem ligar para o suporte."
+      },
+      "successMetricsContribution": [
+        "Contribui para 90% dos pedidos criados em autoatendimento ao remover a etapa manual do suporte"
+      ],
+      "businessRules": [
+        {
+          "id": "RN-ESTOQUE-001",
+          "title": "Nao permitir pedido sem estoque",
+          "description": "Se a quantidade solicitada exceder o disponivel, retornar erro ao cliente com a lista de itens indisponiveis, sem reservar estoque parcial.",
+          "sourceTaskIds": [
+            "TASK-001-001"
+          ]
+        }
+      ],
+      "acceptanceCriteria": [
+        {
+          "id": "AC-STORY-001-01",
+          "statement": "Ao submeter um pedido valido com itens em estoque, o pedido e criado como pendente de pagamento e o estoque e reservado.",
+          "category": "HAPPY_PATH",
+          "relatedRuleIds": [
+            "RN-ESTOQUE-001"
+          ],
+          "sourceTaskIds": [
+            "TASK-001-001"
+          ]
+        }
+      ],
+      "deliveryScope": [
+        {
+          "taskId": "TASK-001-001",
+          "title": "Implementar endpoint POST /pedidos",
+          "businessOutcome": "Cliente consegue criar pedido com validacao de estoque e receber link de pagamento."
+        },
+        {
+          "taskId": "TASK-001-002",
+          "title": "Implementar a tela de revisao do carrinho",
+          "businessOutcome": "Cliente revisa os itens, escolhe o endereco e confirma a compra sem precisar do suporte."
+        }
+      ],
+      "uiContext": {
+        "tela": "TEL-014",
+        "telaNome": "Revisao do carrinho",
+        "rota": "/checkout/revisao",
+        "fluxo": "FLX-002 - Contratacao de pedido pelo cliente",
+        "etapa": "ETP-005 (ordem 3) - Revisar itens e confirmar a compra",
+        "estadosUI": [
+          "padrao - carrinho com itens e endereco selecionado",
+          "vazio - carrinho sem itens, com convite a voltar ao catalogo",
+          "carregando - recalculo de frete e total em andamento",
+          "erro - item sem estoque, com destaque no item e acao de ajustar quantidade"
+        ],
+        "regras": [
+          "RN-ESTOQUE-001 - a confirmacao so e aceita quando todos os itens tem estoque disponivel suficiente; caso contrario o pedido inteiro e recusado",
+          "RN-CHECKOUT-004 - a reserva do carrinho expira em 30 minutos e a tela exibe o tempo restante"
+        ],
+        "entidades": [
+          "TB_PEDIDO",
+          "TB_ITEM_PEDIDO",
+          "TB_ESTOQUE"
+        ],
+        "endpoints": [
+          "POST /pedidos",
+          "GET /enderecos"
+        ],
+        "screenshot": "outputs/spec/screens/TEL-014.png",
+        "fields": [
+          {
+            "name": "enderecoEntregaId",
+            "label": "Endereco de entrega",
+            "type": "select",
+            "required": true,
+            "selection": "single",
+            "optionsSource": {
+              "kind": "endpoint",
+              "ref": "GET /enderecos",
+              "notes": "Lista dinamica: apenas os enderecos do cliente autenticado."
+            },
+            "validations": [
+              {
+                "rule": "obrigatorio",
+                "errorMessage": "Selecione o endereco de entrega."
+              }
+            ],
+            "traceability": "RF-MOD-EXEMPLO-001"
+          },
+          {
+            "name": "formaEntrega",
+            "label": "Forma de entrega",
+            "type": "radio",
+            "required": true,
+            "selection": "single",
+            "optionsSource": {
+              "kind": "enum",
+              "ref": "FormaEntrega"
+            },
+            "options": [
+              {
+                "value": "ECONOMICA",
+                "label": "Economica - 7 a 10 dias uteis",
+                "default": true
+              },
+              {
+                "value": "PADRAO",
+                "label": "Padrao - 3 a 5 dias uteis"
+              },
+              {
+                "value": "EXPRESSA",
+                "label": "Expressa - 1 dia util",
+                "notes": "Indisponivel para itens volumosos."
+              }
+            ],
+            "validations": [
+              {
+                "rule": "obrigatorio",
+                "errorMessage": "Selecione a forma de entrega."
+              }
+            ],
+            "traceability": "RF-MOD-EXEMPLO-001"
+          },
+          {
+            "name": "cupomDesconto",
+            "label": "Cupom de desconto",
+            "type": "text",
+            "required": false,
+            "mask": "AAAA-0000",
+            "maxLength": 9,
+            "placeholder": "XXXX-0000",
+            "validations": [
+              {
+                "rule": "formato AAAA-0000",
+                "errorMessage": "Cupom invalido. Use o formato XXXX-0000."
+              },
+              {
+                "rule": "cupom vigente",
+                "errorMessage": "Cupom expirado ou nao aplicavel a este carrinho."
+              }
+            ]
+          },
+          {
+            "name": "quantidade",
+            "label": "Quantidade",
+            "type": "number",
+            "required": true,
+            "min": 1,
+            "max": 99,
+            "default": 1,
+            "validations": [
+              {
+                "rule": "min 1 e max 99",
+                "errorMessage": "Informe uma quantidade entre 1 e 99."
+              }
+            ]
+          },
+          {
+            "name": "aceiteTermos",
+            "label": "Li e aceito os termos de compra",
+            "type": "checkbox",
+            "required": true,
+            "default": false,
+            "validations": [
+              {
+                "rule": "obrigatorio",
+                "errorMessage": "E necessario aceitar os termos para confirmar a compra."
+              }
+            ]
+          }
+        ],
+        "grid": {
+          "columns": [
+            "Produto - nome e imagem em miniatura (40%, alinhado a esquerda)",
+            "Quantidade - campo numerico editavel de 1 a 99 (15%, centralizado)",
+            "Preco unitario - moeda R$ #.##0,00 (15%, alinhado a direita)",
+            "Subtotal - moeda R$ #.##0,00, recalculado ao alterar a quantidade (15%, alinhado a direita)",
+            "Disponibilidade - etiqueta Em estoque / Estoque insuficiente (15%, centralizado)"
+          ],
+          "defaultSort": "nomeProduto ASC",
+          "pagination": "client-side, sem paginacao - o carrinho tem no maximo 50 itens",
+          "rowActions": [
+            "Remover item",
+            "Salvar para depois"
+          ],
+          "emptyState": "Seu carrinho esta vazio. Volte ao catalogo para escolher produtos."
+        },
+        "filterBehavior": {
+          "applyOn": "change",
+          "combination": "AND",
+          "clearAll": true,
+          "persistence": "querystring",
+          "notes": "A alteracao de quantidade ou de forma de entrega recalcula o total imediatamente, sem botao de aplicar."
+        }
+      },
+      "tasks": [
+        {
+          "id": "TASK-001-002",
+          "storyId": "STORY-001",
+          "featureId": "FEAT-001",
+          "sequence": 2,
+          "title": "Implementar a tela de revisao do carrinho",
+          "description": "Construir a tela de revisao do carrinho com o inventario de campos, o grid de itens e o comportamento de recalculo, consumindo o endpoint de criacao de pedido.",
+          "type": "frontend",
+          "class": "functional",
+          "durationEstimatedDays": 2,
+          "effortHours": {
+            "manual": 16.5,
+            "aiAssisted": 15,
+            "basis": "base 15h (2 setup + 2,0×3 entidades + 1,5×3 cenarios + 0,5×5 campos UI) ×1,1 frontend = 16,5 · IA: 16,5/1,8×1,35 + 16,5×0,15 = 14,85 → 15,0"
+          },
+          "status": "PENDING",
+          "agentExecutionContext": {
+            "selfContainedSummary": "Construir a tela de revisao do carrinho (rota /checkout/revisao), ultima etapa antes da confirmacao da compra. CONTEXTO DE NEGOCIO: o cliente chega a esta tela com o carrinho montado; precisa conferir os itens, ajustar quantidades, escolher o endereco de entrega e a forma de entrega, opcionalmente aplicar um cupom, aceitar os termos e confirmar. A confirmacao dispara a criacao do pedido, que so e aceita quando todos os itens tem estoque suficiente; a reserva do carrinho expira em 30 minutos e a tela mostra o tempo restante. ATORES: CLIENTE final autenticado. INVENTARIO DE CAMPOS (transcrito em uiContext.fields): enderecoEntregaId (select, obrigatorio, opcoes vindas de GET /enderecos em runtime); formaEntrega (radio, obrigatorio, opcoes ECONOMICA 7 a 10 dias uteis - default, PADRAO 3 a 5 dias uteis, EXPRESSA 1 dia util); cupomDesconto (texto opcional, mascara AAAA-0000, ate 9 caracteres); quantidade (numero de 1 a 99, default 1, editavel por linha do grid); aceiteTermos (checkbox obrigatorio, default falso). GRID DE ITENS: colunas Produto, Quantidade, Preco unitario, Subtotal e Disponibilidade, ordenacao inicial por nome do produto, sem paginacao (maximo 50 itens), acoes por linha Remover item e Salvar para depois, e estado vazio com convite a voltar ao catalogo. COMPORTAMENTO DE FILTROS E RECALCULO: aplica ao alterar o campo (sem botao aplicar), combinacao AND entre os criterios, acao de limpar tudo disponivel e persistencia na querystring. FLUXO PRINCIPAL: (1) carregar o carrinho e os enderecos do cliente; (2) renderizar o grid e o resumo de valores; (3) recalcular o total ao alterar quantidade, endereco ou forma de entrega; (4) validar os campos obrigatorios no cliente; (5) enviar a confirmacao; (6) tratar a recusa por estoque insuficiente destacando o item; (7) redirecionar para o pagamento no sucesso. PRE-CONDICOES: cliente autenticado e carrinho com ao menos um item. POS-CONDICOES: pedido criado e cliente redirecionado ao pagamento, ou tela em estado de erro com o item problematico destacado e o carrinho preservado. DECISOES ARQUITETURAIS: estado do carrinho em store local com sincronizacao otimista, componente de grid controlado, debounce de 400 ms no recalculo e mensagens de erro por campo vindas do contrato de validacao.",
+            "criticalWarnings": [
+              "O recalculo do total nunca acontece no cliente como fonte de verdade: o valor exibido vem do servico.",
+              "A recusa por estoque insuficiente deve destacar o item especifico, nao mostrar erro generico."
+            ],
+            "doNotDo": [
+              "Nao permitir confirmar a compra com os termos nao aceitos.",
+              "Nao limpar o carrinho quando a confirmacao falha."
+            ],
+            "minimumOutputToDeliver": [
+              "Pagina /checkout/revisao com o grid de itens e o resumo de valores",
+              "Componentes de selecao de endereco e de forma de entrega",
+              "Testes de componente cobrindo os quatro estados de UI declarados"
+            ]
+          },
+          "implementationGuidance": {
+            "architecturalDecisions": [
+              "Estado do carrinho em store local, com sincronizacao otimista e reconciliacao apos a resposta do servico.",
+              "Componente de grid controlado, recebendo os itens e emitindo eventos de alteracao de quantidade.",
+              "Debounce de 400 ms no recalculo para nao disparar uma chamada por digito."
+            ],
+            "dataFlow": [
+              "1. Rota: carregar a tela /checkout/revisao com o carrinho do store.",
+              "2. Tela: buscar os enderecos do cliente para popular o campo de endereco.",
+              "3. Tela: renderizar o grid de itens com as cinco colunas declaradas.",
+              "4. Tela: renderizar o resumo de valores (subtotal, frete, desconto, total).",
+              "5. Interacao: ao alterar quantidade, aplicar debounce e recalcular.",
+              "6. Interacao: ao alterar endereco ou forma de entrega, recalcular o frete.",
+              "7. Validacao: verificar campos obrigatorios e aceite dos termos.",
+              "8. Envio: enviar a confirmacao com endereco, forma de entrega, itens e cupom.",
+              "9. Resposta de sucesso: redirecionar para a tela de pagamento.",
+              "10. Resposta de recusa por estoque: destacar o item e manter o carrinho.",
+              "11. Resposta de erro tecnico: exibir o estado de erro com acao de tentar novamente.",
+              "12. Expiracao: ao esgotar os 30 minutos, bloquear a confirmacao e oferecer recarregar."
+            ],
+            "errorHandling": {
+              "ESTOQUE_INSUFICIENTE": {
+                "scenario": "A confirmacao e recusada porque um item nao tem estoque suficiente.",
+                "action": "Destacar a linha do item no grid, exibir a quantidade disponivel e manter os demais itens.",
+                "userImpact": "O cliente ajusta a quantidade do item e confirma novamente, sem remontar o carrinho."
+              },
+              "CAMPO_OBRIGATORIO_AUSENTE": {
+                "scenario": "O cliente tenta confirmar sem endereco, sem forma de entrega ou sem aceitar os termos.",
+                "action": "Bloquear o envio e exibir a mensagem de erro do campo, com foco no primeiro campo invalido.",
+                "userImpact": "O cliente ve exatamente qual campo esta em falta."
+              },
+              "RESERVA_EXPIRADA": {
+                "scenario": "Os 30 minutos de reserva do carrinho terminam com a tela aberta.",
+                "action": "Bloquear a confirmacao, exibir aviso de expiracao e oferecer a acao de recarregar o carrinho.",
+                "userImpact": "O cliente entende por que a compra nao pode ser concluida e como retomar."
+              }
+            },
+            "observability": {
+              "structuredLogging": [
+                "Log de abertura da tela (INFO): correlationId, clienteId, quantidade de itens.",
+                "Log de recalculo (DEBUG): correlationId, campo alterado, novo total.",
+                "Log de recusa (WARN): correlationId, codigo de erro, item afetado."
+              ],
+              "metrics": [
+                "Counter checkout_revisao_confirmacoes_total por resultado.",
+                "Histogram checkout_revisao_recalculo_duration_seconds.",
+                "Counter checkout_revisao_abandono_total por motivo."
+              ],
+              "tracing": [
+                "Span raiz de carregamento da tela com spans filhos de carga de enderecos e de recalculo."
+              ]
+            },
+            "testingStrategy": {
+              "unitTests": [
+                "grid_alterarQuantidade_deveRecalcularSubtotal",
+                "form_semAceiteTermos_deveBloquearConfirmacao"
+              ],
+              "integrationTests": [
+                "estado vazio exibe o convite a voltar ao catalogo",
+                "recusa por estoque insuficiente destaca a linha do item"
+              ],
+              "e2e": [
+                "cliente revisa o carrinho, confirma e chega a tela de pagamento"
+              ]
+            }
+          },
+          "uiContext": {
+            "tela": "TEL-014",
+            "telaNome": "Revisao do carrinho",
+            "rota": "/checkout/revisao",
+            "fluxo": "FLX-002 - Contratacao de pedido pelo cliente",
+            "etapa": "ETP-005 (ordem 3) - Revisar itens e confirmar a compra",
+            "estadosUI": [
+              "padrao - carrinho com itens e endereco selecionado",
+              "vazio - carrinho sem itens, com convite a voltar ao catalogo",
+              "carregando - recalculo de frete e total em andamento",
+              "erro - item sem estoque, com destaque no item e acao de ajustar quantidade"
+            ],
+            "regras": [
+              "RN-ESTOQUE-001 - a confirmacao so e aceita quando todos os itens tem estoque disponivel suficiente; caso contrario o pedido inteiro e recusado",
+              "RN-CHECKOUT-004 - a reserva do carrinho expira em 30 minutos e a tela exibe o tempo restante"
+            ],
+            "entidades": [
+              "TB_PEDIDO",
+              "TB_ITEM_PEDIDO",
+              "TB_ESTOQUE"
+            ],
+            "endpoints": [
+              "POST /pedidos",
+              "GET /enderecos"
+            ],
+            "screenshot": "outputs/spec/screens/TEL-014.png",
+            "fields": [
+              {
+                "name": "enderecoEntregaId",
+                "label": "Endereco de entrega",
+                "type": "select",
+                "required": true,
+                "selection": "single",
+                "optionsSource": {
+                  "kind": "endpoint",
+                  "ref": "GET /enderecos",
+                  "notes": "Lista dinamica: apenas os enderecos do cliente autenticado."
+                },
+                "validations": [
+                  {
+                    "rule": "obrigatorio",
+                    "errorMessage": "Selecione o endereco de entrega."
+                  }
+                ],
+                "traceability": "RF-MOD-EXEMPLO-001"
+              },
+              {
+                "name": "formaEntrega",
+                "label": "Forma de entrega",
+                "type": "radio",
+                "required": true,
+                "selection": "single",
+                "optionsSource": {
+                  "kind": "enum",
+                  "ref": "FormaEntrega"
+                },
+                "options": [
+                  {
+                    "value": "ECONOMICA",
+                    "label": "Economica - 7 a 10 dias uteis",
+                    "default": true
+                  },
+                  {
+                    "value": "PADRAO",
+                    "label": "Padrao - 3 a 5 dias uteis"
+                  },
+                  {
+                    "value": "EXPRESSA",
+                    "label": "Expressa - 1 dia util",
+                    "notes": "Indisponivel para itens volumosos."
+                  }
+                ],
+                "validations": [
+                  {
+                    "rule": "obrigatorio",
+                    "errorMessage": "Selecione a forma de entrega."
+                  }
+                ],
+                "traceability": "RF-MOD-EXEMPLO-001"
+              },
+              {
+                "name": "cupomDesconto",
+                "label": "Cupom de desconto",
+                "type": "text",
+                "required": false,
+                "mask": "AAAA-0000",
+                "maxLength": 9,
+                "placeholder": "XXXX-0000",
+                "validations": [
+                  {
+                    "rule": "formato AAAA-0000",
+                    "errorMessage": "Cupom invalido. Use o formato XXXX-0000."
+                  },
+                  {
+                    "rule": "cupom vigente",
+                    "errorMessage": "Cupom expirado ou nao aplicavel a este carrinho."
+                  }
+                ]
+              },
+              {
+                "name": "quantidade",
+                "label": "Quantidade",
+                "type": "number",
+                "required": true,
+                "min": 1,
+                "max": 99,
+                "default": 1,
+                "validations": [
+                  {
+                    "rule": "min 1 e max 99",
+                    "errorMessage": "Informe uma quantidade entre 1 e 99."
+                  }
+                ]
+              },
+              {
+                "name": "aceiteTermos",
+                "label": "Li e aceito os termos de compra",
+                "type": "checkbox",
+                "required": true,
+                "default": false,
+                "validations": [
+                  {
+                    "rule": "obrigatorio",
+                    "errorMessage": "E necessario aceitar os termos para confirmar a compra."
+                  }
+                ]
+              }
+            ],
+            "grid": {
+              "columns": [
+                "Produto - nome e imagem em miniatura (40%, alinhado a esquerda)",
+                "Quantidade - campo numerico editavel de 1 a 99 (15%, centralizado)",
+                "Preco unitario - moeda R$ #.##0,00 (15%, alinhado a direita)",
+                "Subtotal - moeda R$ #.##0,00, recalculado ao alterar a quantidade (15%, alinhado a direita)",
+                "Disponibilidade - etiqueta Em estoque / Estoque insuficiente (15%, centralizado)"
+              ],
+              "defaultSort": "nomeProduto ASC",
+              "pagination": "client-side, sem paginacao - o carrinho tem no maximo 50 itens",
+              "rowActions": [
+                "Remover item",
+                "Salvar para depois"
+              ],
+              "emptyState": "Seu carrinho esta vazio. Volte ao catalogo para escolher produtos."
+            },
+            "filterBehavior": {
+              "applyOn": "change",
+              "combination": "AND",
+              "clearAll": true,
+              "persistence": "querystring",
+              "notes": "A alteracao de quantidade ou de forma de entrega recalcula o total imediatamente, sem botao de aplicar."
+            }
+          },
+          "persistenceModel": {
+            "_comment": "Task de FRONTEND que apenas EXIBE o dado tambem embute a entidade — quem monta o grid precisa do nome real da coluna, do tipo e do dominio de valores. E a regra do gate TASK_MISSING_PERSISTENCE_MODEL.",
+            "entities": [
+              {
+                "table": "TB_PEDIDO",
+                "purpose": "Pedido exibido no cabecalho da revisao do carrinho (status e valor total).",
+                "boundedContext": "Gestao de Pedidos",
+                "operationType": "EXISTING_REF",
+                "identifierStrategy": "SEQUENCE (SEQ_PEDIDO)",
+                "primaryKey": "id",
+                "columns": "id BIGINT PK NOT NULL [READ_ONLY] - Identificador do pedido exibido na confirmacao. | status VARCHAR(40) NOT NULL [READ_ONLY] dominio=PENDENTE_PAGAMENTO,PAGO,CANCELADO - Rotulo de status mostrado ao cliente. | valor_total DECIMAL(10,2) NOT NULL [READ_ONLY] - Total formatado como R$ #.##0,00 no rodape.",
+                "relationships": "ONE_TO_MANY -> TB_ITEM_PEDIDO (id -> pedido_id) onDelete=CASCADE - Um pedido tem varios itens no grid",
+                "dataModelRef": "data-model.json#/tableName/TB_PEDIDO"
+              },
+              {
+                "table": "TB_ITEM_PEDIDO",
+                "purpose": "Linhas do grid de itens do carrinho.",
+                "boundedContext": "Gestao de Pedidos",
+                "operationType": "EXISTING_REF",
+                "identifierStrategy": "SEQUENCE (SEQ_ITEM_PEDIDO)",
+                "primaryKey": "id",
+                "columns": "id BIGINT PK NOT NULL [READ_ONLY] - Chave da linha do grid. | pedido_id BIGINT NOT NULL [READ_ONLY] - FK para TB_PEDIDO. | produto_nome VARCHAR(120) NOT NULL [READ_ONLY] - Coluna Produto do grid (40% da largura). | quantidade INTEGER NOT NULL [READ_ONLY] min=1 max=99 - Coluna Quantidade, editavel na tela. | preco_unitario DECIMAL(10,2) NOT NULL [READ_ONLY] - Coluna Preco unitario, moeda R$ #.##0,00. | subtotal DECIMAL(10,2) NOT NULL [READ_ONLY] - Coluna Subtotal, recalculada ao alterar a quantidade.",
+                "relationships": "MANY_TO_ONE -> TB_PEDIDO (pedido_id -> id) onDelete=CASCADE - Cada item pertence a um pedido",
+                "dataModelRef": "data-model.json#/tableName/TB_ITEM_PEDIDO"
+              },
+              {
+                "table": "TB_ESTOQUE",
+                "purpose": "Origem da etiqueta de disponibilidade exibida por linha do grid.",
+                "boundedContext": "Gestao de Estoque",
+                "operationType": "EXISTING_REF",
+                "identifierStrategy": "SEQUENCE (SEQ_ESTOQUE)",
+                "primaryKey": "id",
+                "columns": "id BIGINT PK NOT NULL [READ_ONLY] - Chave do registro de estoque. | produto_id BIGINT NOT NULL [READ_ONLY] - Produto correspondente a linha do grid. | quantidade_disponivel INTEGER NOT NULL [READ_ONLY] - Quando menor que a quantidade pedida, a etiqueta vira 'Estoque insuficiente'.",
+                "relationships": "MANY_TO_ONE -> TB_PRODUTO (produto_id -> id) onDelete=RESTRICT - Cada registro de estoque refere um produto",
+                "dataModelRef": "data-model.json#/tableName/TB_ESTOQUE"
+              }
+            ]
+          },
+          "acceptanceScenarios": [
+            {
+              "id": "AS-TASK-001-002-01",
+              "category": "HAPPY_PATH",
+              "title": "Confirmar a compra a partir da tela de revisao",
+              "given": "Cliente 42 autenticado, carrinho com 2 unidades do produto 100 em estoque, endereco 7 cadastrado e termos ainda nao aceitos",
+              "when": "O cliente seleciona o endereco 7, mantem a forma de entrega ECONOMICA, aceita os termos e confirma a compra",
+              "then": [
+                "A tela envia a confirmacao com endereco, forma de entrega e itens",
+                "O cliente e redirecionado para a tela de pagamento do pedido criado",
+                "O carrinho e esvaziado apenas apos o sucesso da confirmacao"
+              ],
+              "testData": {
+                "request": {
+                  "method": "POST",
+                  "path": "/pedidos",
+                  "headers": {
+                    "Authorization": "Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiI0MiJ9.assinatura",
+                    "Idempotency-Key": "d4e5f6a7-b8c9-0123-def4-56789012345a"
+                  },
+                  "body": {
+                    "enderecoEntregaId": 7,
+                    "formaEntrega": "ECONOMICA",
+                    "itens": [
+                      {
+                        "produtoId": 100,
+                        "quantidade": 2
+                      }
+                    ]
+                  }
+                },
+                "expectedResponse": {
+                  "statusCode": 201,
+                  "body": {
+                    "id": 789,
+                    "status": "PENDENTE_PAGAMENTO",
+                    "linkPagamento": "/pedidos/789/pagamento"
+                  }
+                },
+                "expectedDatabaseState": {
+                  "TB_PEDIDO": "1 registro novo: id=789, cliente_id=42, status=PENDENTE_PAGAMENTO",
+                  "TB_ESTOQUE": "produto 100: quantidade_disponivel reduzida em 2 unidades"
+                }
+              },
+              "verificationSteps": [
+                "Abrir /checkout/revisao com o carrinho preparado",
+                "Selecionar o endereco 7 e aceitar os termos",
+                "Confirmar a compra e observar o redirecionamento para /pedidos/789/pagamento",
+                "Conferir que o resumo de valores exibido corresponde ao total retornado"
+              ],
+              "relatedRules": [
+                "RN-ESTOQUE-001"
+              ]
+            },
+            {
+              "id": "AS-TASK-001-002-02",
+              "category": "INVALID_INPUT",
+              "title": "Bloquear a confirmacao sem aceite dos termos",
+              "given": "Cliente 42 autenticado na tela de revisao, com endereco 7 selecionado, forma de entrega PADRAO e o checkbox de termos desmarcado",
+              "when": "O cliente aciona o botao de confirmar a compra sem marcar o aceite dos termos",
+              "then": [
+                "A tela nao envia nenhuma requisicao de criacao de pedido",
+                "A mensagem 'E necessario aceitar os termos para confirmar a compra.' e exibida junto ao campo",
+                "O foco vai para o checkbox de aceite"
+              ],
+              "testData": {
+                "request": {
+                  "method": "POST",
+                  "path": "/pedidos",
+                  "headers": {
+                    "Authorization": "Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiI0MiJ9.assinatura"
+                  },
+                  "body": {
+                    "enderecoEntregaId": 7,
+                    "formaEntrega": "PADRAO",
+                    "aceiteTermos": false,
+                    "itens": [
+                      {
+                        "produtoId": 100,
+                        "quantidade": 2
+                      }
+                    ]
+                  }
+                },
+                "expectedResponse": {
+                  "statusCode": 0,
+                  "body": {
+                    "bloqueadoNoCliente": true,
+                    "campo": "aceiteTermos",
+                    "mensagem": "E necessario aceitar os termos para confirmar a compra."
+                  }
+                },
+                "expectedDatabaseState": {
+                  "TB_PEDIDO": "inalterado - a validacao de cliente impede a chamada",
+                  "TB_ESTOQUE": "inalterado - nenhuma reserva efetuada"
+                }
+              },
+              "verificationSteps": [
+                "Abrir /checkout/revisao com o carrinho preparado",
+                "Selecionar o endereco 7 e deixar o aceite dos termos desmarcado",
+                "Acionar o botao de confirmar e verificar que nenhuma chamada de rede e feita",
+                "Conferir a mensagem exibida e o foco no checkbox de aceite"
+              ]
+            },
+            {
+              "id": "AS-TASK-001-002-03",
+              "category": "BUSINESS_RULE_VIOLATION",
+              "title": "Destacar o item sem estoque quando a confirmacao e recusada (RN-ESTOQUE-001)",
+              "given": "Cliente 42 autenticado na tela de revisao com 5 unidades do produto 100 no carrinho, mas apenas 1 unidade disponivel em TB_ESTOQUE",
+              "when": "O cliente aceita os termos e confirma a compra",
+              "then": [
+                "A tela entra no estado de erro previsto em estadosUI",
+                "A linha do produto 100 e destacada com a etiqueta 'Estoque insuficiente' e a quantidade disponivel",
+                "O carrinho e preservado para o cliente ajustar a quantidade"
+              ],
+              "testData": {
+                "request": {
+                  "method": "POST",
+                  "path": "/pedidos",
+                  "headers": {
+                    "Authorization": "Bearer eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiI0MiJ9.assinatura",
+                    "Idempotency-Key": "e5f6a7b8-c9d0-1234-ef56-789012345abc"
+                  },
+                  "body": {
+                    "enderecoEntregaId": 7,
+                    "formaEntrega": "ECONOMICA",
+                    "aceiteTermos": true,
+                    "itens": [
+                      {
+                        "produtoId": 100,
+                        "quantidade": 5
+                      }
+                    ]
+                  }
+                },
+                "expectedResponse": {
+                  "statusCode": 422,
+                  "body": {
+                    "title": "Estoque insuficiente",
+                    "status": 422,
+                    "itensIndisponiveis": [
+                      {
+                        "produtoId": 100,
+                        "quantidadeSolicitada": 5,
+                        "quantidadeDisponivel": 1
+                      }
+                    ]
+                  }
+                },
+                "expectedDatabaseState": {
+                  "TB_PEDIDO": "inalterado - nenhum registro criado",
+                  "TB_ESTOQUE": "produto 100 permanece com 1 unidade disponivel"
+                }
+              },
+              "verificationSteps": [
+                "Ajustar TB_ESTOQUE para deixar o produto 100 com 1 unidade disponivel",
+                "Abrir /checkout/revisao com 5 unidades do produto 100 no carrinho",
+                "Aceitar os termos e confirmar a compra",
+                "Conferir o estado de erro, o destaque da linha e a preservacao do carrinho"
+              ],
+              "relatedRules": [
+                "RN-ESTOQUE-001"
+              ]
+            }
+          ],
+          "validation": {
+            "businessCriteria": [
+              "O cliente consegue revisar itens, escolher endereco e forma de entrega e confirmar sem apoio do suporte.",
+              "A recusa por falta de estoque identifica o item exato e preserva o carrinho."
+            ],
+            "technicalCriteria": [
+              "Os quatro estados de UI declarados em estadosUI tem cobertura de teste.",
+              "Nenhum campo de selecao e renderizado sem as opcoes declaradas em uiContext.fields."
+            ]
+          }
+        }
+      ],
+      "sourceRefs": [
+        {
+          "document": "requirements.md",
+          "section": "RF-MOD-EXEMPLO-001",
+          "itemId": "RF-MOD-EXEMPLO-001"
+        },
+        {
+          "document": "business-rules.md",
+          "section": "RN-ESTOQUE-001",
+          "itemId": "RN-ESTOQUE-001"
+        }
+      ],
+      "traceability": {
+        "requirementIds": [
+          "RF-MOD-EXEMPLO-001"
+        ],
+        "sourceTaskIds": [
+          "TASK-001-001",
+          "TASK-001-002"
+        ]
+      }
+    }
+  ]
+}

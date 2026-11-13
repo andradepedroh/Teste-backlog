@@ -1,0 +1,18 @@
+{
+  "_comment": "LEGADO - a spec-tasks NAO gera mais tasks class=uat (gate NO_UAT_BACKLOG, FATAL; ver SKILL.md secao Homologacao NAO entra no backlog). Mantido apenas para validar o shape de artefatos antigos. Exemplo de task class=uat (execucao manual de homologacao). Valida contra #/definitions/Task. Isenta dos validators de auto-suficiencia tecnica; a fonte humana e o test-plan.md. Sumario curto e permitido; referencia ao test-plan.md e permitida para class=uat.",
+  "id": "EPIC-001-VAL-T01",
+  "storyId": "EPIC-001-VAL",
+  "type": "documentation",
+  "class": "uat",
+  "title": "Executar testes PRINCIPAL - Gestao de pedidos",
+  "testCaseIds": ["TC-001", "TC-002"],
+  "durationEstimatedDays": 0.5,
+  "tags": ["UAT", "homologacao", "negocio"],
+  "agentExecutionContext": {
+    "selfContainedSummary": "Execucao manual dos casos de teste PRINCIPAL da epica Gestao de pedidos (TC-001, TC-002). O executor (PO, analista ou cliente) segue os passos descritos no test-plan.md e registra Aprovado/Reprovado por caso.",
+    "minimumOutputToDeliver": [
+      "Resultado (Aprovado/Reprovado) de cada TC executado",
+      "Evidencias anexadas quando houver reprovacao"
+    ]
+  }
+}

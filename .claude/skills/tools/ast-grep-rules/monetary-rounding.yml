@@ -1,0 +1,23 @@
+# Regra 9 — arredondamento monetário (round/toFixed/Decimal)
+id: monetary-rounding-js
+language: javascript
+severity: hint
+message: "Arredondamento numérico — se o valor for monetário, a política de arredondamento (casas, direção, quando) é regra de negócio. Redigir RN."
+rule:
+  any:
+    - pattern: $X.toFixed($N)
+    - pattern: Math.round($$$A)
+    - pattern: Math.floor($$$A)
+    - pattern: Math.ceil($$$A)
+---
+id: monetary-rounding-py
+language: python
+severity: hint
+message: "Arredondamento numérico — se o valor for monetário, a política de arredondamento (casas, direção, quando) é regra de negócio. Redigir RN."
+rule:
+  any:
+    - pattern: round($$$A)
+    - pattern: $X.quantize($$$A)
+    - pattern: Decimal($$$A)
+    - pattern: math.floor($$$A)
+    - pattern: math.ceil($$$A)

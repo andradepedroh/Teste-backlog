@@ -1,0 +1,210 @@
+openapi: "3.0.3"
+info:
+  title: "Nome da API — Projeto Exemplo"
+  description: "Descrição da API em Português do Brasil."
+  version: "1.0.0"
+  contact:
+    name: "Equipe responsável"
+
+servers:
+  - url: "https://api.exemplo.com/v1"
+    description: "Produção"
+  - url: "https://api-staging.exemplo.com/v1"
+    description: "Staging"
+
+security:
+  - BearerAuth: []
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # RFC 7807 Problem Details — ver SKILL.md § "Alinhamento com o catálogo de erros".
+    # Todo 4xx/5xx documentado no catálogo de erros usa este schema (ou extensão dele com x-*).
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: "URI que identifica o tipo do erro (pode ser âncora lógica, ex.: 'about:blank')"
+          example: "https://api.exemplo.com/erros/recurso-nao-encontrado"
+        title:
+          type: string
+          description: "Resumo curto e legível do tipo de erro, em pt-BR"
+          example: "Recurso não encontrado"
+        status:
+          type: integer
+          description: "Código de status HTTP repetido no corpo, para conveniência"
+          example: 404
+        detail:
+          type: string
+          description: "Explicação específica desta ocorrência, em pt-BR"
+          example: "O recurso solicitado não foi encontrado."
+        instance:
+          type: string
+          format: uri
+          description: "URI que identifica esta ocorrência específica do erro (ex.: path da requisição)"
+          example: "/recursos-exemplo/123"
+        x-rn-violada:
+          type: string
+          description: "Extensão do domínio: identificador da regra de negócio (RN-XXX) violada, quando aplicável"
+          example: "RN-MOD-EXEMPLO-001"
+        traceId:
+          type: string
+          description: "Extensão do domínio: ID de rastreamento da requisição"
+
+    # Substitua pelos schemas derivados de data-model.json
+    RecursoExemploRequest:
+      type: object
+      required: [nome]
+      properties:
+        nome:
+          type: string
+          maxLength: 255
+          description: "Nome do recurso em pt-BR"
+
+    RecursoExemploResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nome:
+          type: string
+        status:
+          type: string
+          enum: [PENDENTE, ATIVO, ENCERRADO]
+          description: "Status do ciclo de vida"
+        criadoEm:
+          type: string
+          format: date-time
+
+paths:
+  /recursos-exemplo:
+    post:
+      operationId: criarRecursoExemplo
+      summary: "Criar recurso de exemplo"
+      description: "Cria um novo recurso. Idempotente via Idempotency-Key."
+      tags: [RecursosExemplo]
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: false
+          schema:
+            type: string
+            format: uuid
+          description: "Chave de idempotência (UUID v4 gerado pelo cliente)"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecursoExemploRequest"
+            example:
+              nome: "Exemplo de recurso"
+      responses:
+        "201":
+          description: "Recurso criado com sucesso"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecursoExemploResponse"
+        "400":
+          description: "Requisição inválida"
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+              example:
+                type: "https://api.exemplo.com/erros/campo-obrigatorio-ausente"
+                title: "Campo obrigatório ausente"
+                status: 400
+                detail: "O campo 'nome' é obrigatório."
+                instance: "/recursos-exemplo"
+        "409":
+          description: "Conflito — Idempotency-Key já processada com payload DIFERENTE (mesma chave + mesmo payload devolve o 201 original, sem reprocessar)"
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+        "422":
+          description: "Regra de negócio violada"
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"
+
+    get:
+      operationId: listarRecursosExemplo
+      summary: "Listar recursos de exemplo"
+      description: "Lista paginada por cursor (lista transacional que cresce sob escrita concorrente — cursor evita duplicatas/saltos; ver catálogo de estilo do SKILL.md). Filtros na sintaxe filter[campo]."
+      tags: [RecursosExemplo]
+      parameters:
+        - name: "filter[status]"
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [PENDENTE, ATIVO, ENCERRADO]
+          description: "Filtro por status — múltiplos filtros combinam múltiplas chaves filter[campo]"
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: string
+          description: "Cursor opaco devolvido em nextCursor da página anterior; ausente = primeira página"
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
+            maximum: 100
+      responses:
+        "200":
+          description: "Página de resultados com cursor para a próxima"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RecursoExemploResponse"
+                  nextCursor:
+                    type: string
+                    nullable: true
+                    description: "Cursor da próxima página; null quando não há mais resultados"
+
+  /recursos-exemplo/{id}:
+    get:
+      operationId: obterRecursoExemplo
+      summary: "Obter recurso de exemplo por ID"
+      tags: [RecursosExemplo]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: "Recurso encontrado"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RecursoExemploResponse"
+        "404":
+          description: "Recurso não encontrado"
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/Problem"

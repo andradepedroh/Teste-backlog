@@ -1,0 +1,60 @@
+{
+  "skillVersion": "spec-data-model-1.4",
+  "schemaVersion": "data-model/v1",
+  "generatedAt": "2026-01-15T09:30:00Z",
+  "outputLanguage": "pt-BR",
+  "projectName": "NOME-DO-PROJETO",
+  "paths": {
+    "specRoot": "outputs/spec",
+    "pipelineRoot": "outputs/spec",
+    "rulesRoot": ".cursor/rules"
+  },
+  "changelog": [
+    { "version": "1.0", "date": "2026-01-15", "summary": "Versão inicial do modelo, gerada a partir do requirements.md", "structural": true }
+  ],
+  "boundedContexts": [
+    {
+      "id": "BC-001",
+      "name": "Nome do bounded context em pt-BR",
+      "description": "Descrição do domínio em pt-BR",
+      "moduleIds": ["MOD-EXEMPLO-A"],
+      "entities": [
+        {
+          "name": "EntidadeExemplo",
+          "operationType": "NEW",
+          "purpose": "Propósito da entidade em pt-BR",
+          "dataOwnership": { "mode": "OWNED", "source": "—", "notes": "—" },
+          "tableName": "tb_entidade_exemplo",
+          "identifierStrategy": "UUID",
+          "columns": [
+            { "name": "id", "type": "UUID", "nullable": false, "unique": true, "operationType": "NEW", "notes": "PK gerada automaticamente" },
+            { "name": "nome", "type": "VARCHAR(255)", "nullable": false, "unique": false, "operationType": "NEW", "notes": "Nome do registro", "businessRuleRef": "RN-XXX-001" },
+            { "name": "status", "type": "VARCHAR(50)", "nullable": false, "unique": false, "operationType": "NEW", "notes": "Status do ciclo de vida" },
+            { "name": "criado_em", "type": "TIMESTAMP WITH TIME ZONE", "nullable": false, "unique": false, "operationType": "NEW", "notes": null },
+            { "name": "atualizado_em", "type": "TIMESTAMP WITH TIME ZONE", "nullable": true, "unique": false, "operationType": "NEW", "notes": null }
+          ],
+          "primaryKey": ["id"],
+          "indexes": [
+            { "name": "idx_entidade_exemplo_status", "columns": ["status"], "unique": false, "purpose": "Consulta por status" }
+          ],
+          "relationships": [],
+          "traceability": [{ "section": "§ Módulo MOD-EXEMPLO-A", "itemId": "RF-MOD-EXEMPLO-A-001", "excerpt": "Trecho do requisito que originou esta entidade" }]
+        }
+      ],
+      "enumerations": [
+        {
+          "name": "StatusEntidadeExemplo",
+          "values": [
+            { "value": "PENDENTE", "label": "Pendente" },
+            { "value": "ATIVO", "label": "Ativo" },
+            { "value": "ENCERRADO", "label": "Encerrado" }
+          ],
+          "usedIn": ["EntidadeExemplo.status"]
+        }
+      ],
+      "asyncChannels": []
+    }
+  ],
+  "migrationsState": [],
+  "openQuestions": []
+}

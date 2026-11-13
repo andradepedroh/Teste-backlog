@@ -1,0 +1,289 @@
+{
+  "_comment": "FIXTURE NEGATIVO — cada item existe para provar que um validador FATAL dispara. É o oposto do tasks.fixture-compat.json: aqui espera-se REPROVAÇÃO. Rodar: node ../scripts/validate-tasks-business.mjs tasks.fixture-validators.json (esperado exit 1) e node ../scripts/validate-tasks-selfsufficiency.mjs tasks.fixture-validators.json (esperado exit 1). Se algum destes PASSAR, o validador correspondente regrediu.",
+  "_esperado": {
+    "NARRATIVE_NOT_BOILERPLATE": "STORY-CLONE-1 e STORY-CLONE-2 têm narrativa IDÊNTICA; STORY-DENY usa uma string da NARRATIVE_BOILERPLATE_DENYLIST.",
+    "LEVEL_GROUNDED_IN_SOURCE": "STORY-NOREF não tem sourceRefs[]; EPIC-NOREF também não.",
+    "CONSUMER_CONTRACT": "STORY-NONAME não tem name nem title; STORY-BADAC tem critério sem statement; STORY-BADTRACE tem traceability escalar.",
+    "LEVEL_DETAIL_UNDECLARED": "metadata['x-desvios-do-schema-default'] tenta suspender validadores em prosa livre.",
+    "UAT_TASK_HAS_SUMMARY": "TASK-UAT-SEM-SUMMARY é class=uat sem agentExecutionContext.selfContainedSummary (o defeito medido em 42/42 tasks de UAT do artefato real).",
+    "SPIKE_TASK_COMPLETE": "TASK-SPIKE-RASO tem apenas id/title/type — sem description, pergunta, timebox, critério de saída e GAP (o defeito medido nos 2 spikes do artefato real).",
+    "TASK_MISSING_API_CONTRACT": "TASK-FRONT-SEM-CONTRATO é type=frontend, cita a rota /v1/x/buscar no summary e no cenário e não tem apiContracts[] — o defeito medido em 18 tasks (e em 15/15 tasks de frontend) de um artefato real, que o validador aceitava com exit 0.",
+    "TASK_MISSING_PERSISTENCE_MODEL": "TASK-FRONT-SEM-CONTRATO também cita a tabela física tb_pedido_fixture e não tem persistenceModel.entities[].",
+    "(nenhum código de contrato)": "TASK-SEM-SUPERFICIE é o CONTROLE do par: task legítima sem API e sem dados (componente puro de formatação). NÃO pode disparar TASK_MISSING_API_CONTRACT nem TASK_MISSING_PERSISTENCE_MODEL — se disparar, o gatilho deixou de ser objetivo e passou a reprovar task correta."
+  },
+  "metadata": {
+    "schemaVersion": "tasks/v5.3",
+    "outputLanguage": "pt-BR",
+    "projectName": "Fixture negativo dos validadores",
+    "backlogHierarchy": {
+      "chosen": ["epic", "story", "task"]
+    },
+    "x-desvios-do-schema-default": "Epic e Feature carregam apenas título neste projeto; isso sobrepõe os validadores NARRATIVE_*/HAS_BUSINESS_RULES/HAS_ACCEPTANCE_CRITERIA."
+  },
+  "epics": [
+    {
+      "id": "EPIC-NOREF",
+      "name": "Epic sem ancoragem na especificação",
+      "containedStoryIds": ["STORY-CLONE-1", "STORY-CLONE-2", "STORY-DENY", "STORY-NOREF", "STORY-NONAME", "STORY-BADAC", "STORY-BADTRACE", "STORY-UAT", "STORY-SPIKE"],
+      "narrative": {
+        "elevatorPitch": "Para a pessoa que opera o processo, a consolidação do fluxo — um lugar único para acompanhar o andamento. Diferente do cenário atual, em que o acompanhamento é feito por mensagens avulsas, esta entrega permite ver o andamento numa só tela.",
+        "context": "Para a pessoa que opera o processo, a consolidação do fluxo — um lugar único para acompanhar o andamento. Diferente do cenário atual, em que o acompanhamento é feito por mensagens avulsas, esta entrega permite ver o andamento numa só tela.\n\nEste Epic existe apenas para o fixture negativo: não tem sourceRefs[], portanto LEVEL_GROUNDED_IN_SOURCE deve reprovar.",
+        "problem": "O acompanhamento do andamento é feito por mensagens avulsas, o que faz o estado real do processo depender de quem lembra do quê.",
+        "deliveredValue": "Andamento visível numa só tela, sem depender de troca de mensagens.",
+        "actors": ["Pessoa que opera o processo"]
+      },
+      "successMetrics": [{ "name": "Consultas de andamento por mensagem", "target": "redução de 80%", "baseline": "60 por semana" }],
+      "businessRules": [
+        {
+          "id": "REGRA-SEM-PROCEDENCIA",
+          "title": "Regra sem id de RN e sem sourceRefs",
+          "description": "Esta regra tem descrição longa o suficiente para passar o piso de 40 caracteres, mas o id não é de RN e não há sourceRefs nem sourceTaskIds — logo LEVEL_GROUNDED_IN_SOURCE deve apontar a falta de procedência."
+        }
+      ],
+      "acceptanceCriteria": [
+        { "id": "AC-SEM-RASTREIO-01", "statement": "A pessoa que opera o processo consegue ver o andamento numa só tela.", "category": "OUTCOME" }
+      ]
+    }
+  ],
+  "stories": [
+    {
+      "_comment": "Par de narrativa clonada — NARRATIVE_NOT_BOILERPLATE deve reprovar AS DUAS.",
+      "id": "STORY-CLONE-1",
+      "name": "Primeira história do par clonado",
+      "epicId": "EPIC-NOREF",
+      "priority": "MEDIUM",
+      "sourceRefs": [{ "document": "requirements.md", "section": "RF-X-001", "itemId": "RF-X-001" }],
+      "userStory": { "asA": "pessoa que opera o processo", "iWant": "ver o andamento", "soThat": "eu saiba o que falta" },
+      "narrative": {
+        "elevatorPitch": "Para a pessoa que opera o processo, o acompanhamento do andamento — uma listagem com o estado de cada item. Diferente do cenário atual, esta entrega permite ver o que falta sem perguntar a ninguém.",
+        "context": "Para a pessoa que opera o processo, o acompanhamento do andamento — uma listagem com o estado de cada item. Diferente do cenário atual, esta entrega permite ver o que falta sem perguntar a ninguém.\n\nNarrativa deliberadamente idêntica à de STORY-CLONE-2, para o validador ter o que reprovar neste fixture negativo.",
+        "problem": "Saber o que falta exige perguntar a outra pessoa, o que atrasa a decisão de priorização do dia.",
+        "deliveredValue": "O estado de cada item fica visível na listagem, sem consulta a terceiros.",
+        "actors": ["Pessoa que opera o processo"]
+      },
+      "businessRules": [
+        { "id": "RN-X-001", "title": "Estado exibido é o estado corrente", "description": "A listagem exibe sempre o estado corrente do item no momento da consulta, nunca um estado em cache de consulta anterior, porque decisão de priorização tomada sobre estado velho gera retrabalho e a pessoa não tem como saber que o dado estava desatualizado." }
+      ],
+      "acceptanceCriteria": [
+        { "id": "AC-CLONE-1-01", "statement": "A pessoa vê o estado corrente de cada item na listagem.", "category": "HAPPY_PATH", "relatedRuleIds": ["RN-X-001"] }
+      ],
+      "deliveryScope": [{ "taskId": "TASK-CLONE-1", "title": "Listagem de andamento", "businessOutcome": "Estado corrente visível na listagem." }],
+      "tasks": [
+        { "id": "TASK-CLONE-1", "storyId": "STORY-CLONE-1", "class": "functional", "title": "Listagem de andamento", "type": "backend", "agentExecutionContext": { "selfContainedSummary": "Task de fixture negativo — conteúdo mínimo; a reprovação esperada aqui é de nível story (narrativa clonada), não de auto-suficiência." } }
+      ]
+    },
+    {
+      "id": "STORY-CLONE-2",
+      "name": "Segunda história do par clonado",
+      "epicId": "EPIC-NOREF",
+      "priority": "MEDIUM",
+      "sourceRefs": [{ "document": "requirements.md", "section": "RF-X-002", "itemId": "RF-X-002" }],
+      "userStory": { "asA": "pessoa que opera o processo", "iWant": "ver o andamento", "soThat": "eu saiba o que falta" },
+      "narrative": {
+        "elevatorPitch": "Para a pessoa que opera o processo, o acompanhamento do andamento — uma listagem com o estado de cada item. Diferente do cenário atual, esta entrega permite ver o que falta sem perguntar a ninguém.",
+        "context": "Para a pessoa que opera o processo, o acompanhamento do andamento — uma listagem com o estado de cada item. Diferente do cenário atual, esta entrega permite ver o que falta sem perguntar a ninguém.\n\nNarrativa deliberadamente idêntica à de STORY-CLONE-2, para o validador ter o que reprovar neste fixture negativo.",
+        "problem": "Saber o que falta exige perguntar a outra pessoa, o que atrasa a decisão de priorização do dia.",
+        "deliveredValue": "O estado de cada item fica visível na listagem, sem consulta a terceiros.",
+        "actors": ["Pessoa que opera o processo"]
+      },
+      "businessRules": [
+        { "id": "RN-X-001", "title": "Estado exibido é o estado corrente", "description": "A listagem exibe sempre o estado corrente do item no momento da consulta, nunca um estado em cache de consulta anterior, porque decisão de priorização tomada sobre estado velho gera retrabalho e a pessoa não tem como saber que o dado estava desatualizado." }
+      ],
+      "acceptanceCriteria": [
+        { "id": "AC-CLONE-2-01", "statement": "A pessoa vê o estado corrente de cada item na listagem.", "category": "HAPPY_PATH", "relatedRuleIds": ["RN-X-001"] }
+      ],
+      "deliveryScope": [{ "taskId": "TASK-CLONE-2", "title": "Listagem de andamento", "businessOutcome": "Estado corrente visível na listagem." }],
+      "tasks": [
+        { "id": "TASK-CLONE-2", "storyId": "STORY-CLONE-2", "class": "functional", "title": "Listagem de andamento", "type": "backend", "agentExecutionContext": { "selfContainedSummary": "Task de fixture negativo — conteúdo mínimo." } }
+      ]
+    },
+    {
+      "_comment": "Boilerplate da DENYLIST — NARRATIVE_NOT_BOILERPLATE deve reprovar por string proibida.",
+      "id": "STORY-DENY",
+      "name": "História com texto de fallback proibido",
+      "epicId": "EPIC-NOREF",
+      "priority": "LOW",
+      "sourceRefs": [{ "document": "requirements.md", "section": "RF-X-003", "itemId": "RF-X-003" }],
+      "userStory": { "asA": "pessoa que opera o processo", "iWant": "algo", "soThat": "algum valor" },
+      "narrative": {
+        "elevatorPitch": "Para usuários do sistema, a capacidade do sistema é autoatendimento orientado com transparência e respaldo legal, diferente do cenário atual de atendimento manual e baixa autonomia.",
+        "context": "Para usuários do sistema, a capacidade do sistema é autoatendimento orientado com transparência e respaldo legal, diferente do cenário atual de atendimento manual e baixa autonomia.\n\nEste texto é exatamente o fallback hardcoded que o motor de síntese v2 injetava em todas as stories, independentemente do domínio do projeto.",
+        "problem": "O usuário não sabe qual serviço usar e recorre ao suporte por telefone.",
+        "deliveredValue": "Escolher o serviço correto com clareza, sem depender de suporte telefônico.",
+        "actors": ["Usuário / Requerente"]
+      },
+      "businessRules": [
+        { "id": "RN-X-003", "title": "Regra de fixture", "description": "Descrição longa o bastante para o piso de 40 caracteres, presente apenas para que o achado esperado seja o de boilerplate e não o de regra ausente." }
+      ],
+      "acceptanceCriteria": [
+        { "id": "AC-DENY-01", "statement": "O usuário consegue realizar a jornada de negócio desta história sem depender de suporte manual.", "category": "OUTCOME", "relatedRuleIds": ["RN-X-003"] }
+      ],
+      "deliveryScope": [{ "taskId": "TASK-DENY", "title": "Task de fixture", "businessOutcome": "Entrega de valor de negócio alinhada à história" }],
+      "tasks": [
+        { "id": "TASK-DENY", "storyId": "STORY-DENY", "class": "functional", "title": "Task de fixture", "type": "backend", "agentExecutionContext": { "selfContainedSummary": "Task de fixture negativo." } }
+      ]
+    },
+    {
+      "_comment": "Sem sourceRefs — LEVEL_GROUNDED_IN_SOURCE deve reprovar.",
+      "id": "STORY-NOREF",
+      "name": "História sem nenhuma âncora na especificação",
+      "epicId": "EPIC-NOREF",
+      "priority": "LOW",
+      "userStory": { "asA": "pessoa que opera o processo", "iWant": "exportar a lista", "soThat": "eu possa conferir fora do sistema" },
+      "narrative": {
+        "elevatorPitch": "Para a pessoa que opera o processo, a exportação da lista — um arquivo com o conteúdo da listagem corrente. Diferente do cenário atual, em que a conferência é feita na tela, esta entrega permite conferir o conteúdo fora do sistema.",
+        "context": "Para a pessoa que opera o processo, a exportação da lista — um arquivo com o conteúdo da listagem corrente. Diferente do cenário atual, em que a conferência é feita na tela, esta entrega permite conferir o conteúdo fora do sistema.\n\nEsta história tem narrativa plausível e nenhuma sourceRef: é exatamente o caso que LEVEL_GROUNDED_IN_SOURCE existe para reprovar.",
+        "problem": "A conferência é feita na tela, item por item, o que torna inviável revisar listas longas.",
+        "deliveredValue": "Conteúdo da listagem disponível em arquivo, conferível fora do sistema.",
+        "actors": ["Pessoa que opera o processo"]
+      },
+      "businessRules": [
+        { "id": "RN-X-004", "title": "Exportação reflete o filtro aplicado", "description": "O arquivo exportado contém exatamente os itens visíveis na listagem no momento do pedido, respeitando o filtro aplicado, porque um arquivo com recorte diferente do que a pessoa viu na tela é conferido contra a expectativa errada e a divergência é atribuída ao sistema." }
+      ],
+      "acceptanceCriteria": [
+        { "id": "AC-NOREF-01", "statement": "O arquivo exportado contém exatamente os itens visíveis na listagem no momento do pedido.", "category": "HAPPY_PATH", "relatedRuleIds": ["RN-X-004"] }
+      ],
+      "deliveryScope": [{ "taskId": "TASK-NOREF", "title": "Exportação da listagem", "businessOutcome": "Listagem conferível fora do sistema." }],
+      "tasks": [
+        { "id": "TASK-NOREF", "storyId": "STORY-NOREF", "class": "functional", "title": "Exportação da listagem", "type": "backend", "agentExecutionContext": { "selfContainedSummary": "Task de fixture negativo." } }
+      ]
+    },
+    {
+      "_comment": "Sem name e sem title — CONSUMER_CONTRACT deve reprovar (o consumidor publicaria '<id>: <id>').",
+      "id": "STORY-NONAME",
+      "epicId": "EPIC-NOREF",
+      "priority": "LOW",
+      "sourceRefs": [{ "document": "requirements.md", "section": "RF-X-005", "itemId": "RF-X-005" }],
+      "tasks": [
+        { "id": "TASK-NONAME", "storyId": "STORY-NONAME", "class": "functional", "title": "Task de fixture", "type": "backend", "agentExecutionContext": { "selfContainedSummary": "Task de fixture negativo." } }
+      ]
+    },
+    {
+      "_comment": "Critério sem statement — CONSUMER_CONTRACT deve reprovar (campo AcceptanceCriteria do ADO sairia vazio).",
+      "id": "STORY-BADAC",
+      "name": "História com critério em forma que o consumidor não lê",
+      "epicId": "EPIC-NOREF",
+      "priority": "LOW",
+      "sourceRefs": [{ "document": "requirements.md", "section": "RF-X-006", "itemId": "RF-X-006" }],
+      "acceptanceCriteria": [
+        { "id": "AC-BADAC-01", "given": "algo", "when": "algo acontece", "then": "algum resultado" }
+      ],
+      "tasks": [
+        { "id": "TASK-BADAC", "storyId": "STORY-BADAC", "class": "functional", "title": "Task de fixture", "type": "backend", "agentExecutionContext": { "selfContainedSummary": "Task de fixture negativo." } }
+      ]
+    },
+    {
+      "_comment": "traceability escalar — CONSUMER_CONTRACT deve reprovar (nenhum renderer o exibe).",
+      "id": "STORY-BADTRACE",
+      "name": "História com traceability em forma escalar",
+      "epicId": "EPIC-NOREF",
+      "priority": "LOW",
+      "sourceRefs": [{ "document": "requirements.md", "section": "RF-X-007", "itemId": "RF-X-007" }],
+      "traceability": "RF-X-007",
+      "tasks": [
+        { "id": "TASK-BADTRACE", "storyId": "STORY-BADTRACE", "class": "functional", "title": "Task de fixture", "type": "backend", "agentExecutionContext": { "selfContainedSummary": "Task de fixture negativo." } }
+      ]
+    },
+    {
+      "_comment": "Task de UAT sem selfContainedSummary — UAT_TASK_HAS_SUMMARY deve reprovar.",
+      "id": "STORY-UAT",
+      "name": "Validação de Negócio — fixture",
+      "epicId": "EPIC-NOREF",
+      "priority": "HIGH",
+      "testType": "UAT",
+      "sourceDocument": "outputs/spec/test-plan.md",
+      "tasks": [
+        {
+          "id": "TASK-UAT-SEM-SUMMARY",
+          "storyId": "STORY-UAT",
+          "class": "uat",
+          "type": "documentation",
+          "title": "Executar testes PRINCIPAL — fixture",
+          "description": "Executar os casos de teste do plano de homologação.\n\nConsultar o roteiro completo em outputs/spec/test-plan.md."
+        }
+      ]
+    },
+    {
+      "_comment": "Spike raso — SPIKE_TASK_COMPLETE deve reprovar por description, pergunta, timebox, critério de saída e GAP.",
+      "id": "STORY-SPIKE",
+      "name": "Investigações pendentes — fixture",
+      "epicId": "EPIC-NOREF",
+      "priority": "MEDIUM",
+      "sourceRefs": [{ "document": "gaps-document.md", "section": "GAP-099", "itemId": "GAP-099" }],
+      "tasks": [
+        {
+          "id": "TASK-SPIKE-RASO",
+          "storyId": "STORY-SPIKE",
+          "class": "spike",
+          "type": "documentation",
+          "adoWorkItemType": "Task",
+          "title": "Spike — investigar a alternativa técnica"
+        }
+      ]
+    },
+    {
+      "_comment": "Par de contrato técnico. TASK-FRONT-SEM-CONTRATO deve reprovar em TASK_MISSING_API_CONTRACT e TASK_MISSING_PERSISTENCE_MODEL; TASK-SEM-SUPERFICIE é o CONTROLE e não pode disparar nenhum dos dois. Os dois na MESMA story de propósito: prova que o gatilho é por CITAÇÃO da task, não pelo contexto da story.",
+      "id": "STORY-CONTRATO",
+      "name": "Consulta de pedidos na tela — fixture",
+      "epicId": "EPIC-NOREF",
+      "priority": "HIGH",
+      "sourceRefs": [{ "document": "requirements.md", "section": "§ Módulo MOD-FIXTURE", "itemId": "RF-MOD-FIXTURE-001", "excerpt": "A tela apresenta a relação de pedidos do usuário com filtro por situação." }],
+      "tasks": [
+        {
+          "_comment": "type=frontend citando rota literal e tabela física, sem apiContracts nem persistenceModel. Antes da v1.4 saía com exit 0: os validadores de QUALIDADE retornavam em silêncio quando o campo estava ausente.",
+          "id": "TASK-FRONT-SEM-CONTRATO",
+          "storyId": "STORY-CONTRATO",
+          "class": "functional",
+          "type": "frontend",
+          "adoWorkItemType": "Task",
+          "title": "Tela de consulta de pedidos",
+          "description": "Montar a tela de consulta de pedidos, com filtro por situação e paginação, consumindo a operação de busca do back-end e exibindo as colunas da relação.",
+          "agentExecutionContext": {
+            "selfContainedSummary": "A tela de consulta de pedidos chama POST /v1/x/buscar para obter a relação paginada e exibe as colunas vindas de tb_pedido_fixture. O filtro por situação é enviado no corpo da requisição e a paginação é controlada pelo servidor. Pré-condição: usuário autenticado com vínculo ativo. Pós-condição: relação renderizada, ou estado vazio explícito quando o filtro não retorna nada. Esta task é o fixture do gate de PRESENÇA de contrato: ela cita a rota e a tabela, e deliberadamente NÃO embute apiContracts[] nem persistenceModel.entities[] — é o defeito que TASK_MISSING_API_CONTRACT e TASK_MISSING_PERSISTENCE_MODEL existem para reprovar. Nenhuma pessoa implementa esta tela sem o shape do request, sem os códigos de erro e sem o nome real das colunas."
+          },
+          "acceptanceScenarios": [
+            {
+              "id": "AS-FIXTURE-01",
+              "category": "HAPPY_PATH",
+              "given": "Usuário autenticado com pedidos na base",
+              "when": "A tela chama POST /v1/x/buscar com o filtro de situação",
+              "then": "A relação é exibida paginada",
+              "testData": {
+                "request": { "method": "POST", "path": "/v1/x/buscar", "headers": { "Authorization": "Bearer <token>" }, "body": { "dsSituacao": ["ABERTO"] } },
+                "expectedResponse": { "statusCode": 200, "body": { "dados": { "conteudo": [] } } },
+                "expectedDatabaseState": { "tb_pedido_fixture": "inalterada — operação de leitura" }
+              }
+            }
+          ]
+        },
+        {
+          "_comment": "CONTROLE — componente puro de formatação: nenhuma rota, nenhuma tabela. Os dois gates de presença têm de ficar CALADOS aqui.",
+          "id": "TASK-SEM-SUPERFICIE",
+          "storyId": "STORY-CONTRATO",
+          "class": "functional",
+          "type": "frontend",
+          "adoWorkItemType": "Task",
+          "title": "Componente de formatação de valor monetário",
+          "description": "Componente puro de apresentação que formata um número já resolvido em moeda brasileira, com duas casas decimais e separador de milhar, sem qualquer acesso a rede ou a banco.",
+          "agentExecutionContext": {
+            "selfContainedSummary": "Componente puro de formatação de valor monetário: recebe um número por propriedade e devolve o texto formatado em Real brasileiro, com duas casas decimais, separador de milhar por ponto e separador decimal por vírgula. Valor nulo é apresentado como travessão. Não faz requisição de rede, não lê configuração remota e não toca persistência — toda a entrada chega por propriedade do componente. Pré-condição: nenhuma. Pós-condição: texto formatado devolvido de forma determinística para a mesma entrada. Esta task é o CONTROLE do fixture de contrato: ela é legitimamente sem superfície de API e sem superfície de dados, e nenhum dos dois gates de presença pode disparar nela."
+          },
+          "acceptanceScenarios": [
+            {
+              "id": "AS-FIXTURE-02",
+              "category": "HAPPY_PATH",
+              "given": "O componente recebe o número 1234.5 por propriedade",
+              "when": "O componente é renderizado",
+              "then": "O texto exibido é 1.234,50",
+              "testData": {
+                "request": { "props": { "valor": 1234.5 } },
+                "expectedResponse": { "texto": "1.234,50" },
+                "expectedDatabaseState": { "(nenhuma)": "componente sem persistência" }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

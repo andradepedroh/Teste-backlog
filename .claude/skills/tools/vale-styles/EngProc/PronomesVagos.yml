@@ -1,0 +1,8 @@
+# EngProc.PronomesVagos — pronomes/expressões com referente ambíguo no início de frase.
+# "Isso deve ser validado" → isso o quê? Nomear explicitamente o objeto referido.
+extends: existence
+message: "Início de frase com referente ambíguo ('%s') — nomeie explicitamente o que está sendo referido."
+level: suggestion
+scope: sentence
+raw:
+  - '(?i)^(?:isso|isto|aquilo|o mesmo|tal)\b'

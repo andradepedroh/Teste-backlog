@@ -1,0 +1,23 @@
+# Regra 11 — mensagens de erro de negócio (throw/raise com string de regra)
+id: business-error-message-js
+language: javascript
+severity: hint
+message: "throw com mensagem de regra de negócio — a mensagem enuncia a regra violada. Transcrever como RN (enunciado, impacto se violada, local)."
+rule:
+  any:
+    - pattern: throw new $ERR($MSG)
+    - pattern: throw new $ERR($MSG, $$$REST)
+constraints:
+  MSG:
+    regex: "(?i)(não pode|nao pode|não é permitido|deve |obrigat|inválid|invalid|limite|exced|not allowed|must |cannot|apenas|somente|vencid|expirad)"
+---
+id: business-error-message-py
+language: python
+severity: hint
+message: "raise com mensagem de regra de negócio — a mensagem enuncia a regra violada. Transcrever como RN (enunciado, impacto se violada, local)."
+rule:
+  any:
+    - pattern: raise $ERR($MSG)
+constraints:
+  MSG:
+    regex: "(?i)(não pode|nao pode|não é permitido|deve |obrigat|inválid|invalid|limite|exced|not allowed|must |cannot|apenas|somente|vencid|expirad)"

@@ -1,0 +1,123 @@
+{
+  "_comment": [
+    "Formato do fallback MCP do domínio Azure DevOps. Use quando NÃO houver PAT configurado:",
+    "o agente busca os work items pelo MCP do Azure DevOps e grava este arquivo em",
+    "outputs/spec/status/azure-snapshot.json. O CLI o detecta automaticamente (ou aponte com",
+    "--azure-snapshot <caminho>) e o trata como fonte equivalente à API REST, marcando a",
+    "origem no relatório como 'snapshot coletado via MCP'.",
+    "",
+    "Dois formatos são aceitos:",
+    "  (a) o formato simplificado abaixo (campos já normalizados);",
+    "  (b) a resposta REST crua do ADO (array de objetos com 'fields': {'System.Title': ...}).",
+    "Prefira (b) quando o MCP devolver os campos com os nomes do ADO — não traduza à mão,",
+    "traduzir manualmente é onde os erros aparecem.",
+    "",
+    "Regras: 'id' é obrigatório; 'state' deve ser o estado REAL do ADO (o CLI normaliza para",
+    "concluído/em andamento/a fazer); 'logicalId' é o ID do pipeline (TASK-XXX-XXX) e é o que",
+    "liga o work item à matriz de rastreabilidade — preencha sempre que a tag logical-id existir.",
+    "",
+    "Bugs por módulo (aba Execução e backlog): para cada bug, traga também Severity, Priority, Tags,",
+    "Parent, CreatedDate, ClosedDate e ResolvedDate (no formato cru: Microsoft.VSTS.Common.Severity,",
+    "Microsoft.VSTS.Common.Priority, System.Tags, System.Parent, System.CreatedDate,",
+    "Microsoft.VSTS.Common.ClosedDate, Microsoft.VSTS.Common.ResolvedDate). Os itens-pai dos bugs,",
+    "subindo até a Epic, entram em ancestors mesmo quando estão fora do escopo da consulta: o",
+    "módulo de um bug quase sempre está na história ou na épica dele. ancestors não entra no",
+    "progresso do backlog — serve só para decidir o módulo dos bugs."
+  ],
+  "collectedAt": "2026-08-04T14:30:00.000Z",
+  "organization": "minha-org",
+  "project": "MEU-PROJETO",
+  "scope": "id-map.json (127 work items publicados pelo pipeline)",
+  "items": [
+    {
+      "id": 4821,
+      "title": "STORY-012: Cadastro de beneficiário",
+      "type": "User Story",
+      "state": "Closed",
+      "reason": "Completed",
+      "assignedTo": "Maria Souza",
+      "areaPath": "MEU-PROJETO\\Beneficiários",
+      "iterationPath": "MEU-PROJETO\\Sprint 12",
+      "tags": [
+        "logical-id:STORY-012",
+        "modulo:MOD-002"
+      ],
+      "createdDate": "2026-07-01T12:00:00Z",
+      "changedDate": "2026-07-28T18:22:00Z",
+      "closedDate": "2026-07-28T18:22:00Z",
+      "priority": 2,
+      "storyPoints": 8,
+      "completedWork": 14,
+      "remainingWork": 0,
+      "parentId": 4800,
+      "url": "https://dev.azure.com/minha-org/MEU-PROJETO/_workitems/edit/4821",
+      "logicalId": "STORY-012",
+      "severity": null
+    },
+    {
+      "id": 4822,
+      "title": "TASK-012-003: Validar CPF e duplicidade (RN-004, RN-007)",
+      "type": "Task",
+      "state": "Active",
+      "assignedTo": "João Lima",
+      "areaPath": "MEU-PROJETO\\Beneficiários",
+      "iterationPath": "MEU-PROJETO\\Sprint 12",
+      "tags": [
+        "logical-id:TASK-012-003"
+      ],
+      "storyPoints": null,
+      "remainingWork": 4,
+      "completedWork": 6,
+      "parentId": 4821,
+      "url": "https://dev.azure.com/minha-org/MEU-PROJETO/_workitems/edit/4822",
+      "logicalId": "TASK-012-003"
+    },
+    {
+      "id": 4823,
+      "title": "TASK-012-004: Tela de listagem com filtros",
+      "type": "Task",
+      "state": "New",
+      "assignedTo": null,
+      "iterationPath": "MEU-PROJETO\\Sprint 13",
+      "tags": [
+        "logical-id:TASK-012-004",
+        "blocked:aguarda-aprovacao"
+      ],
+      "parentId": 4821,
+      "url": "https://dev.azure.com/minha-org/MEU-PROJETO/_workitems/edit/4823",
+      "logicalId": "TASK-012-004"
+    },
+    {
+      "id": 4830,
+      "title": "[Beneficiários] CPF com zero à esquerda é recusado",
+      "type": "Bug",
+      "state": "Active",
+      "assignedTo": "João Lima",
+      "areaPath": "MEU-PROJETO\\Beneficiários",
+      "iterationPath": "MEU-PROJETO\\Sprint 13",
+      "tags": [
+        "MOD-002"
+      ],
+      "createdDate": "2026-07-30T10:00:00Z",
+      "closedDate": null,
+      "resolvedDate": null,
+      "priority": 1,
+      "severity": "2 - High",
+      "parentId": 4821,
+      "url": "https://dev.azure.com/minha-org/MEU-PROJETO/_workitems/edit/4830"
+    }
+  ],
+  "ancestors": [
+    {
+      "id": 4800,
+      "title": "EPIC-002: Gestão de beneficiários",
+      "type": "Epic",
+      "state": "Active",
+      "tags": [
+        "epic-json:EPIC-002"
+      ],
+      "parentId": null,
+      "url": "https://dev.azure.com/minha-org/MEU-PROJETO/_workitems/edit/4800"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+# Regra 6 — datas/prazos hardcoded
+id: hardcoded-date-deadline-js
+language: javascript
+severity: hint
+message: "Data literal hardcoded — candidato a prazo/vigência de negócio (corte, vencimento, campanha). Confirmar se é regra ou resíduo e redigir RN."
+rule:
+  kind: string
+  regex: "\\d{4}-\\d{2}-\\d{2}|\\d{2}/\\d{2}/\\d{4}"
+---
+id: hardcoded-date-deadline-py
+language: python
+severity: hint
+message: "Data literal hardcoded — candidato a prazo/vigência de negócio (corte, vencimento, campanha). Confirmar se é regra ou resíduo e redigir RN."
+rule:
+  kind: string
+  regex: "\\d{4}-\\d{2}-\\d{2}|\\d{2}/\\d{2}/\\d{4}"

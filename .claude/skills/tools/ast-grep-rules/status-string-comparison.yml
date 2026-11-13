@@ -1,0 +1,30 @@
+# Regra 1 — comparação de campo status/estado com string literal
+id: status-string-comparison-js
+language: javascript
+severity: hint
+message: "Comparação de status/estado com string literal — candidato a regra de negócio (máquina de estado implícita). Redigir RN citando arquivo:linha."
+rule:
+  any:
+    - pattern: $OBJ.$FIELD === $LIT
+    - pattern: $OBJ.$FIELD !== $LIT
+    - pattern: $OBJ.$FIELD == $LIT
+    - pattern: $OBJ.$FIELD != $LIT
+constraints:
+  FIELD:
+    regex: "(?i)^(status|state|situacao|estado|fase|etapa)$"
+  LIT:
+    regex: "^[\"'`]"
+---
+id: status-string-comparison-py
+language: python
+severity: hint
+message: "Comparação de status/estado com string literal — candidato a regra de negócio (máquina de estado implícita). Redigir RN citando arquivo:linha."
+rule:
+  any:
+    - pattern: $OBJ.$FIELD == $LIT
+    - pattern: $OBJ.$FIELD != $LIT
+constraints:
+  FIELD:
+    regex: "(?i)^(status|state|situacao|estado|fase|etapa)$"
+  LIT:
+    regex: "^[\"']"

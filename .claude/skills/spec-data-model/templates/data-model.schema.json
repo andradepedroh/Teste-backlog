@@ -1,0 +1,187 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "data-model",
+  "description": "Especificação de modelo de dados produzida pela skill spec-data-model. Consumida por spec-tasks (persistenceModel) e spec-api-contracts (schemas de request/response).",
+  "type": "object",
+  "required": ["skillVersion", "generatedAt", "projectName", "boundedContexts"],
+  "properties": {
+    "skillVersion": { "type": "string", "example": "spec-data-model-1.4" },
+    "generatedAt": { "type": "string", "format": "date-time", "description": "Timestamp ISO-8601 UTC real da geração (ex.: 2026-01-15T09:30:00Z). NÃO usar placeholder textual — o gate DATAMODEL_VALID valida o formato date-time.", "example": "2026-01-15T09:30:00Z" },
+    "outputLanguage": { "type": "string", "default": "pt-BR" },
+    "schemaVersion": { "type": "string", "default": "data-model/v1" },
+    "projectName": { "type": "string" },
+    "paths": {
+      "type": "object",
+      "properties": {
+        "specRoot": { "type": "string", "default": "outputs/spec" },
+        "pipelineRoot": { "type": "string", "default": "outputs/spec" },
+        "rulesRoot": { "type": "string", "default": ".cursor/rules" }
+      }
+    },
+    "changelog": {
+      "type": "array",
+      "description": "Historico de versoes do modelo, em pt-BR. Escrito pela skill; renderizado pelo data-model.md. A entrada mais recente vem primeiro.",
+      "items": {
+        "type": "object",
+        "required": ["version", "date", "summary", "structural"],
+        "properties": {
+          "version": { "type": "string", "description": "Versao do modelo, ex.: 8.3" },
+          "date": { "type": "string", "format": "date" },
+          "summary": { "type": "string", "description": "pt-BR — o que mudou, e por que" },
+          "structural": {
+            "type": "boolean",
+            "description": "true = mudou entidade, coluna, relacionamento ou enum; false = rodada sem alteracao estrutural. A distincao e o que faz o changelog valer."
+          }
+        }
+      }
+    },
+    "boundedContexts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "entities"],
+        "properties": {
+          "id": { "type": "string", "example": "BC-001" },
+          "name": { "type": "string", "description": "Nome do bounded context em pt-BR" },
+          "description": { "type": "string" },
+          "moduleIds": { "type": "array", "items": { "type": "string" }, "description": "MOD-XXX correspondentes em requirements.md" },
+          "entities": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["name", "operationType"],
+              "properties": {
+                "name": { "type": "string" },
+                "operationType": { "enum": ["NEW", "ALTER", "EXISTING_REF"] },
+                "purpose": { "type": "string", "description": "Propósito da entidade em pt-BR" },
+                "dataOwnership": {
+                  "type": "object",
+                  "description": "Quem e dono do dado em TEMPO DE EXECUCAO. Nao e redundante com operationType: aquele diz o que a migration faz, este diz quem escreve. Uma entidade pode estar no nosso schema e nunca ser escrita por nos -- carga de terceiro, somente leitura.",
+                  "required": ["mode"],
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "enum": ["OWNED", "EXTERNAL_LOADED", "EXTERNAL_PROJECTION", "HYBRID"],
+                      "description": "OWNED = criamos e escrevemos. EXTERNAL_LOADED = carregada no nosso schema por terceiro, somente leitura. EXTERNAL_PROJECTION = projecao de API externa. HYBRID = parte externa, parte nossa -- exige notes."
+                    },
+                    "source": {
+                      "type": "string",
+                      "description": "Nome da fonte quando o modo nao e OWNED, ex.: nome da tabela de origem ou do servico. Use — quando nao se aplica."
+                    },
+                    "notes": {
+                      "type": "string",
+                      "description": "pt-BR. OBRIGATORIO quando mode = HYBRID: explique o que e externo e o que e nosso. Use — quando nao se aplica."
+                    }
+                  }
+                },
+                "tableName": { "type": "string" },
+                "columns": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": ["name", "type", "operationType"],
+                    "properties": {
+                      "name": { "type": "string" },
+                      "type": { "type": "string", "description": "Tipo SQL/NoSQL" },
+                      "nullable": { "type": "boolean", "default": true },
+                      "unique": { "type": "boolean", "default": false },
+                      "defaultValue": {},
+                      "operationType": { "enum": ["NEW", "ALTER_ADD", "ALTER_MODIFY", "ALTER_DROP", "EXISTING"] },
+                      "notes": { "type": ["string", "null"], "description": "Notas em pt-BR" },
+                      "businessRuleRef": { "type": "string", "description": "RN-XXX que originou este campo" }
+                    }
+                  }
+                },
+                "primaryKey": { "type": "array", "items": { "type": "string" } },
+                "indexes": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": { "type": "string" },
+                      "columns": { "type": "array", "items": { "type": "string" } },
+                      "unique": { "type": "boolean" },
+                      "purpose": { "type": "string" }
+                    }
+                  }
+                },
+                "identifierStrategy": { "type": ["string", "null"], "description": "UUID, SEQUENCE, IDENTITY, etc." },
+                "relationships": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "targetEntity": { "type": "string" },
+                      "type": { "enum": ["ONE_TO_ONE", "ONE_TO_MANY", "MANY_TO_ONE", "MANY_TO_MANY"] },
+                      "foreignKey": { "type": "string" },
+                      "cascade": { "type": "string" },
+                      "nullable": { "type": "boolean" }
+                    }
+                  }
+                },
+                "currentStateIfAlter": { "type": "object", "description": "Estado atual da entidade (brownfield) — o que existe hoje antes da alteração" },
+                "migrationNotes": { "type": "string", "description": "Notas de migração em pt-BR" },
+                "traceability": { "type": "array", "items": { "type": "object", "properties": { "section": { "type": "string" }, "itemId": { "type": "string" }, "excerpt": { "type": "string" } } } }
+              }
+            }
+          },
+          "enumerations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "values": { "type": "array", "items": { "type": "object", "properties": { "value": { "type": "string" }, "label": { "type": "string", "description": "pt-BR" } } } },
+                "usedIn": { "type": "array", "items": { "type": "string" } }
+              }
+            }
+          },
+          "asyncChannels": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": { "enum": ["QUEUE", "TOPIC", "WEBHOOK", "SCHEDULED_JOB", "OTHER"] },
+                "name": { "type": "string" },
+                "direction": { "enum": ["INBOUND", "OUTBOUND", "BOTH"] },
+                "operationType": { "enum": ["NEW", "ALTER"] },
+                "payloadSummary": { "type": "string", "description": "pt-BR" },
+                "retryAndIdempotency": { "type": "string", "description": "pt-BR" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "migrationsState": {
+      "type": "array",
+      "description": "Estado DECLARADO das migrations existentes (brownfield). Lista mantida a mao: o declaredAt de cada entrada existe para que a idade da afirmacao fique visivel, porque a verdade mora na pasta de migrations e esta lista envelhece. O extract-ddl-schema.py de tools/ e o caminho de evidencia para o estado atual, e NAO popula este campo -- ele le DDL, nao pasta de migrations.",
+      "items": {
+        "type": "object",
+        "required": ["id", "content", "declaredAt"],
+        "properties": {
+          "id": { "type": "string", "description": "Identificador da migration, ex.: 20260609135635" },
+          "content": { "type": "string", "description": "pt-BR — o que ela cria ou altera" },
+          "appliedIn": { "type": "string", "description": "Ambiente onde consta aplicada, ex.: DEV. Use — quando nao se sabe." },
+          "declaredAt": {
+            "type": "string",
+            "format": "date",
+            "description": "Quando esta linha foi afirmada. O gerador imprime esta data, para que ninguem leia a lista como estado presente."
+          }
+        }
+      }
+    },
+    "openQuestions": {
+      "type": "array",
+      "description": "Lacunas do modelo de dados sem ID (nunca GAP-XXX aqui — a numeração e o rastreio de GAPs são exclusivos de spec-iterate e spec-tasks/gaps-document.md).",
+      "items": {
+        "type": "object",
+        "properties": {
+          "description": { "type": "string", "description": "pt-BR" },
+          "affectedEntity": { "type": "string" },
+          "requiredInformation": { "type": "string", "description": "pt-BR" }
+        }
+      }
+    }
+  }
+}

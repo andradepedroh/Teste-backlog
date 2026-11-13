@@ -1,0 +1,15 @@
+{
+  "name": "spec-tasks-html",
+  "version": "6.3.0",
+  "private": true,
+  "type": "module",
+  "description": "Gera relatório HTML navegável a partir de tasks.json (spec-tasks v5+). Suporta hierarquia Epic → Story → Task (ou modo flat Story → Task).",
+  "scripts": {
+    "report": "node cli.mjs",
+    "report:input": "node cli.mjs --input",
+    "report:stdout": "node cli.mjs --stdout"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

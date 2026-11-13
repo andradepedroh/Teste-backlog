@@ -1,0 +1,43 @@
+---
+description: "Entrega da Cobrança Inteligente: aplicação escopada versionada no GitHub, instâncias dev → homologação → produção e um branch por história"
+globs: "**/*.xml,**/*.json,**/*.md"
+alwaysApply: false
+---
+
+# Deploy e build — Cobrança Inteligente (2.6 Cobrança · SEFAZ-MT)
+
+> Por que: a instância é compartilhada com os outros produtos do Profisco; alteração fora do
+> escopo `x_cbi_` ou direto em produção pode quebrar outro produto.
+
+---
+
+## Empacotamento
+
+- **Aplicação escopada `x_cbi_`**, sem container. O código fica no repositório `servicenow-cobranca` (papel `codigo` no `workspace.md`), ligado pelo controle de versão do Studio. Fonte: quadro técnico itens 3.3 e 8.1.
+
+## Ambientes
+
+| Ambiente | Uso |
+|----------|-----|
+| Desenvolvimento | construção e testes unitários |
+| Homologação | testes integrados, carga e homologação com a área de negócio (plano, slide 13) |
+| Produção | operação |
+
+Fonte: quadro técnico item 8.2. Promoção sempre na ordem; nunca desenvolver em homologação ou produção.
+
+## Branches
+
+- **GitHub Flow:** `main` + **um branch por história** (`us/<ID>-<resumo>`), integrado por PR revisado. Fonte: quadro técnico item 8.3 e a disciplina de git do harness.
+- PR só depois da auditoria da história (`auditoria-de-us`).
+- Nunca `--force` nem `--no-verify` sem pedido explícito.
+
+## Infraestrutura compartilhada
+
+- A instância é compartilhada com os outros produtos do Profisco, cada um no seu escopo. Fonte: quadro técnico item 8.4; plano, slide 4.
+- Nenhuma alteração em tabela, ACL ou propriedade **global** sem acordo da TI SEFAZ-MT.
+
+## Anti-padrões
+
+- Alteração feita direto em produção e «trazida de volta» depois.
+- Update set manual misturado com o controle de versão.
+- Branch com mais de uma história.

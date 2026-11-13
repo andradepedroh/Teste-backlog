@@ -1,0 +1,46 @@
+---
+description: "Estratégia de testes da Cobrança Inteligente: unitário, integração, ATF ponta a ponta e carga com k6"
+globs: "**/*.js,**/*.xml"
+alwaysApply: false
+---
+
+# Estratégia de testes — Cobrança Inteligente (2.6 Cobrança · SEFAZ-MT)
+
+> Por que: as regras de cálculo (prioridade, origem da regularização, sorteio do controle) decidem
+> quem é cobrado e quanto a cobrança «rendeu»; um erro silencioso nelas distorce a operação inteira.
+
+---
+
+## Camadas
+
+| Camada | Ferramenta | O que cobre |
+|--------|-----------|-------------|
+| Unitário | ATF (Automated Test Framework, o framework de testes nativo do ServiceNow) com passo de script do servidor | Cada Script Include de regra, cenário a cenário |
+| Integração | Coleção de testes REST + kit de payloads simulados (RF-MOD-INGESTAO-15) | APIs de ingestão e callback contra o contrato |
+| Ponta a ponta | ATF, interface e API | Fluxos críticos: carga → carteira → régua → caso → regularização |
+| Carga | k6 contra as APIs de ingestão, em homologação | RNF-DES-001 (consolidação ≤ 4 h) e RNF-DES-002 (22 mil comunicações em ≤ 6 h) |
+
+Fonte: quadro técnico itens 5.1, 5.3 e 5.4.
+
+## Cobertura exigida
+
+- **Sem meta de % de linhas** (a plataforma não mede bem).
+- **Obrigatório:** toda regra de Derivação de `business-rules.md` (9 regras com algoritmo) tem teste por passo do algoritmo, e **todos os cenários de aceite** (os 3 cenários de cada RF) viram teste automatizado. Fonte: quadro técnico item 5.2.
+
+## Regras
+
+**MUST:**
+- Teste antes ou junto do código: nenhum RF é dado como pronto sem os 3 cenários automatizados.
+- Dado de teste **sintético**: CNPJ e CPF gerados, nunca dado real (LGPD).
+- Testar o caminho de erro: documento inválido, reenvio, fonte em falha, opt-out, régua pausada.
+- Teste de permissão por papel (5 papéis × grupos de tabelas), inclusive acesso pelo endereço direto do registro (RNF-SEG-001).
+
+**MUST NOT:**
+- Teste que depende de dado deixado por outro teste.
+- Teste que chama o provedor de mensagens real (usar o provedor de teste).
+
+## Anti-padrões
+
+- Testar só o caminho feliz.
+- Copiar dado de produção para homologação sem mascarar.
+- Teste de carga em produção.

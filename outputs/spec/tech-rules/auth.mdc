@@ -1,0 +1,48 @@
+---
+description: "Autenticação e autorização da Cobrança Inteligente: SSO para usuários, OAuth por fonte nas APIs, 5 papéis com ACL e auditoria completa"
+globs: "**/*.js,**/*.xml"
+alwaysApply: false
+---
+
+# Autenticação e autorização — Cobrança Inteligente (2.6 Cobrança · SEFAZ-MT)
+
+> Por que: o produto guarda dívida tributária e dado pessoal de cerca de 1,8 milhão de
+> contribuintes; um papel que vê mais do que deve é vazamento, não detalhe de tela.
+
+---
+
+## Autenticação
+
+| Quem | Mecanismo | Responsável |
+|------|-----------|-------------|
+| Usuários internos | SSO da SEFAZ-MT (login da instância) | instância ServiceNow — fora do escopo do produto |
+| Sistemas parceiros | **OAuth 2.0** com **um usuário de integração por fonte** + REST API Access Policy | aplicação |
+
+Fonte: ETF §1.1 e §2.1; quadro técnico item 7.1. Cada fonte só acessa o próprio endpoint;
+nenhuma fonte enxerga a API de outra.
+
+## Autorização
+
+- **Papéis da aplicação:** `cbi_gestor_integracao`, `cbi_coordenador`, `cbi_atendente`, `cbi_auditor`, `cbi_admin`. Matriz de acesso da ETF §6.4 (a validar, GAP-003).
+- **ACL na camada de dados** em toda tabela e nos campos sensíveis; esconder menu não é controle (RN-NOVO-GOV-001).
+- **Isolamento do atendente** por **Query Business Rule** + ACL: ele lê só os casos atribuídos a ele e os contribuintes desses casos (RN-NOVO-MON-002).
+- Fonte: quadro técnico item 7.2.
+
+## Auditoria
+
+- **Completa**: interação, publicação de versão, confirmação de carteira, alteração de parâmetro, meta e faixa, reatribuição e exportação geram evento em `x_cbi_auditoria_evento` com usuário, ação, data e registro afetado. Fonte: quadro técnico item 7.3; RN-NOVO-GOV-003.
+- Evento de auditoria não tem update nem delete para nenhum papel.
+
+## Proteções adicionais
+
+- **Limite de requisições** por usuário de integração nas APIs de ingestão.
+- **Reenvio sem duplicidade** em toda escrita da ingestão e no callback de status (RN-NOVO-ING-005).
+- Upload de arquivo: não se aplica.
+- Fonte: quadro técnico item 7.4.
+
+## Anti-padrões
+
+- Testar papel no Client Script em vez de ACL.
+- Usuário de integração com papel `admin`.
+- Exportação sem registro.
+- ACL que libera por `true` para «destravar» teste.

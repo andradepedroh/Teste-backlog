@@ -1,0 +1,50 @@
+---
+description: "Integrações da Cobrança Inteligente: 7 APIs de ingestão com padrão comum de lote, provedor de mensagens por canal e callback de status"
+alwaysApply: false
+paths: **/*.js, **/*.xml
+---
+
+# Integrações — Cobrança Inteligente (2.6 Cobrança · SEFAZ-MT)
+
+> Por que: as fontes ainda não fecharam contrato (GAP-001) e o provedor de mensagens pode mudar
+> (GAP-004); o padrão comum e a camada por canal deixam trocar um lado sem reescrever o outro.
+
+---
+
+## Integrações
+
+| Sistema | Direção | Autenticação | Adaptador | Dado pessoal |
+|---------|---------|--------------|-----------|--------------|
+| CCF, MPI, Big Data, IPVA, ITCD, SNE/DT-e | entrada (a fonte chama a API) | OAuth 2.0, um usuário por fonte | `ApiIngestaoBase` + uma Scripted REST API por fonte | sim (CPF/CNPJ, nome) |
+| UFMT (score) | entrada | OAuth 2.0, usuário próprio | `ApiIngestaoBase` + API do score | sim (documento) |
+| Provedor de e-mail, SMS e WhatsApp | saída | credencial do provedor (fora do código) | `EnvioCanal*`, um por canal | sim (contato, nome, valor) |
+| Provedor (status de entrega) | entrada (callback) | credencial por provedor | API de callback | não |
+
+Fonte: context-map.md (sistemas e integrações); ETF §6.3; quadro técnico item 10.1.
+
+## Padrão comum das APIs de ingestão
+
+1. A fonte **abre o lote** informando o identificador do lote na origem.
+2. Envia **pacotes numerados**; a resposta traz, por registro, aceito ou rejeitado com motivo.
+3. **Fecha o lote** informando quantos pacotes enviou.
+4. Reenvio do mesmo pacote ou registro não duplica nada (RN-NOVO-ING-005).
+
+O contrato fica documentado em OpenAPI (fonte: `spec-api-contracts`).
+
+## Provedor de mensagens
+
+- Uma classe por canal com a mesma interface (`enviar`, `consultarStatus`), escolhida por parâmetro, para trocar de provedor sem mudar o motor de réguas.
+- **Reenvio limitado** ao parâmetro de tentativas (RN-NOVO-REG-004); depois, falha definitiva.
+- Antes de enviar, conferir consentimento (RN-NOVO-REG-002; bloqueio do GAP-028 para ICMS, ITCD e parcelamentos).
+
+## Falha de integração
+
+- Fonte que não entrega no prazo fica em Falha; vale a última carga válida; as demais seguem (RN-NOVO-ING-006).
+- Provedor fora do ar: comunicação em Falha e reenvio no próximo ciclo de reenvio.
+
+## Anti-padrões
+
+- Regra de negócio dentro da Scripted REST API.
+- Credencial no código ou em propriedade sem proteção.
+- Código específico de um provedor dentro do motor de réguas.
+- Logar o payload de entrada com dado pessoal.

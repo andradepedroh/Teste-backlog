@@ -1,0 +1,375 @@
+---
+description: Constituição frontend Next.js (App Router), TypeScript — boundaries, services, Query, erros, testes. Aplicar em UI, protótipos web (HTML/CSS/JS), evolução para Next no repo, e arquivos .ts/.tsx/.js/.jsx; referência única para IA.
+globs: "**/*.ts,**/*.tsx,**/*.js,**/*.jsx,**/*.mjs,**/*.cjs,**/*.html,**/*.css,**/*.mdx,**/*.canvas.tsx"
+alwaysApply: false
+---
+
+# Frontend — Next.js App Router
+
+Decisões **obrigatórias**. Conflito com o produto → **esta rule prevalece** até alteração explícita no repositório.
+
+---
+
+## Stack
+
+| Camada | Escolha |
+|--------|---------|
+| Framework | Next.js (App Router) |
+| Linguagem | TypeScript (`strict`) |
+| UI | React + shadcn/ui (`components/ui`) |
+| Estilo | Tailwind + `cn()` (`@/lib/utils`) |
+| Cache remoto no browser | TanStack React Query |
+| Estado global de UI leve | Context API — **não** Zustand/outra store sem alterar esta rule |
+| Formulários | React Hook Form + Zod + `zodResolver` |
+| Validação | Zod (shape/contrato) |
+| HTTP | Um cliente (`fetch` **ou** axios — **um** por repo) em `shared/services/http` |
+| Unitários | Vitest + RTL + `jsdom` |
+
+---
+
+## Estrutura (`src/`)
+
+```text
+src/
+  app/                    # Rotas, layouts, handlers, loading/error/not-found
+  components/             # Componentes de UI e de negócio
+    ui/                   # shadcn — componentes primitivos
+  lib/                    # providers, env tipado, cn, utils
+  services/               # Lógica de fetch de dados e HTTP
+  types/                  # Interfaces e schemas
+  styles/                 # CSS global
+```
+
+- **`lib/`** — wiring Next/TanStack/env e helpers genéricos.
+- **`components/`** — Todos os componentes React da aplicação, exceto as pages.
+
+### Boundaries
+1. Rotas no `app/` compõem as páginas usando componentes da pasta `components/`.
+2. Componentes que fazem fetch de dados devem usar hooks isolados ou usar Server Components chamando a pasta `services/`.
+
+---
+
+## Server vs Client
+
+| Arquivo | Papel |
+|----------|--------|
+| Sem `"use client"` | Server Component (default). |
+| Com `"use client"` | Client — diretiva no topo, antes de imports. |
+
+**MUST:** `"use client"` só se pelo menos uma condição se aplicar: handlers DOM; estado React (`useState`/`useReducer`/…); `useEffect`/`useLayoutEffect` com DOM; hooks só cliente (Query, RHF `useForm`, …); APIs `window`/`document`/`localStorage`/….
+
+**MUST:** TanStack Query só em arquivos cliente; dados via hooks que chamam services.
+
+**MUST:** Começar componentes novos como Server Component; promover a Client só quando necessário.
+
+---
+
+## Serviços e HTTP
+
+**MUST:** HTTP só em `*.service.ts` / `*.service.server.ts` (ou cliente em `shared/services`). Funções **nomeadas**. UI e `page.tsx` **não** chamam `fetch`/`http` diretamente (exceto testes com mock).
+
+| Arquivo | Uso |
+|----------|-----|
+| `*.service.ts` | Chamado do browser (Query, eventos). |
+| `*.service.server.ts` | `cookies()`, `headers()`, cache Next, segredos; RSC, Actions, Route Handlers. |
+
+### Paths de API
+
+**MUST:** Paths relativos ao cliente em `features/<d>/services/<nome>.paths.ts` ou `shared/config/api.paths.ts`. Services montam URL só com imports desses módulos.
+
+**MUST NOT:** literais de path no corpo das funções de service (templates `` `/…/${id}` ``, concatenações) — usar funções/constantes de `*.paths.ts` ou `api.paths.ts`. Segmentos partilhados entre `*.service.ts` e `*.service.server.ts` vivem no **mesmo** `*.paths.ts` do domínio.
+
+```ts
+// features/user/services/user.paths.ts
+export const userPaths = { detail: (id: string) => `/users/${id}` as const };
+
+// features/user/services/user.service.ts
+import { http } from '@/shared/services/http';
+import { mapUserFromApi } from '../mappers/user.mapper';
+import { userPaths } from './user.paths';
+
+export async function getUser(id: string) {
+  const dto = await http.get<unknown>(userPaths.detail(id));
+  return mapUserFromApi(dto);
+}
+```
+
+---
+
+## Negócio, dados e View Model
+
+### Onde fica a regra de negócio
+
+**MUST:** Cálculos, invariantes, decisões sobre estado de domínio → `*.service.ts` / `*.service.server.ts` (se há I/O ou orquestração), ou funções puras em `features/<d>/utils/*.ts`, ou — **só** se inseparável da transformação — `mappers/*.mapper.ts` (comentário **porquê**).
+
+**MUST:** Validação declarativa → `schemas/` (Zod); combinar com `utils/` quando o schema ficar ilegível.
+
+**MUST NOT:** Negócio em JSX, em `views/`/`components` como lógica de domínio, nem em **data hooks** (só orquestram Query + services).
+
+**MUST NOT:** Negócio em **hooks de UI**. **Exceção:** estado puramente apresentacional (painel aberto, passo de wizard **só** visual). **Não** colocar em hook de UI: cálculo de preço, elegibilidade, totais, regras condicionais de domínio — isso vai para `utils/` ou service e o hook só consome o resultado.
+
+### Mapper
+
+**MUST:** Payload bruto da API **não** chega à UI. Parse/transform em `mappers/*.mapper.ts` (um agregado principal por arquivo).
+
+**MUST NOT:** `.parse()` Zod em massa dentro do render do componente — parse na entrada (service/mapper). Para payloads enormes, o domínio pode documentar **parse seletivo** (campos críticos) vs custo de parse total.
+
+**MUST NOT:** Importar mapper/service no componente só para chamar parse/format — dados já chegam preparados via RSC ou data hook.
+
+### View Model e derivação na UI
+
+**MUST:** Labels formatados, flags de negócio, junção de vários campos de API, ordenação/filtro que altera o que o usuário entende como “dados” → **View Model**: tipo `features/<d>/types/<nome>-view.type.ts` **ou** `to<Nome>ViewModel` em `mappers/`, aplicado **antes** do JSX.
+
+**MUST:** No componente só derivações **triviais e visuais** (ex.: `selectedId === id`, classes condicionais) **sem** formatar API nem recombinar campos de rede.
+
+**MUST NOT:** Formatação (data, moeda, …) ou transformação de contrato API **no JSX**. **MUST NOT:** props de domínio tipadas como resposta crua da API.
+
+```tsx
+// MUST NOT — formatação no JSX
+<span>{user.createdAt ? format(user.createdAt, 'PP') : '—'}</span>
+// MUST — campo já no View Model
+<span>{row.createdAtLabel}</span>
+```
+
+### Schemas e tipos
+
+**MUST:** Forms → Zod em `schemas/` + `z.infer`. **MUST NOT:** `any` em dados remotos — `unknown` + parse.
+
+**MUST:** `types/*.type.ts` para unions de props, branded IDs quando existirem, View Models (`*-view.type.ts`), helpers. **Não** duplicar campos já inferidos do Zod sem motivo.
+
+---
+
+## Erros (`AppError`)
+
+**MUST:** Tipo global **`AppError`**, nome exato, export **único** em `@/shared/types/app-error.ts`.
+
+**MUST:** `toAppError(unknown): AppError` na camada HTTP (ou `shared/services/http-errors.ts` que importa `AppError`). Serviços propagam `AppError` ou sucesso tipado — **não** ramos de erro como `unknown`/`any`.
+
+**MUST:** Pelo menos `code`, `message` (segura para UI), `status?`. UI ramifica por **`error.code`**, não por texto livre da rede.
+
+**MUST NOT:** `String(error)` genérico em componente sem normalização prévia.
+
+**MUST NOT:** Tratamento só com `console.log` — a UI deve refletir erro (`isError`, mensagem a partir de `AppError`).
+
+---
+
+## React Query
+
+**MUST:** `useQuery` / `useMutation` só em `"use client"`. Hook `use*.ts` por domínio chama `*.service.ts`. Keys centralizadas em `features/<d>/hooks/query-keys.ts`; key inclui filtros, página, ordenação.
+
+**MUST:** Mutation → `invalidateQueries` / `setQueryData` conforme contrato documentado no domínio.
+
+**MUST:** Várias queries no **mesmo** data hook apenas quando alimentam **uma** view ou fluxo coeso (ex.: lista + total); caso contrário hooks separados.
+
+```ts
+// features/<d>/hooks/query-keys.ts — params estáveis na key
+export const userKeys = {
+  all: ['users'] as const,
+  detail: (id: string) => ['users', 'detail', id] as const,
+};
+export const orderKeys = {
+  list: (p: { page: number; pageSize: number; sort: OrderSort; filters: OrderFilters }) =>
+    ['orders', 'list', p] as const,
+};
+```
+
+### Hooks: dados, UI, composição
+
+| Tipo | Permite | Proíbe |
+|------|---------|--------|
+| **Data** | Query/Mutation, mesmo domínio, chama services | Negócio, View Model, estado UI pesado, toast |
+| **UI** | Estado/controlo de UI, callbacks | HTTP, Query/Mutation |
+
+**MUST:** Um hook de dados principal por recurso na **view ou container** mais alto do fluxo. Filhos recebem **props** (ou **contexto de feature** com comentário no arquivo a explicar **porquê** props não bastam).
+
+**MUST NOT:** O mesmo `useQuery` (mesma key) em vários irmãos quando o pai já pode passar dados. **MUST NOT:** `useX(id)` por linha se a lista já veio de uma query agregada.
+
+**MUST NOT:** Hook único que mistura API + wizard + analytics — dividir.
+
+**MUST NOT:** Importar service/mapper no componente para “atalho”; dados via RSC ou data hook.
+
+### Paginação / filtros / sort
+
+**MUST:** Params de lista como objeto estável tipado; faz parte da `queryKey`. Defaults num só sítio. Paginação “suave” conforme TanStack da versão pinada — documentar se não for o default.
+
+### Loading
+
+**MUST:** RSC → `loading.tsx` quando fizer sentido. Cliente → estado do Query (`isPending` / `isFetching`); **não** segundo `useState` de loading para o mesmo pedido.
+
+**MUST NOT:** `fetch` paralelo manual para o mesmo recurso que o Query cobre.
+
+**MUST:** Se usar `useSuspenseQuery`, combinar com **Suspense boundary** adequado; **não** misturar no mesmo fluxo suspense + flags manuais de loading sem decisão documentada no domínio.
+
+### Side effects (toast, analytics, redirect)
+
+**MUST:** Toast, modal, `router.push`, tracking típico de **produto/UI** → Client / hook UI / `onSuccess` de `useMutation` no data hook **ou** wrapper cliente que envolve esse hook — **nunca** importar `toast` dentro de service.
+
+**MUST NOT:** Toast/modal/redirect em `*.service.ts`, `*.service.server.ts` ou mappers.
+
+**MUST:** Eventos que são **obrigação de negócio/registo** no servidor (ex.: auditoria fiscal) → Server Action ou endpoint + service server, **não** apenas um “fire and forget” no clique sem contrato com o backend.
+
+---
+
+## Providers
+
+**MUST:** Árvore única em `app/layout.tsx` ou `src/lib/providers.tsx`. Tipicamente Theme → QueryClientProvider → sessão cliente se existir.
+
+**MUST:** `makeQueryClient` — singleton no browser, por request no SSR se usar prefetch (doc TanStack + Next).
+
+**MUST NOT:** Provider de **um** feature no layout raiz — usar `layout` de segmento ou view.
+
+---
+
+## Formulários e `page.tsx`
+
+**MUST:** RHF + Zod; submit → `useMutation` **ou** Server Action — **nunca** `fetch` no `onSubmit`.
+
+### `page.tsx`
+
+**MUST:** Composição de views +, em RSC, `await` a services server ou passagem de `params`/`searchParams` sem lógica extra.
+
+**MUST NOT:** Mapper, View Model, negócio, formatação ou JSX grande com ramificações de domínio — mover para `features/<d>/views/` ou componentes.
+
+---
+
+## Estilo e env
+
+**MUST:** Tailwind; sem `style={{}}` para layout estático.
+
+**MUST:** Segredos sem `NEXT_PUBLIC_`. Browser só `NEXT_PUBLIC_*`; **nunca** tokens/chaves privadas no cliente.
+
+---
+
+## Acessibilidade
+
+**MUST:** nível mínimo **WCAG 2.2 AA** em toda tela. É o nível que a `spec-product` cobra no
+`product-requirements.md` e que a `spec-tech-rules` lê daqui — não é pergunta de kickoff. Exigência
+maior do cliente (AAA em parte do fluxo, norma setorial) entra como exceção registrada no `frontend`
+do projeto; abaixo de AA, nunca.
+
+**MUST:** os critérios AA que mais caem em revisão — contraste mínimo 4,5:1 no texto; label em todo
+campo de formulário; navegação por teclado em todos os fluxos; foco visível e não encoberto por
+header ou modal; alvo interativo de pelo menos 24×24 px; texto alternativo em imagem.
+
+---
+
+## Decisões: dados e mutações
+
+### Origem dos dados
+
+1. Só servidor, estável por rota → **RSC** + `*.service.server.ts` (cache Next **dentro** do service).
+2. Refetch, cache partilhado no cliente, UX de loading → **Client** + Query + `*.service.ts`.
+3. Mutação com validação/cookies no servidor → **Server Action** `'use server'` → `*.service.server.ts`.
+
+### Tabela rápida
+
+| Situação | Mecanismo |
+|----------|-----------|
+| Lista com filtros/página no cliente | Query + hook |
+| SEO / dado inicial no HTML | RSC + service server |
+| Mutação + atualizar cache cliente | `useMutation` + invalidate / `setQueryData` |
+| Mutação sem estado cliente rico | Server Action + `revalidatePath`/`revalidateTag` |
+| Mesmo GET em RSC **e** Query | **Prefetch** no RSC + `HydrationBoundary` + keys iguais — **ou** uma única fonte (só RSC ou só cliente) |
+
+### Cache
+
+- **Next** (`fetch` cache, tags, `revalidate*`) → só camada server/service server.
+- **TanStack** → após hidratação. **Não** usar Query para dados **nunca** lidos no cliente.
+
+### Prefetch
+
+**MUST:** Mesmo recurso no HTML e no Query → `prefetchQuery` no RSC + `dehydrate` / `HydrationBoundary`; **keys idênticas** às do hook cliente.
+
+**MUST:** Para o cliente levar só estado serializável (`dehydrate`) + props JSON-safe — **não** passar instâncias mutáveis do cliente HTTP nem objetos não serializáveis pela fronteira RSC→client.
+
+**MUST NOT:** RSC que busca e cliente `useQuery` igual sem prefetch/hidratação acordada **ou** fonte única.
+
+**MUST NOT:** `useQuery` a refazer o mesmo GET que o server já fez **sem** partilha de cache (`HydrationBoundary` / escolha única de fonte).
+
+---
+
+## Auth (resumo)
+
+**MUST:** Sessão cookie httpOnly / provider; identidade no servidor para RSC. Credenciais via interceptor HTTP — **nunca** token hardcoded em componente.
+
+---
+
+## Rotas
+
+**MUST:** `loading.tsx`, `error.tsx`, `not-found.tsx` quando async ou erro recuperável importa. SEO → `generateMetadata` / `metadata`.
+
+---
+
+## Testes
+
+**MUST:** Mock HTTP centralizado (`vi.mock('@/shared/services/http')` ou MSW) — **não** espalhar `vi.mock` de `global.fetch` sem helper comum.
+
+**MUST:** Schemas com negócio → testes `safeParse`. Hooks Query → `QueryClient` novo por teste, `retry: false`, cache zerado.
+
+**MUST NOT:** Snapshot da árvore inteira; acoplar testes a classes CSS frágeis — preferir roles/labels (RTL).
+
+**MUST NOT:** `page.tsx` completa como teste de integração de rota em unitário — reservar a E2E quando existir suite.
+
+**MUST:** Fluxos críticos (auth, permissões, checkout, …) com E2E (ex.: Playwright) quando o projeto mantém suite — unitários **não** substituem confiança na rota montada.
+
+---
+
+## Componentização
+
+1. **UI genérica** — `shared/components` **compõe** `components/ui`; sem negócio.
+2. **Domínio** — `features/<d>/components`, `views` (negócio só via dados já preparados + composição).
+3. **Rota** — `app/.../page.tsx` conforme seção **page.tsx**.
+
+---
+
+## MUST NOT (lista compacta)
+
+HTTP/`fetch` na UI ou em `page`; import entre features; negócio ou transformação API em componente/page/hook UI/data hook; `useQuery` sem `"use client"`; paths hardcoded em services; DTO na UI; toast/modal em service; erro não normalizado para `AppError`; `any` em dados remotos; segredos em `NEXT_PUBLIC_*`; Query duplicada em filhos quando props bastam; loading duplicado; Action + `useMutation` para a mesma mutação sem critério; JSX com formatação que pertence a View Model.
+
+---
+
+## Anti-patterns
+
+God component; fetch em `onClick`; queryKey instável; mesma query em N irmãos; hook monstro; negócio em `page.tsx`; toast no service; props “god object” com dados crus da API.
+
+---
+
+## Nomenclatura
+
+| Artefato | Padrão |
+|-----------|--------|
+| Service | `<nome>.service.ts` |
+| Service server | `<nome>.service.server.ts` |
+| Paths | `<nome>.paths.ts` (domínio) ou `shared/config/api.paths.ts` |
+| Mapper | `<nome>.mapper.ts` |
+| View Model | `<nome>-view.type.ts` ou `to<Nome>ViewModel` |
+| Schema | `<nome>.schema.ts` |
+| Tipo auxiliar | `<nome>.type.ts` |
+| Hook | `use<Nome>.ts` |
+| Query keys | `query-keys.ts` → `xyzKeys` |
+| View | `PascalCase.tsx` em `views/` |
+| Erro global | `AppError` em `@/shared/types/app-error.ts` |
+| Teste | `<arquivo>.test.ts(x)` |
+
+Imports: `@/` conforme `tsconfig`.
+
+---
+
+## SOLID (resumo)
+
+Um papel por módulo (schema, mapper, view model, service, hooks, UI). Compor em vez de ramificar mega-arquivos. UI depende de contratos estáveis e dados já preparados.
+
+---
+
+## Processo para a IA
+
+**Antes de codificar**
+
+1. Domínio em `features/<d>/` (criar pasta se entidade/fluxo novo).
+2. Por arquivo: Server vs Client.
+3. Artefatos mínimos: services (+ `paths` se novo recurso), mapper/schema, `query-keys`, View Model **se** houver formatação/composição, data hook vs UI hook.
+4. Confirmar `@/shared/types/app-error.ts` e `toAppError` se tocar em erros HTTP.
+
+**Antes de fechar a resposta** — verificar: separação service / mapper / view model / hooks / UI; sem HTTP fora de services; sem payload API cru na UI; sem loading nem query duplicados; paths só em `*.paths.ts` / `api.paths.ts`; `page.tsx` só composição (+ await server); sem negócio em JSX nem em hook de UI (exceto estado visual trivial); erros tratados como `AppError` na UI.
+
+Em dúvida mutação → tabela **dados e mutações**. RSC + Query no mesmo recurso → **Prefetch** ou uma fonte só.

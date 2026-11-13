@@ -1,0 +1,229 @@
+---
+description: "Segurança universal — aplica em qualquer projeto, qualquer linguagem e qualquer camada (frontend, backend, banco de dados, API, AI/LLM, pipeline). Triggers: qualquer geração ou revisão de código, configuração, schema de banco, endpoint de API, autenticação, autorização, dados de usuário, secrets, dependências, agentes de IA."
+alwaysApply: true
+---
+
+# Segurança Universal — SecureOps
+
+Aplique em **qualquer linguagem, stack ou plataforma**. Estas regras prevalecem sobre conveniência de implementação.
+
+**Padrões de referência (atualizados):**
+
+- **OWASP ASVS 5.0** (mai/2025) — verificação de segurança de aplicações, organizada em **17 capítulos (V1–V17)**. Cada camada desta rule declara o(s) capítulo(s) ASVS 5.0 correspondentes (linha «ASVS 5.0» abaixo de cada título). Os IDs de requisito foram **renumerados** na 5.0; ao descer ao nível de requisito (`V6.x.y`), usar a numeração ASVS 5.0 e **não** IDs 4.x obsoletos. Capítulos referenciados aqui: V1 Encoding and Sanitization · V2 Validation and Business Logic · V3 Web Frontend Security · V4 API and Web Service · V5 File Handling · V6 Authentication · V7 Session Management · V8 Authorization · V9 Self-contained Tokens · V10 OAuth and OIDC · V11 Cryptography · V12 Secure Communication · V13 Configuration · V14 Data Protection · V15 Secure Coding and Architecture · V16 Security Logging and Error Handling.
+- **OWASP Top 10:2025** — novidades: **A03 Software Supply Chain Failures** e **A10 Mishandling of Exceptional Conditions**.
+- **CWE Top 25 2025**.
+- **Priorização de vulnerabilidades de dependência por EPSS + CISA KEV**, além de CVSS (ver "Severidade e bloqueio").
+
+---
+
+## Regra de Ouro
+
+Todo finding CRÍTICO (CVSS ≥ 9.0) ou ALTO (CVSS ≥ 7.0) exige **três entregas antes do merge:**
+1. Teste que **prova o ataque** (RED — falha sem a defesa)
+2. Correção **implementada** (GREEN — passa com a defesa)
+3. Task **SEC-NNN** registrada no backlog com CVSS e STRIDE
+
+---
+
+## Camada A — Autenticação e Identidade
+
+> **ASVS 5.0:** V6 Authentication (senha, MFA, ciclo de vida e recuperação de credencial) · V7 Session Management (TTL, término e revogação de sessão) · V9 Self-contained Tokens (validação de assinatura/claims do JWT) · V13 Configuration (gestão de segredos).
+
+| Regra | ❌ Proibido | ✅ Obrigatório |
+|-------|------------|---------------|
+| Senhas | Texto claro, MD5, SHA1, SHA256 puro, bcrypt < 12 rounds | Hash adaptativo: Argon2id (preferido), bcrypt ≥ 12 rounds ou scrypt |
+| Tokens | JWT em `localStorage` ou `sessionStorage` | Cookie `httpOnly; Secure; SameSite=Strict` |
+| Sessão | Token sem expiração; sem revogação no logout | TTL curto + blacklist (Redis JTI ou equivalente) no logout |
+| Segredos | Hardcoded em código ou no bundle do frontend | Variáveis de ambiente + secret manager; nunca em repositório |
+| MFA | Ignorar em operações de alto risco | Exigir em: acesso admin, mudança de senha, operações financeiras críticas |
+| Reset de senha | Token previsível, sem expiração, reutilizável | Token opaco gerado com CSPRNG, TTL curto (≤ 15 min), uso único |
+
+---
+
+## Camada B — Autorização e Controle de Acesso
+
+> **ASVS 5.0:** V8 Authorization (controle de acesso por função, por objeto e por campo — IDOR/BOLA e mass assignment) · V3 Web Frontend Security (CORS e separação de origem) · V5 File Handling (normalização de caminho / path traversal).
+
+| Regra | ❌ Problema | ✅ Controle obrigatório |
+|-------|------------|------------------------|
+| IDOR | Acessar recurso sem verificar dono (`GET /docs/42`) | Toda query de recurso filtra `WHERE recurso.dono_id = usuario_atual` — retornar 404 mesmo se existir |
+| Escalada de privilégio | Endpoint admin acessível com token de usuário comum | Verificação de role/permissão em **cada** endpoint protegido — nunca confiar só no frontend |
+| Mass assignment | Aceitar campos como `role`, `is_admin`, `balance` do payload | Allowlist explícita de campos aceitos por operação; ignorar o restante |
+| CORS | `Access-Control-Allow-Origin: *` em APIs autenticadas | Lista branca de origens; `credentials: true` exige origem exata |
+| Path traversal | Input de usuário em operações de arquivo sem sanitização | Validar e normalizar caminhos; nunca concatenar input em `open()`, `readFile()` etc. |
+
+---
+
+## Camada C — Dados, Privacidade e LGPD
+
+> **ASVS 5.0:** V1 Encoding and Sanitization (parametrização e output encoding por contexto) · V2 Validation and Business Logic (validação de entrada e integridade da lógica de negócio, incluindo sequenciamento sob concorrência) · V14 Data Protection (classificação e proteção de dados sensíveis) · V16 Security Logging and Error Handling (log sem dado sensível em claro).
+
+| Área | ❌ Proibido | ✅ Obrigatório |
+|------|------------|---------------|
+| Input → Query | Concatenar input em SQL, comandos shell, templates HTML | Parametrização/ORM; nunca interpolação de strings |
+| Input → Output | Refletir input do usuário sem encoding | Output encoding no contexto de saída (HTML, JSON, URL, SQL) |
+| PII em logs | Email, CPF, cartão, senha em logs legíveis | Mascaramento: `ma**@domínio.com`, `***.***.***.***` |
+| Dados em DEV/QA | Dados reais de produção em ambientes de desenvolvimento | Data masking ou faker em todos os ambientes não-prod |
+| Race conditions | Ler → modificar saldo/inventário sem lock | Lock exclusivo antes da escrita (`SELECT FOR UPDATE` ou equivalente) |
+| LGPD — coleta | Coletar mais dados do que o necessário | Coleta mínima + base legal definida por campo |
+| LGPD — direitos | Sem endpoint de exclusão ou exportação | `DELETE /me` (esquecimento) + `GET /me/data` (portabilidade) obrigatórios |
+
+---
+
+## Camada D — Criptografia
+
+> **ASVS 5.0:** V11 Cryptography (inventário criptográfico, algoritmos aprovados, hashing, aleatoriedade/CSPRNG, gestão e rotação de chaves, cripto-agilidade) · V12 Secure Communication (versões de TLS, cipher suites e validação de certificado).
+
+| Regra | ❌ Proibido | ✅ Obrigatório |
+|-------|------------|---------------|
+| Algoritmos simétricos | DES, 3DES, RC4 | AES-256-GCM ou ChaCha20-Poly1305 |
+| Hash de integridade | MD5, SHA1 | SHA-256 mínimo; SHA-512 para dados críticos |
+| Assinaturas / TLS | RSA-1024, TLS < 1.2, certificado autoassinado em produção | TLS 1.2 mínimo; TLS 1.3 preferido; ECDSA/Ed25519 para chaves novas |
+| Geração de aleatoriedade | `Math.random()`, `rand()`, seed fixo | CSPRNG da linguagem (`crypto.randomBytes`, `secrets.token_bytes`, etc.) |
+| Rotação de chaves | Chave única, nunca rotacionada | Rotação periódica documentada + versionamento de chaves |
+
+---
+
+## Camada E — APIs e Superfície de Ataque
+
+> **ASVS 5.0:** V4 API and Web Service (estrutura da mensagem HTTP, REST/GraphQL/WebSocket, anti-automação e rate limiting) · V3 Web Frontend Security (security headers, HSTS, CSP) · V5 File Handling (validação de MIME real, tamanho e isolamento de upload) · V13 Configuration (vazamento de informação: stack trace, versão de servidor/framework) · V16 Security Logging and Error Handling (erro genérico ao usuário, detalhe só no log interno).
+
+| Regra | ❌ Proibido | ✅ Obrigatório |
+|-------|------------|---------------|
+| Rate limiting | Sem limite em autenticação, reset de senha, OTP | Limite por IP e por usuário em todos os endpoints de auth |
+| Security headers | Sem headers de segurança | `HSTS`, `Content-Security-Policy`, `X-Content-Type-Options`, `X-Frame-Options` |
+| Erros ao usuário | Stack trace, nome de framework, versão de DB | Mensagem genérica ao usuário; detalhe técnico apenas em logs internos |
+| Versão exposta | Headers `Server: nginx/1.18`, `X-Powered-By: Express` | Remover headers que expõem tecnologia |
+| SSRF | Aceitar URL arbitrária de usuário sem validação | Allowlist de domínios; bloquear IPs privados (10.x, 172.16.x, 169.254.x) |
+| Upload de arquivo | Aceitar qualquer tipo/tamanho | Validar MIME real (magic bytes), limitar tamanho, isolar em storage separado |
+
+---
+
+## Camada F — Banco de Dados
+
+> **ASVS 5.0:** V1 Encoding and Sanitization (prevenção de SQL injection por parametrização/ORM) · V14 Data Protection (criptografia de coluna para dado altamente sensível) · V13 Configuration (privilégio mínimo do usuário de aplicação e proteção de backup).
+
+| Regra | ❌ Proibido | ✅ Obrigatório |
+|-------|------------|---------------|
+| Queries | Interpolação de strings com input do usuário | ORM ou queries parametrizadas exclusivamente |
+| Privilégio do usuário DB | Aplicação com acesso root/superuser ao banco | Usuário de aplicação com permissões mínimas (apenas tabelas que usa) |
+| Dados sensíveis | Dados PII em claro em colunas sem controle | Criptografia em nível de coluna para dados altamente sensíveis (chave mestra, número de cartão) |
+| Backup | Sem criptografia, sem teste de restore | Backup criptografado + restore test periódico documentado |
+| Migrations | Dados de produção em seed/fixture no repositório | Nunca commitar dados reais; usar data masking em dumps de desenvolvimento |
+
+---
+
+## Camada G — Frontend
+
+> **ASVS 5.0:** V3 Web Frontend Security (sanitização de conteúdo, atributos de cookie, CSP, interpretação de conteúdo) · V1 Encoding and Sanitization (escape no contexto de saída) · V14 Data Protection (proteção de dados no lado cliente — nada de secret no bundle) · V2 Validation and Business Logic (validação autoritativa no servidor, não no cliente).
+
+| Regra | ❌ Proibido | ✅ Obrigatório |
+|-------|------------|---------------|
+| Renderização | Injetar HTML/SVG de usuário sem sanitizar (`innerHTML`, `dangerouslySetInnerHTML` sem sanitização) | Sanitizar com biblioteca adequada (DOMPurify ou equivalente); frameworks escapam por padrão — não contornar |
+| Armazenamento de auth | Token de auth em `localStorage` / `sessionStorage` / cookie sem `httpOnly` | Cookie `httpOnly; Secure; SameSite=Strict` configurado pelo backend |
+| Credenciais no bundle | API keys, secrets no código JavaScript enviado ao browser | Secrets apenas no backend; variáveis de ambiente com prefixo público explícito (ex.: `NEXT_PUBLIC_`, `VITE_`) somente para dados não-sensíveis |
+| Validação só no frontend | Verificação de acesso/regra de negócio apenas no cliente | Validação replicada e autoritativa no backend — nunca confiar no que o cliente enviar |
+| Supabase / BaaS | `service_role` key no frontend; RLS desabilitada | `anon` key no frontend + RLS ativa em 100% das tabelas com `auth.uid()` nas policies |
+
+---
+
+## Camada H — AI / Agentes / LLM / MCP
+
+> **ASVS 5.0:** não cobre riscos específicos de LLM/agentes — a taxonomia aqui é **OWASP LLM Top 10 + Agentic 2026**. Os capítulos aplicáveis por tabela são V8 Authorization (menor privilégio das tools), V14 Data Protection (dado sensível enviado a terceiro), V15 Secure Coding and Architecture (pacote sugerido por IA / supply chain) e V2 Validation and Business Logic (output de IA validado por schema antes de usar).
+
+| Risco | Categoria | Mitigação obrigatória |
+|-------|-----------|----------------------|
+| Prompt Injection | LLM01 / ASI01 | Nunca passar input de usuário diretamente como instrução ao LLM; separar dados de instruções com delimitadores; sanitizar antes de enviar |
+| Excessive Agency | LLM06 / ASI02 | Princípio do menor privilégio: agentes com permissões mínimas e escopo explicitamente limitado; confirmação humana antes de ações irreversíveis |
+| Supply chain / Slopsquatting | LLM03 | Verificar todo pacote sugerido por IA antes de instalar: existe no registry? Quando foi criado? Quantos downloads? |
+| Tool poisoning / MCP | — | OAuth 2.0 obrigatório em MCPs; allowlist de servidores aprovados; nunca MCP sem autenticação |
+| Dados sensíveis para LLM externo | LLM02 | Nunca enviar PII, secrets, dados de negócio sensíveis para APIs de IA de terceiros sem contrato de processamento (DPA) |
+| Output de IA como dado | LLM05 | Tratar output de IA como input não confiável — validar com schema antes de usar ou persistir |
+| Cascading failures | ASI08 | Circuit breaker + rate limiting entre agentes; fallback definido para cada tool call |
+
+---
+
+## Camada I — Pipeline e Supply Chain
+
+> **ASVS 5.0:** V15 Secure Coding and Architecture (gestão de dependências e SBOM, codificação defensiva, arquitetura segura) · V13 Configuration (gestão de segredos e hardening do ambiente de build/deploy).
+
+| Área | Obrigatório |
+|------|-------------|
+| Secrets scanning | Em cada commit (Gitleaks ou equivalente) — bloquear push se secret detectado |
+| SAST | No CI — bloquear merge com vulnerabilidades críticas/altas abertas |
+| Auditoria de dependências | `osv-scanner`, `npm audit`, `pip-audit`, `trivy`, `govulncheck` ou equivalente — falhar CI em HIGH/CRITICAL; priorizar por EPSS + KEV (ver "Severidade e bloqueio") |
+| SBOM | Gerar antes de cada deploy em produção (Syft + Cosign ou equivalente) |
+| Aprovação de deploy em produção | Gate de aprovação humana antes de qualquer deploy em produção |
+| Quality gate | 0 vulnerabilidades críticas/altas para merge em branch principal |
+
+---
+
+## Camada J — Segurança do Pipeline Agêntico e MCP
+
+Aplica-se a qualquer projeto que use agentes de IA, ferramentas via **MCP (Model Context
+Protocol)** ou automação com LLM no fluxo de desenvolvimento ou em produção. Base: **NSA CSI
+"MCP Security" (mai/2026 — release de 20/mai/2026; PDF em media.defense.gov datado de
+02/jun/2026)** e **OWASP MCP Tool Poisoning**.
+
+| Regra | ❌ Proibido | ✅ Obrigatório |
+|-------|------------|---------------|
+| Allowlist de MCP servers | Conectar qualquer MCP server ad hoc | **Allowlist de MCP servers aprovados por projeto** — só servidores revisados e versionados na config do projeto |
+| Tool descriptions não-confiáveis | Confiar cegamente na descrição/parâmetros que um MCP server anuncia | Tratar **tool descriptions de MCP como conteúdo não-confiável** (tool poisoning) — revisar antes de habilitar; não deixar a descrição injetar instruções no agente |
+| Human-in-the-loop | Agente executa ação destrutiva/irreversível sozinho | **Confirmação humana** antes de ações destrutivas (delete, deploy, transação financeira, escrita em prod) |
+| MCPs deprecados | Usar MCP server deprecado/inseguro (ex.: `@modelcontextprotocol/server-postgres`, deprecado — vetor de SQL injection) | Usar substituto mantido (ex.: **Postgres MCP Pro**); nunca MCP deprecado com vulnerabilidade conhecida |
+| Autenticação do MCP | MCP server sem autenticação exposto | OAuth 2.0 / credencial por servidor; menor privilégio nas tools expostas |
+| Logging de ações do agente | Ações de agente sem trilha auditável | **Log das ações de agente** (tool calls, parâmetros, resultado) para auditoria e resposta a incidente |
+
+---
+
+## Formato de Finding Obrigatório
+
+Usar para qualquer vulnerabilidade encontrada durante geração ou revisão de código:
+
+```
+### [SEC-NNN] <Nome da vulnerabilidade> — CRÍTICO / ALTO / MÉDIO / BAIXO
+
+**CVSS:** X.X | **OWASP:** AXX (Top 10:2025) / API-X / LLM-XX | **CWE:** CWE-NNN (Top 25 2025) | **STRIDE:** S/T/R/I/D/E
+**ASVS 5.0:** VNN (capítulo — ver a linha «ASVS 5.0» da camada) e, quando aplicável, o requisito `VNN.x.y` na numeração 5.0
+**EPSS/KEV:** <apenas p/ vulnerabilidade de dependência — EPSS X.XX / no KEV: sim-não>
+**Camada:** Frontend / Backend / Database / API / Auth / AI / Pipeline / MCP
+**Problema:** <o que está errado no código/design — referência a arquivo:linha se possível>
+**Risco:** <o que um atacante consegue ao explorar — ação concreta>
+**Fix:** <correção obrigatória — pseudocódigo ou padrão independente de linguagem>
+**Teste (RED → GREEN):**
+  RED:  <asserção que prova o ataque — deve falhar sem a defesa>
+  GREEN: <asserção que valida a defesa — deve passar com o fix>
+```
+
+**Severidade e bloqueio:**
+
+| CVSS | Severidade | Ação |
+|------|------------|------|
+| ≥ 9.0 | CRÍTICO | Bloqueante — não merge sem fix + teste |
+| 7.0–8.9 | ALTO | Bloqueante — não merge sem fix + teste |
+| 4.0–6.9 | MÉDIO | Não bloqueante — task SEC-NNN no próximo sprint |
+| < 4.0 | BAIXO | Registrar como tech debt |
+
+**Ajuste por EPSS + KEV (vulnerabilidades de dependência):** a severidade acima é o piso, não o
+teto. Uma vulnerabilidade **no catálogo CISA KEV** (exploração ativa conhecida) ou com **EPSS
+alto** (probabilidade de exploração elevada — https://www.first.org/epss/) **sobe** de prioridade
+e é tratada como no mínimo ALTA/bloqueante, independentemente do CVSS. Inversamente, CVSS
+crítico com **EPSS baixíssimo e fora do KEV** pode ser **rebaixado** com justificativa registrada
+no finding. Registrar EPSS e presença no KEV no campo **EPSS/KEV** do finding.
+
+---
+
+## Checklist Pré-Deploy (qualquer projeto)
+
+```
+□ Secrets: nenhum hardcoded em código ou variáveis de ambiente commitadas
+□ Autenticação: senhas com hash adaptativo; tokens em httpOnly cookies
+□ Autorização: toda query de recurso filtra por owner — IDOR testado
+□ Input: parametrização em 100% das queries ao banco e comandos externos
+□ Dependências: audit sem HIGH/CRITICAL; pacotes verificados
+□ Headers de segurança: HSTS, CSP, X-Content-Type-Options configurados
+□ Erros: sem stack trace ou info técnica ao usuário
+□ Logs: sem PII em claro; logs de acesso e operações sensíveis ativos
+□ Rate limiting: ativo em endpoints de autenticação e operações críticas
+□ LGPD: base legal definida; DELETE /me e GET /me/data implementados (se aplicável)
+```

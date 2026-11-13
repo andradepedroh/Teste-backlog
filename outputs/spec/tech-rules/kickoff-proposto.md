@@ -1,6 +1,6 @@
 # Kickoff técnico proposto — spec-tech-rules (aguardando confirmação)
 
-Status: proposta — **não aprovada**
+Status: **aprovado** por Pedro em 2026-11-13, sem exceções
 Última atualização: 2026-11-13
 Decisor: Pedro
 Fonte das perguntas: `.claude/skills/spec-tech-rules/references/kickoff-blocos.md` (10 blocos do kit)
@@ -59,4 +59,4 @@ Fonte das perguntas: `.claude/skills/spec-tech-rules/references/kickoff-blocos.m
 
 | # | Exceção ou confirmação |
 |---|---|
-| — | *(preencher)* |
+| todos | «confirmo tudo» — Pedro, 2026-11-13 |

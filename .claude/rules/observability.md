@@ -1,0 +1,45 @@
+---
+description: "Observabilidade da Cobrança Inteligente: logs estruturados com o lote como correlação, métricas de negócio e alertas, com recursos nativos do ServiceNow"
+alwaysApply: false
+paths: **/*.js, **/*.xml
+---
+
+# Observabilidade — Cobrança Inteligente (2.6 Cobrança · SEFAZ-MT)
+
+> Por que: a operação depende de cargas diárias de seis fontes e de milhares de envios por dia;
+> sem rastro por lote, uma falha só aparece quando o coordenador estranha os números.
+
+---
+
+## Nível e destino
+
+- **Logs estruturados + métricas**, com os recursos nativos do ServiceNow (logs do sistema e as tabelas de execução da aplicação), **sem OpenTelemetry**. Fonte: quadro técnico itens 6.1 e 6.2.
+
+## Logs
+
+- Formato estruturado: `{ modulo, operacao, idLote, fonte, resultado, qtd, duracaoMs }`. O **identificador do lote** é a chave de correlação. Fonte: quadro técnico item 6.3.
+- Nível: `info` para início e fim de lote e de job; `warn` para rejeição e reenvio; `error` para falha de fonte ou de envio.
+- **Nunca** logar CPF, e-mail, telefone ou conteúdo de mensagem em claro (security.mdc, camada C).
+
+## Trilha operacional em tabela
+
+- Todo lote grava `x_cbi_sync_execucao` com lidos, aceitos, rejeitados, situação e mensagem de erro.
+- Toda comunicação grava a situação de entrega e o número de tentativas em `x_cbi_comunicacao`.
+
+## Métricas de negócio
+
+Fonte: quadro técnico item 6.4 e os RNF.
+
+| Métrica | Onde | Alerta |
+|---------|------|--------|
+| Lotes por fonte e situação | `x_cbi_sync_execucao` | fonte em Falha no fechamento do ciclo → alerta ao Gestor de Integração em ≤ 15 min (RNF-CON-001) |
+| Registros rejeitados por motivo | `x_cbi_registro_rejeitado` | — |
+| Comunicações por canal e situação | `x_cbi_comunicacao` | falha definitiva acima do normal |
+| Duração da consolidação | log do job | > 4 h (RNF-DES-001) |
+| Coleta dos indicadores | Platform Analytics | não concluída até 08:00 (RNF-CON-002) |
+
+## Anti-padrões
+
+- Bloco que captura erro e não registra nada.
+- Log de payload inteiro da fonte.
+- Alerta sem dono definido.

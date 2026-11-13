@@ -1360,7 +1360,7 @@ Cenário 3: Contribuinte regularizou
 **Regras de Negócio aplicáveis:** RN-NOVO-ING-002, RN-NOVO-QUA-002, RN-NOVO-REG-002
 **Dependências:** RF-MOD-QUALIFICACAO-06
 **Rastreabilidade:** F-073, F-024
-**Notas:** promove RF-027 do Explore.
+**Notas:** promove RF-027 do Explore. ⚠️ BLOQUEADO por GAP-028 para os segmentos ICMS Normal, ICMS ST, ITCD e Parcelamentos: não há fonte de opt-in fora do IPVA (decisão de Pedro, 2026-11-13, manter a regra e bloquear).
 
 ---
 
@@ -1446,7 +1446,7 @@ Cenário 3: Sem opt-in
 **Regras de Negócio aplicáveis:** RN-NOVO-REG-003
 **Dependências:** RF-MOD-REGUAS-02
 **Rastreabilidade:** F-075
-**Notas:** promove RF-029 do Explore.
+**Notas:** promove RF-029 do Explore. ⚠️ BLOQUEADO por GAP-028 para os segmentos ICMS Normal, ICMS ST, ITCD e Parcelamentos: não há fonte de opt-in fora do IPVA (decisão de Pedro, 2026-11-13, manter a regra e bloquear).
 
 ---
 
@@ -1489,7 +1489,7 @@ Cenário 3: Variável ausente
 **Regras de Negócio aplicáveis:** RN-NOVO-REG-003
 **Dependências:** RF-MOD-REGUAS-04
 **Rastreabilidade:** F-076
-**Notas:** promove RF-030 do Explore.
+**Notas:** promove RF-030 do Explore. ⚠️ BLOQUEADO por GAP-028 para os segmentos ICMS Normal, ICMS ST, ITCD e Parcelamentos: não há fonte de opt-in fora do IPVA (decisão de Pedro, 2026-11-13, manter a regra e bloquear).
 
 ---
 

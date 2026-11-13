@@ -86,6 +86,16 @@ Não vira GAP.
 
 ---
 
+## Tratamento decidido por Pedro (2026-11-13)
+
+| GAP | Tratamento nesta simulação |
+|-----|----------------------------|
+| GAP-028 | **Bloqueado:** a regra de consentimento fica como está e as histórias de régua de ICMS, ITCD e parcelamentos ficam marcadas ⚠️ BLOQUEADO (RF-MOD-REGUAS-02, 04 e 05; RN-NOVO-REG-002) |
+| GAP-015 | Aceito em aberto: segue sem mudar requisito |
+| GAP-001, GAP-002, GAP-004, GAP-007, GAP-017, GAP-023 (os 6 altos) | Aceitos em aberto: não seguram a cadeia técnica nem o backlog; seguem registrados |
+
+---
+
 ## GAPs
 
 <!-- id: gap-028 -->
@@ -96,7 +106,7 @@ Não vira GAP.
 |-------|----------|
 | **Tipo** | PENDING_DECISION |
 | **Severidade** | CRÍTICA |
-| **Status** | aberto |
+| **Status** | aberto — ⚠️ BLOQUEADO |
 | **Tema** | Fonte do consentimento por canal |
 | **Descrição** | A regra de consentimento (RN-NOVO-REG-002) só deixa enviar mensagem a quem tem opt-in vigente no canal. Mas a única API de consentimento listada é a do IPVA. Para ICMS, ITCD e parcelamentos não há fonte de opt-in para e-mail, SMS ou WhatsApp. |
 | **Impacto se não resolvido** | Com a regra atual, nenhum contribuinte de ICMS, ITCD ou parcelamento recebe mensagem, e as réguas desses segmentos ficam vazias. |

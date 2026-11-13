@@ -346,7 +346,7 @@ Restrição, Derivação, Inferência ou Gatilho); toda regra de Derivação tra
 | **Enunciado** | SE o contribuinte não tem opt-in vigente no canal ENTÃO o sistema não envia por esse canal; o opt-out vale na hora |
 | **Algoritmo** | — (não é Derivação) |
 | **Exceções** | — |
-| **Conflitos** | — |
+| **Conflitos** | ⚠️ BLOQUEADO por GAP-028: só o IPVA tem fonte de opt-in; para ICMS, ITCD e parcelamentos nenhuma comunicação sai até a fonte ser definida (decisão de Pedro, 2026-11-13) |
 | **Vinculada a** | RF-MOD-REGUAS-04, RF-MOD-REGUAS-05 |
 | **Justificativa** | Base legal e relacionamento com o contribuinte |
 

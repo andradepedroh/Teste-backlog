@@ -1,5 +1,7 @@
 # Especificação Funcional — Cobrança Inteligente (2.6 Cobrança · SEFAZ-MT)
 
+> **CONGELADO em 2026-11-13** — sucedido por `outputs/spec/`. Mudança vai para lá, ou para `spec-scope-change` se for virada de escopo.
+
 > **Fase:** Explore · **Versão:** 0.1 · **Status:** cobertura completa, profundidade preliminar
 > **Documentos irmãos:** [HLD](./hld-funcional.md) · [Técnica](./especificacao-tecnica.md) · [Modelo de Dados](./modelo-de-dados.md) · [GAPs](./gaps.md)
 >

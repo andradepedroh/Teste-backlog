@@ -1,5 +1,7 @@
 # GAPs e Questões Abertas — Cobrança Inteligente (2.6 Cobrança · SEFAZ-MT)
 
+> **CONGELADO em 2026-11-13** — sucedido por `outputs/spec/`. Mudança vai para lá, ou para `spec-scope-change` se for virada de escopo.
+
 > **Fase:** Explore · **Versão:** 0.1 · **KERNEL — registro único de questões abertas.**
 > **Documentos irmãos:** [HLD](./hld-funcional.md) · [Funcional](./especificacao-funcional.md) · [Técnica](./especificacao-tecnica.md) · [Modelo de Dados](./modelo-de-dados.md)
 

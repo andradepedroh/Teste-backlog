@@ -1,5 +1,7 @@
 # Modelo de Dados — Cobrança Inteligente (2.6 Cobrança · SEFAZ-MT)
 
+> **CONGELADO em 2026-11-13** — sucedido por `outputs/spec/`. Mudança vai para lá, ou para `spec-scope-change` se for virada de escopo.
+
 > **Fase:** Explore · **Versão:** 0.1 · **Status:** preliminar e **opcional**
 > **Documentos irmãos:** [HLD](./hld-funcional.md) · [Funcional](./especificacao-funcional.md) · [Técnica](./especificacao-tecnica.md) · [GAPs](./gaps.md)
 >

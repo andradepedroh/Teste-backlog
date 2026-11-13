@@ -14,6 +14,7 @@ Ordem cronológica, mais recente no topo. Cada execução = uma linha.
 
 | # | Data/Hora | Skill | Modo / contexto | Inputs consumidos | Outputs gerados ou atualizados | Decisões-chave (1–3 bullets) | Decisor | Próximo passo recomendado |
 |--:|-----------|-------|-----------------|-------------------|-------------------------------|------------------------------|---------|---------------------------|
+| 8 | 2026-11-13 19:34 | spec-iterate | Etapa A (auditoria); ponte do Explore (17 GAPs importados com o mesmo número) | todos os artefatos de outputs/spec/ + outputs/explore/gaps.md | outputs/spec/gaps.md, outputs/spec/gaps-answers.md | 28 GAPs (24 abertos: 2 críticos, 6 altos); novos GAP-018 a GAP-028, com destaque para GAP-028 (sem fonte de consentimento fora do IPVA); 10 pontos cegos checados; GAP-005, 009, 018 e 019 resolvidos pelas decisões de Pedro | Pedro | responder GAP-028 e GAP-015 (críticos) → congelar Explore → spec-tech-rules |
 | 7 | 2026-11-13 19:24 | spec-report | layout 3.0; capa curada; domínios visao, documentos, fluxos, revisao, qualidade | outputs/spec/ (context-map, discovery-document, legacy skip, 6 artefatos da spec-product, sync-log, revisao.json) | outputs/spec/capa.md, outputs/spec/report/product-discovery-kit.html | sem benchmark e sem gaps.md do kit (spec-iterate pendente); contador automático da capa infla RF/RN por somar IDs do Explore — números corretos na capa; GAPs abertos em destaque: GAP-001, GAP-002, GAP-004, GAP-015 | Pedro | spec-iterate → spec-tech-rules (após confirmação do quadro técnico) |
 | 6 | 2026-11-13 17:28 | spec-product | completo, ramo A, sem benchmark e sem protótipo (isenção); simulação sem horas | context-map.md, discovery-document.md, legacy.md (skip), outputs/explore/ | modules.md, product-vision/product-vision.md, business-rules.md, requirements/requirements.md, product-requirements/product-requirements.md, flow-map.md | 7 módulos; 55 RF (26 Must, 24 Should, 5 Could), 7 RNF, 32 RN-NOVO (9 Derivação com algoritmo), 14 PR de tela; decisões de Pedro aplicadas: score v1 com fallback, controle 3%, distribuição por carga/grupo, Cobrança Ativa fora da v1; flow-map etapas_com_tela=68% · transicoes_com_rn=85,2%; promocao.mjs 85 cobertos, 0 órfãos | Pedro | spec-tech-rules (Tempo B do Plan) |
 | 5 | 2026-11-13 17:14 | spec-legacy | LEGACY_SKIPPED: motivo=greenfield · justificativa=kickoff legado=Não e inputs/ só tem especificação, plano e protótipo de validação | inputs/ (classificação do Passo 0), outputs/spec/context-map.md | outputs/spec/legacy.md | modo skip; grafo e sinais N/A (sem código); spec-benchmark fora da simulação por decisão de Pedro | Pedro | spec-product (ramo A) |
@@ -27,6 +28,10 @@ modulos-kickoff: candidatos=MOD-INGESTAO, MOD-QUALIFICACAO, MOD-SCORE, MOD-REGUA
 FLOWMAP_VALID: etapas_com_tela=68.0% · transicoes_com_rn=85.2% · avisos=3 tratados/justificados (estados de etapas automáticas, ver flow-map.md §Cobertura)
 TOOL_UNAVAILABLE:vale (binário ausente; rota efêmera por docker falhou: daemon não está rodando)
 PROSE_LINTED: arquivos=requirements.md, product-requirements.md · ocorrencias=62 · criticas=4 · corrigidas=4 · justificadas=0 · demais=58 ⚪ agregadas (EngProc.Ambiguidade: 55 «adequado» numa frase repetida, corrigida no gerador; restam 2) · modo=llm · estilos_confirmados=não · relint_pos_4.7=0
+
+PROSE_LINTED: ocorrencias=9 · modo=llm (spec-iterate Etapa A; TOOL_UNAVAILABLE:vale — binário ausente e daemon docker parado)
+PROTOTYPE_HARVESTED: camada=skipped · telas_manifesto=0 · avisos_crosscheck=0 — protótipo dispensado por isenção; o HTML v3 em inputs/prototipo/ é só referência e não tem prototype.md
+UI_BINDING_AUDITED: n/a — data-model.json e api-contracts.yaml ainda não existem
 
 **Convenções de preenchimento:**
 - **Modo / contexto:** o que diferenciou esta execução das outras (ex.: `delta` se for re-execução; `proto-first` vs `doc-first` etc.). É também a coluna dos **marcadores de skip** lidos pelo `check-outputs.py` — ver abaixo.
@@ -66,6 +71,10 @@ Mudanças entre artefatos resultantes do fecho de GAPs (Etapa B do `spec-iterate
 
 | Data | Direção | GAP fechado | Origem da decisão | Artefatos tocados | Resumo | Decisor |
 |------|---------|-------------|-------------------|-------------------|--------|---------|
+| 2026-11-13 | doc→doc | GAP-005 | decisão no chat (Pedro) | product-vision.md §5 e §8; requirements.md matriz de cobertura; modules.md | Cobrança Ativa por telefone fora da v1 | Pedro |
+| 2026-11-13 | doc→doc | GAP-009 | decisão no chat (Pedro) | business-rules.md RN-NOVO-CQ-001; product-vision.md §5 | distribuição por carga ou grupo; vínculo contador ↔ atendente fora da v1 | Pedro |
+| 2026-11-13 | doc→doc | GAP-018 | decisão no chat (Pedro) | business-rules.md RN-NOVO-SCO-001; requirements.md MOD-SCORE | score na v1 com critérios determinísticos quando faltar | Pedro |
+| 2026-11-13 | doc→doc | GAP-019 | decisão no chat (Pedro) | business-rules.md RN-NOVO-QUA-003 | grupo de controle de 3% da carteira, parametrizável | Pedro |
 | YYYY-MM-DD | doc→proto \| proto→doc \| doc→doc | GAP-XXX | gaps-answers.md / chat / nova evidência F-xxx | arquivo §seção | resumo da mudança | consultor / cliente / nome |
 
 *(Direção: `doc→proto` = documento gerou alteração no protótipo; `proto→doc` = protótipo revelou alteração em documento; `doc→doc` = mudança entre documentos sem protótipo.)*

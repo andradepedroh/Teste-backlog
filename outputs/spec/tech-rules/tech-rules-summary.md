@@ -13,7 +13,7 @@
 | Migrações | Controle de versão do Studio ligado ao GitHub; promoção dev → homologação → produção | repositório em uso no GitHub → versionar a aplicação nele |
 | Convenções | Identificadores em português; `x_cbi_` + snake_case; API `/api/x_cbi/v1`; RFC 7807 + resultado por registro; códigos de erro tipados | ETF §4 e §6.1 usam nomes em português; RN-NOVO-ING-004 exige resposta por registro |
 | Testes | Unitário (ATF) + integração (kit de payloads) + ponta a ponta (ATF) + carga (k6); todas as regras de cálculo e cenários de aceite automatizados | requirements.md RNF-DES-001 e RNF-DES-002 (volume) → carga obrigatória; business-rules.md tem 9 regras de Derivação |
-| Observabilidade | Logs estruturados + métricas nativas, identificador do lote como correlação, sem OpenTelemetry | requirements.md RNF-CON-001 (alerta de fonte em falha) → rastro por lote |
+| Observabilidade | Logs estruturados + métricas nativas, identificador do lote como correlação, sem OpenTelemetry | requirements.md RNF-CONF-001 (alerta de fonte em falha) → rastro por lote |
 | Auth | SSO da instância para usuários; OAuth 2.0 com um usuário por fonte nas APIs | ETF §1.1 e §2.1 → login fora do escopo, autenticação das APIs no escopo |
 | Autorização | 5 papéis, ACL na camada de dados, isolamento do atendente por Query Business Rule | ETF §6.4; business-rules.md RN-NOVO-GOV-001 e RN-NOVO-MON-002 |
 | Auditoria | Completa | discovery-document.md (cliente governamental, dado pessoal); RN-NOVO-GOV-003 |

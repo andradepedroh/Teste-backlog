@@ -32,11 +32,11 @@ Fonte: quadro técnico item 6.4 e os RNF.
 
 | Métrica | Onde | Alerta |
 |---------|------|--------|
-| Lotes por fonte e situação | `x_cbi_sync_execucao` | fonte em Falha no fechamento do ciclo → alerta ao Gestor de Integração em ≤ 15 min (RNF-CON-001) |
+| Lotes por fonte e situação | `x_cbi_sync_execucao` | fonte em Falha no fechamento do ciclo → alerta ao Gestor de Integração em ≤ 15 min (RNF-CONF-001) |
 | Registros rejeitados por motivo | `x_cbi_registro_rejeitado` | — |
 | Comunicações por canal e situação | `x_cbi_comunicacao` | falha definitiva acima do normal |
 | Duração da consolidação | log do job | > 4 h (RNF-DES-001) |
-| Coleta dos indicadores | Platform Analytics | não concluída até 08:00 (RNF-CON-002) |
+| Coleta dos indicadores | Platform Analytics | não concluída até 08:00 (RNF-CONF-002) |
 
 ## Anti-padrões
 

@@ -33,7 +33,7 @@ listada é a do IPVA (F-120). Com a regra como está, as réguas de ICMS, ITCD e
 ### 🟡 Inconsistências entre documentos
 
 **[P-002] Metas dos RNF sem fonte → GAP-020**
-Os valores-alvo de RNF-DES-001, RNF-DES-002, RNF-CON-001 e RNF-CON-002 foram propostos nesta simulação.
+Os valores-alvo de RNF-DES-001, RNF-DES-002, RNF-CONF-001 e RNF-CONF-002 foram propostos nesta simulação.
 → **Pergunta:** consolidação em até 4 horas, envio em até 6 horas e painéis até 08:00 estão aprovados?
 
 **[P-003] Contato-chave existe no protótipo e não na ETF → GAP-025**
@@ -414,7 +414,7 @@ Não vira GAP.
 | **Dono sugerido** | Coordenação de Cobrança + TI |
 | **Sugestão de tratamento** | Validar as quatro metas com Coordenação e TI. ICE: 3 × 2 × 5 = 30 |
 | **Sugestão de artefato** | Ajuste dos RNF em requirements.md |
-| **Afeta** | requirements.md RNF-DES-001, RNF-DES-002, RNF-CON-001, RNF-CON-002 |
+| **Afeta** | requirements.md RNF-DES-001, RNF-DES-002, RNF-CONF-001, RNF-CONF-002 |
 | **Features bloqueadas** | RNF-DES-001, RNF-DES-002 |
 | **Fonte** | Origem: P-002; requirements.md#QA-02 |
 

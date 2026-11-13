@@ -38,7 +38,7 @@ Fonte das perguntas: `.claude/skills/spec-tech-rules/references/kickoff-blocos.m
 | 5.2 | Cobertura mínima | Sem meta de % de linhas; exigido: toda regra de cálculo com teste e todos os cenários de aceite automatizados | 9 regras de cálculo |
 | 5.3 | Ferramenta E2E | ATF (framework de testes nativo do ServiceNow), interface e API | plataforma |
 | 5.4 | Teste de carga | k6 contra as APIs de ingestão, em homologação | RNF-DES-001 e 002 |
-| 6.1 | Observabilidade | Logs estruturados + métricas | RNF-CON-001 |
+| 6.1 | Observabilidade | Logs estruturados + métricas | RNF-CONF-001 |
 | 6.2 | Destino | Recursos nativos do ServiceNow (logs do sistema e tabelas de execução de lotes), sem OpenTelemetry | ETF §4.2 |
 | 6.3 | Formato de log | Estruturado, com o identificador do lote como chave de correlação | ETF §4.2 |
 | 6.4 | Métricas de negócio | Sim: lotes por fonte, registros rejeitados, comunicações por canal e situação | RNF / F6 |

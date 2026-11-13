@@ -113,7 +113,7 @@ Resposta ainda pendente: `**Resposta:** [PENDENTE — levar para cliente]`.
 **Resposta:** [PENDENTE — levar para cliente]
 **Decisor e data:**
 **Novo F-xxx gerado?**
-**Artefatos afetados:** requirements.md RNF-DES-001, RNF-DES-002, RNF-CON-001, RNF-CON-002
+**Artefatos afetados:** requirements.md RNF-DES-001, RNF-DES-002, RNF-CONF-001, RNF-CONF-002
 
 ## GAP-024 — Retenção de dados pessoais
 **Perguntas:** 1) Por quanto tempo os registros rejeitados ficam guardados? 2) Comunicações e interações seguem o prazo de guarda dos processos fiscais (sim/não)?

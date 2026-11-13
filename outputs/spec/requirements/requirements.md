@@ -183,11 +183,11 @@ Fonte: context-map.md (F-xxx), discovery-document.md §4, product-vision.md, bus
 | RF-MOD-GOVERNANCA-06 | RF | MOD-GOVERNANCA | Governança, Acesso e Auditoria | product-vision.md §5 | F-113 |
 | RNF-DES-001 | RNF | MOD-INGESTAO | Desempenho | product-vision.md §4 | F-183, F-133 |
 | RNF-DES-002 | RNF | MOD-REGUAS | Desempenho | product-vision.md §4 | F-150 |
-| RNF-CON-001 | RNF | MOD-INGESTAO | Confiabilidade | product-vision.md §4 | F-133 |
+| RNF-CONF-001 | RNF | MOD-INGESTAO | Confiabilidade | product-vision.md §4 | F-133 |
 | RNF-SEG-001 | RNF | MOD-GOVERNANCA | Segurança | product-vision.md §4 | F-017, F-158 |
 | RNF-SEG-002 | RNF | MOD-REGUAS | Segurança | product-vision.md §4 | F-188 |
 | RNF-USA-001 | RNF | MOD-GOVERNANCA | Usabilidade | product-vision.md §4 | F-008 |
-| RNF-CON-002 | RNF | MOD-MONITORAMENTO | Confiabilidade | product-vision.md §4 | F-147 |
+| RNF-CONF-002 | RNF | MOD-MONITORAMENTO | Confiabilidade | product-vision.md §4 | F-147 |
 
 ---
 
@@ -2651,7 +2651,7 @@ Cenário 3: Tentativa de editar
 
 ---
 
-### RNF-CON-001: Fonte em falha não interrompe o ciclo
+### RNF-CONF-001: Fonte em falha não interrompe o ciclo
 
 **Categoria (ISO 25010):** Confiabilidade
 **Prioridade MoSCoW:** Must
@@ -2771,7 +2771,7 @@ Cenário 3: Tentativa de editar
 
 ---
 
-### RNF-CON-002: Painéis atualizados a cada dia
+### RNF-CONF-002: Painéis atualizados a cada dia
 
 **Categoria (ISO 25010):** Confiabilidade
 **Prioridade MoSCoW:** Should
@@ -2811,8 +2811,8 @@ Cenário 3: Tentativa de editar
 | RF-MOD-INGESTAO-02 | Validar o documento do contribuinte | MOD-INGESTAO | — |
 | RF-MOD-INGESTAO-03 | Consolidar débitos por contribuinte | MOD-INGESTAO | RNF-DES-001 |
 | RF-MOD-INGESTAO-04 | Evitar duplicidade no reenvio | MOD-INGESTAO | — |
-| RF-MOD-INGESTAO-05 | Fechar o ciclo diário e acompanhar as fontes | MOD-INGESTAO | RNF-CON-001 |
-| RF-MOD-INGESTAO-06 | Seguir operando com fonte em falha | MOD-INGESTAO | RNF-CON-001 |
+| RF-MOD-INGESTAO-05 | Fechar o ciclo diário e acompanhar as fontes | MOD-INGESTAO | RNF-CONF-001 |
+| RF-MOD-INGESTAO-06 | Seguir operando com fonte em falha | MOD-INGESTAO | RNF-CONF-001 |
 | RF-MOD-INGESTAO-07 | Carga inicial e reconciliação | MOD-INGESTAO | — |
 | RF-MOD-INGESTAO-08 | Reprocessar registros rejeitados | MOD-INGESTAO | — |
 | RF-MOD-INGESTAO-09 | Atualizar a regularização durante o ciclo | MOD-INGESTAO | — |
@@ -2831,7 +2831,7 @@ Cenário 3: Tentativa de editar
 | RF-MOD-SCORE-01 | Receber o score da UFMT | MOD-SCORE | — |
 | RF-MOD-SCORE-02 | Classificar o score em faixas | MOD-SCORE | — |
 | RF-MOD-SCORE-03 | Operar sem score | MOD-SCORE | — |
-| RF-MOD-SCORE-04 | Painel do Score | MOD-SCORE | RNF-CON-002 |
+| RF-MOD-SCORE-04 | Painel do Score | MOD-SCORE | RNF-CONF-002 |
 | RF-MOD-REGUAS-01 | Montar a régua | MOD-REGUAS | — |
 | RF-MOD-REGUAS-02 | Enviar a etapa devida | MOD-REGUAS | RNF-DES-002 |
 | RF-MOD-REGUAS-03 | Escalonar e encaminhar | MOD-REGUAS | — |
@@ -2854,7 +2854,7 @@ Cenário 3: Tentativa de editar
 | RF-MOD-MONITORAMENTO-04 | Efeito incremental | MOD-MONITORAMENTO | — |
 | RF-MOD-MONITORAMENTO-05 | Retorno das réguas | MOD-MONITORAMENTO | — |
 | RF-MOD-MONITORAMENTO-06 | Realizado × meta | MOD-MONITORAMENTO | — |
-| RF-MOD-MONITORAMENTO-07 | Painel Institucional | MOD-MONITORAMENTO | RNF-USA-001, RNF-CON-002 |
+| RF-MOD-MONITORAMENTO-07 | Painel Institucional | MOD-MONITORAMENTO | RNF-USA-001, RNF-CONF-002 |
 | RF-MOD-MONITORAMENTO-08 | Regularizações por origem | MOD-MONITORAMENTO | — |
 | RF-MOD-GOVERNANCA-01 | Controlar acesso por papel | MOD-GOVERNANCA | RNF-SEG-001 |
 | RF-MOD-GOVERNANCA-02 | Isolar a visão do atendente | MOD-GOVERNANCA | RNF-SEG-001 |
@@ -2870,6 +2870,6 @@ Cenário 3: Tentativa de editar
 | QA | Descrição | Onde aparece | Sugestão de tratamento |
 |----|-----------|---------------|-------------------------|
 | QA-01 | Desempate entre massificada e qualificada para quem atende aos dois critérios | RF-MOD-QUALIFICACAO-04 | Coordenação decide (gaps.md GAP-007) |
-| QA-02 | Valores-alvo dos RNF de desempenho e confiabilidade são propostas desta simulação | RNF-DES-001, RNF-DES-002, RNF-CON-001, RNF-CON-002 | Validar com a Coordenação e a TI |
+| QA-02 | Valores-alvo dos RNF de desempenho e confiabilidade são propostas desta simulação | RNF-DES-001, RNF-DES-002, RNF-CONF-001, RNF-CONF-002 | Validar com a Coordenação e a TI |
 | QA-03 | Atribuição de origem quando há contato por mais de um canal na janela | RF-MOD-MONITORAMENTO-02 | Validar com a Coordenação (GAP-008) |
 | QA-04 | Fonte da lista de contumazes: CCF ou Credep | RF-MOD-QUALIFICACAO-01 | TI confirma (GAP-017) |

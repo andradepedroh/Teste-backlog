@@ -3748,9 +3748,9 @@ paths:
                 value:
                   scores:
                   - documento: '52998224725'
-                    valor: 712.5
+                    valor: 0.71
                   - documento: '11144477735'
-                    valor: 430.0
+                    valor: 0.43
       responses:
         '200':
           description: Pacote processado. Cada registro vem como aceito ou rejeitado com o motivo; em reenvio, «reenvio» vem
@@ -4740,9 +4740,9 @@ components:
           type: number
           format: double
           minimum: 0
-          maximum: 1000
-          description: Valor do score. A escala exata depende do modelo da UFMT (ver questões em aberto).
-          example: 712.5
+          maximum: 1
+          description: Valor do score, de 0 a 1, como as faixas do produto (RN-NOVO-SCO-002).
+          example: 0.71
     ResultadoRegistro:
       type: object
       description: 'O que aconteceu com um registro do pacote: aceito, ou rejeitado com o motivo da lista fechada (RN-NOVO-ING-004).'
@@ -5155,6 +5155,6 @@ components:
           description: Scores do pacote, um por contribuinte.
           example:
           - documento: '52998224725'
-            valor: 712.5
+            valor: 0.71
           - documento: '11144477735'
-            valor: 430.0
+            valor: 0.43

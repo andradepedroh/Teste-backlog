@@ -2,7 +2,7 @@
   "_comment": "Suplemento ao api-contracts.yaml — o que o OpenAPI não cobre: idempotência, semântica de cada status, limites e rastreio. Gerado por spec-api-contracts.",
   "skillVersion": "spec-api-contracts-1.4",
   "schemaVersion": "api-contracts/v1",
-  "generatedAt": "2026-11-13T20:16:21Z",
+  "generatedAt": "2026-11-13T20:18:09Z",
   "outputLanguage": "pt-BR",
   "conventions": {
     "basePath": "/api/x_cbi/v1",
@@ -1873,7 +1873,7 @@
       "x-open-questions": [
         "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
         "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação.",
-        "Escala do score da UFMT não informada; o contrato aceita 0 a 1.000 até a confirmação."
+        "O contrato assume o score de 0 a 1, como as faixas do produto (RN-NOVO-SCO-002); confirmar com a UFMT."
       ]
     },
     {
@@ -1974,7 +1974,7 @@
       "x-open-questions": [
         "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
         "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação.",
-        "Escala do score da UFMT não informada; o contrato aceita 0 a 1.000 até a confirmação."
+        "O contrato assume o score de 0 a 1, como as faixas do produto (RN-NOVO-SCO-002); confirmar com a UFMT."
       ]
     },
     {
@@ -2056,7 +2056,7 @@
       "x-open-questions": [
         "Tamanho máximo do pacote (1.000 registros) e limite de requisições são provisórios: confirmar com cada fonte e com o teste de carga (SEC-005, RSK-05).",
         "Contrato das fontes ainda não fechado com os sistemas parceiros (GAP-001): campos e nomes podem mudar antes da homologação.",
-        "Escala do score da UFMT não informada; o contrato aceita 0 a 1.000 até a confirmação."
+        "O contrato assume o score de 0 a 1, como as faixas do produto (RN-NOVO-SCO-002); confirmar com a UFMT."
       ]
     },
     {

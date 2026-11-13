@@ -14,27 +14,28 @@
 ## Changelog
 | Versão | Data | Mudança |
 |---|---|---|
-| 1.0 | 2026-11-13 | criação do manifesto — projeto ServiceNow - 2.6 Cobrança (org/projeto do ADO pendentes) |
+| 1.0 | 2026-11-13 | criação do manifesto — projeto ServiceNow - 2.6 Cobrança |
+| 1.1 | 2026-11-13 | repositórios no GitHub (andradepedroh); docs = Teste-backlog. Azure DevOps fica para o backlog do Plan |
 
 ## Repositórios
 
 | Papel | Repositório no ADO | Pasta local | Para que serve |
 |---|---|---|---|
-| docs | `servicenow-cobranca-docs` | `servicenow-cobranca-docs` | artefatos de fase; publicado como wiki |
-| codigo | `servicenow-cobranca` | `servicenow-cobranca` | código da solução |
-| prototipo | `servicenow-cobranca-prototipo` | `servicenow-cobranca-prototipo` | protótipo de alta fidelidade |
+| docs | `Teste-backlog` | `Teste-backlog` | artefatos de fase; publicado como wiki |
+| codigo | `servicenow-cobranca` (a criar no Deliver) | `servicenow-cobranca` | código da solução |
+| prototipo | `servicenow-cobranca-prototipo` (a criar antes da spec-prototype) | `servicenow-cobranca-prototipo` | protótipo de alta fidelidade |
 
 <!-- harness:workspace -->
 - papel: docs
-  repositorio: https://dev.azure.com/<org>/<projeto>/_git/servicenow-cobranca-docs
+  repositorio: https://github.com/andradepedroh/Teste-backlog
 <!-- codigo entra só no Deliver — descomente as três linhas abaixo quando o repositório de
      código existir, e preencha os tokens:
 - papel: codigo
-  repositorio: https://dev.azure.com/<org>/<projeto>/_git/servicenow-cobranca
+  repositorio: https://github.com/andradepedroh/servicenow-cobranca
   branch-de-integracao: main
 -->
 - papel: prototipo
-  repositorio: https://dev.azure.com/<org>/<projeto>/_git/servicenow-cobranca-prototipo
+  repositorio: https://github.com/andradepedroh/servicenow-cobranca-prototipo
 <!-- /harness:workspace -->
 
 > `branch-de-integracao` é opcional (default `main`). Declare quando o repo integrar em `master`,

@@ -1,0 +1,13 @@
+{
+  "projeto": "Exemplo de MVP",
+  "rodada": "1 — Lacunas do Explore",
+  "decisoes": [
+    {"id": "GAP-001", "pergunta": "O consentimento por canal vem de qual sistema?", "contexto": "Sem fonte de opt-in, a régua desses segmentos não envia nada. A cadeia pode seguir com a história marcada como bloqueada.", "bloqueia": "histórias de régua",
+     "opcoes": [{"valor": "A", "rotulo": "Marcar como bloqueado", "efeito": "As histórias ficam com o selo Bloqueada; o backlog sai completo.", "recomendada": true},
+                {"valor": "B", "rotulo": "Usar só e-mail por enquanto", "efeito": "A régua sai só por e-mail até existir a fonte."},
+                {"valor": "C", "rotulo": "Tirar a régua do MVP", "efeito": "As histórias de régua saem do backlog."}]},
+    {"id": "KICKOFF-01", "pergunta": "Níveis do backlog", "contexto": "Define as colunas e os cartões do kanban final.",
+     "opcoes": [{"valor": "A", "rotulo": "Épico › História › Tarefa", "efeito": "Colunas por módulo, cartões por requisito.", "recomendada": true},
+                {"valor": "B", "rotulo": "Épico › Feature › História › Tarefa", "efeito": "Um nível a mais entre módulo e requisito."}]}
+  ]
+}

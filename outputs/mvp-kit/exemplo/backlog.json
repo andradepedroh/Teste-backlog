@@ -1,0 +1,609 @@
+{
+ "projeto": "Cobrança Inteligente 2.6 (exemplo)",
+ "versao": "1.0",
+ "data": "2026-11-24",
+ "epicos": [
+  {
+   "id": "EP-001",
+   "nome": "Ingestão e Carteira Consolidada",
+   "objetivo": "Manter, a cada ciclo diário, a visão única de cada contribuinte com todos os débitos das seis fontes",
+   "historias": [
+    {
+     "id": "HU-056",
+     "titulo": "A consolidação de ~1,8 milhão de contribuintes pode passar de 4 horas na instância",
+     "descricao": "Como time de desenvolvimento, quero responder com medição: rodar a consolidação com lote simulado de 1,8 milhão e medir: termina em até 4 horas, para evitar o impacto: carteira desatualizada no início do expediente.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "plano de segurança / riscos técnicos"
+    },
+    {
+     "id": "HU-001",
+     "titulo": "Receber débitos das fontes",
+     "descricao": "Como sistema parceiro, quero enviar os débitos do dia em lotes, para a carteira refletir os débitos de todas as fontes.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-INGESTAO-01"
+    },
+    {
+     "id": "HU-005",
+     "titulo": "Fechar o ciclo diário e acompanhar as fontes",
+     "descricao": "Como gestor de integração, quero ver a situação de cada fonte no dia, para agir quando uma fonte não entregou.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-INGESTAO-05"
+    },
+    {
+     "id": "HU-006",
+     "titulo": "Seguir operando com fonte em falha",
+     "descricao": "Como sistema, quero manter a carteira utilizável quando uma fonte falha, para a cobrança não parar.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-INGESTAO-06"
+    },
+    {
+     "id": "HU-007",
+     "titulo": "Carga inicial e reconciliação",
+     "descricao": "Como gestor de integração, quero receber o histórico das fontes, para começar a operar com a base completa.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-INGESTAO-07"
+    },
+    {
+     "id": "HU-015",
+     "titulo": "Simular cargas das fontes",
+     "descricao": "Como gestor de integração, quero gerar lotes de teste por fonte, para testar as APIs antes da integração real.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-INGESTAO-15"
+    },
+    {
+     "id": "HU-012",
+     "titulo": "Receber sinalização coercitiva",
+     "descricao": "Como atendente, quero ver se outra coordenadoria já está cobrando de forma coercitiva, para não conflitar com protesto ou notificação.",
+     "prioridade": "Baixa",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-INGESTAO-12"
+    },
+    {
+     "id": "HU-002",
+     "titulo": "Validar o documento do contribuinte",
+     "descricao": "Como sistema parceiro, quero saber quais registros têm documento inválido, para corrigir na origem.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-INGESTAO-02"
+    },
+    {
+     "id": "HU-008",
+     "titulo": "Reprocessar registros rejeitados",
+     "descricao": "Como gestor de integração, quero reprocessar um registro rejeitado sem pedir novo envio, para corrigir rejeições por causa já resolvida.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-INGESTAO-08"
+    },
+    {
+     "id": "HU-003",
+     "titulo": "Consolidar débitos por contribuinte",
+     "descricao": "Como sistema, quero juntar os débitos de várias fontes do mesmo contribuinte, para ter uma visão única por contribuinte e por tributo.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-INGESTAO-03"
+    },
+    {
+     "id": "HU-011",
+     "titulo": "Transição MPI → Big Data",
+     "descricao": "Como gestor de integração, quero receber as duas fontes durante a transição, para não perder débitos enquanto o MPI é desligado.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-INGESTAO-11"
+    },
+    {
+     "id": "HU-014",
+     "titulo": "Carteira consolidada",
+     "descricao": "Como coordenador, quero listar a posição dos contribuintes por tributo, para escolher onde atuar.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-INGESTAO-14"
+    },
+    {
+     "id": "HU-009",
+     "titulo": "Atualizar a regularização durante o ciclo",
+     "descricao": "Como sistema, quero saber no dia quem regularizou, para não cobrar quem já pagou.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-INGESTAO-09"
+    },
+    {
+     "id": "HU-013",
+     "titulo": "Visão única do contribuinte",
+     "descricao": "Como coordenador, quero ver tudo de um contribuinte num lugar só, para decidir sem consultar outros sistemas.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-INGESTAO-13"
+    },
+    {
+     "id": "HU-010",
+     "titulo": "Alertar parcelamento em risco",
+     "descricao": "Como coordenador, quero saber quais parcelamentos têm parcela vencida, para agir antes do rompimento.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-INGESTAO-10"
+    },
+    {
+     "id": "HU-004",
+     "titulo": "Evitar duplicidade no reenvio",
+     "descricao": "Como sistema parceiro, quero reenviar um pacote sem medo de duplicar, para recuperar falhas de comunicação.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-INGESTAO-04"
+    }
+   ]
+  },
+  {
+   "id": "EP-002",
+   "nome": "Qualificação e Parametrização da Carteira",
+   "objetivo": "Formar a carteira de cada ciclo por critérios versionados e auditáveis, com grupo de controle sorteado",
+   "historias": [
+    {
+     "id": "HU-016",
+     "titulo": "Parametrizar critérios da carteira",
+     "descricao": "Como coordenador, quero definir os critérios de quem entra na carteira, para a seleção ser replicável.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-QUALIFICACAO-01"
+    },
+    {
+     "id": "HU-017",
+     "titulo": "Versionar critérios",
+     "descricao": "Como coordenador, quero publicar uma nova versão dos critérios, para a carteira usar regras aprovadas e auditáveis.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-QUALIFICACAO-02"
+    },
+    {
+     "id": "HU-018",
+     "titulo": "Simular a carteira",
+     "descricao": "Como coordenador, quero ver a carteira antes de publicar, para avaliar o efeito dos critérios.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-QUALIFICACAO-03"
+    },
+    {
+     "id": "HU-019",
+     "titulo": "Segmentar massificada × qualificada",
+     "descricao": "Como sistema, quero separar a carteira em dois eixos, para cada contribuinte receber a estratégia certa.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-QUALIFICACAO-04"
+    },
+    {
+     "id": "HU-020",
+     "titulo": "Sortear o grupo de controle",
+     "descricao": "Como sistema, quero sortear quem não será cobrado, para medir o efeito da cobrança.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-QUALIFICACAO-05"
+    },
+    {
+     "id": "HU-021",
+     "titulo": "Confirmar a carteira",
+     "descricao": "Como coordenador, quero confirmar a carteira do ciclo, para liberar as réguas e criar os casos.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-QUALIFICACAO-06"
+    }
+   ]
+  },
+  {
+   "id": "EP-003",
+   "nome": "Scoring de Liquidez",
+   "objetivo": "Usar o score da UFMT para priorizar quem cobrar, sem depender dele para operar",
+   "historias": [
+    {
+     "id": "HU-024",
+     "titulo": "Operar sem score",
+     "descricao": "Como coordenador, quero continuar qualificando e priorizando sem score, para a operação não depender do modelo da UFMT.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-SCORE-03"
+    },
+    {
+     "id": "HU-060",
+     "titulo": "Lote de score com ~1,4 milhão de linhas pode estourar o limite de requisição da plataforma",
+     "descricao": "Como time de desenvolvimento, quero responder com medição: enviar um lote simulado de 1,4 milhão em pacotes e medir o tamanho máximo aceito por pacote, para evitar o impacto: score atrasado.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "plano de segurança / riscos técnicos"
+    },
+    {
+     "id": "HU-022",
+     "titulo": "Receber o score da UFMT",
+     "descricao": "Como UFMT (sistema), quero enviar o score por lote, para o produto priorizar com base analítica.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-SCORE-01"
+    },
+    {
+     "id": "HU-023",
+     "titulo": "Classificar o score em faixas",
+     "descricao": "Como sistema, quero classificar o score em faixas, para o coordenador usar faixas na estratégia.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-SCORE-02"
+    },
+    {
+     "id": "HU-025",
+     "titulo": "Painel do Score",
+     "descricao": "Como gestor de integração, quero acompanhar a cobertura e a distribuição do score, para saber se o score está sendo útil.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-SCORE-04"
+    }
+   ]
+  },
+  {
+   "id": "EP-004",
+   "nome": "Réguas de Cobrança Massificada",
+   "objetivo": "Comunicar a carteira massificada por e-mail, SMS e WhatsApp sem confirmação manual",
+   "historias": [
+    {
+     "id": "HU-026",
+     "titulo": "Montar a régua",
+     "descricao": "Como coordenador, quero cadastrar a régua de um segmento, para definir quando e por qual canal cobrar.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-REGUAS-01"
+    },
+    {
+     "id": "HU-033",
+     "titulo": "Pausar e retomar a régua",
+     "descricao": "Como coordenador, quero pausar uma régua, para interromper a cobrança sem perder o histórico.",
+     "prioridade": "Baixa",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-REGUAS-08"
+    },
+    {
+     "id": "HU-027",
+     "titulo": "Enviar a etapa devida",
+     "descricao": "Como sistema, quero enviar a etapa certa no dia certo, para cobrar sem confirmação manual.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-REGUAS-02"
+    },
+    {
+     "id": "HU-029",
+     "titulo": "Respeitar o consentimento",
+     "descricao": "Como sistema, quero conferir o consentimento antes de enviar, para não mandar mensagem a quem não autorizou.",
+     "prioridade": "Alta",
+     "status": "bloqueada",
+     "decisoes": [
+      "PEND-01"
+     ],
+     "fonte": "RF-MOD-REGUAS-04"
+    },
+    {
+     "id": "HU-030",
+     "titulo": "Enviar por canal",
+     "descricao": "Como sistema, quero enviar por e-mail, SMS ou WhatsApp, para alcançar o contribuinte pelo canal da etapa.",
+     "prioridade": "Alta",
+     "status": "bloqueada",
+     "decisoes": [
+      "PEND-01"
+     ],
+     "fonte": "RF-MOD-REGUAS-05"
+    },
+    {
+     "id": "HU-028",
+     "titulo": "Escalonar e encaminhar",
+     "descricao": "Como sistema, quero intensificar a cobrança de quem não responde, para aumentar a recuperação.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-REGUAS-03"
+    },
+    {
+     "id": "HU-032",
+     "titulo": "Reenviar falhas",
+     "descricao": "Como sistema, quero reenviar o que falhou, para não perder a comunicação por falha momentânea.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-REGUAS-07"
+    },
+    {
+     "id": "HU-034",
+     "titulo": "Acompanhar a execução",
+     "descricao": "Como coordenador, quero ver o que foi enviado e o que falhou, para corrigir problemas de envio.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-REGUAS-09"
+    },
+    {
+     "id": "HU-057",
+     "titulo": "O provedor pode não sustentar 22 mil envios por dia",
+     "descricao": "Como time de desenvolvimento, quero responder com medição: enviar 22 mil mensagens ao provedor de teste e medir: todas aceitas em até 6 horas, para evitar o impacto: etapas atrasadas e régua fora da cadência.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "plano de segurança / riscos técnicos"
+    },
+    {
+     "id": "HU-059",
+     "titulo": "Sem fonte de opt-in fora do IPVA, as réguas de ICMS, ITCD e parcelamentos ficam paradas",
+     "descricao": "Como time de desenvolvimento, quero responder com medição: levantar com a TI se o B-Cadastro ou a DT-e têm consentimento por canal: existe campo utilizável, para evitar o impacto: cobrança massificada só para o ipva.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "plano de segurança / riscos técnicos"
+    },
+    {
+     "id": "HU-031",
+     "titulo": "Receber o status de entrega",
+     "descricao": "Como Provedor de mensagens (sistema), quero informar se a mensagem foi entregue, para a régua saber o que chegou ao contribuinte.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-REGUAS-06"
+    }
+   ]
+  },
+  {
+   "id": "EP-005",
+   "nome": "Cobrança Qualificada",
+   "objetivo": "Dar a cada atendente uma fila priorizada de casos com o dossiê completo do contribuinte",
+   "historias": [
+    {
+     "id": "HU-035",
+     "titulo": "Criar casos",
+     "descricao": "Como sistema, quero criar o caso de cobrança qualificada, para o atendente ter onde trabalhar.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-QUALIFICADA-01"
+    },
+    {
+     "id": "HU-036",
+     "titulo": "Distribuir casos",
+     "descricao": "Como sistema, quero atribuir cada caso a um atendente, para a carga ficar equilibrada sem planilha.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-QUALIFICADA-02"
+    },
+    {
+     "id": "HU-037",
+     "titulo": "Fila priorizada",
+     "descricao": "Como atendente, quero ver meus casos do mais prioritário ao menos, para começar pelo que mais recupera.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-QUALIFICADA-03"
+    },
+    {
+     "id": "HU-039",
+     "titulo": "Registrar interação",
+     "descricao": "Como atendente, quero registrar cada contato com o contribuinte, para manter o histórico do caso.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-QUALIFICADA-05"
+    },
+    {
+     "id": "HU-038",
+     "titulo": "Dossiê do caso",
+     "descricao": "Como atendente, quero ver tudo do contribuinte dentro do caso, para conduzir o contato com contexto.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-QUALIFICADA-04"
+    },
+    {
+     "id": "HU-040",
+     "titulo": "Follow-up com lembrete",
+     "descricao": "Como atendente, quero agendar o próximo contato, para não esquecer de voltar ao contribuinte.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-QUALIFICADA-06"
+    },
+    {
+     "id": "HU-041",
+     "titulo": "Reatribuir casos",
+     "descricao": "Como coordenador, quero mudar o atendente de um caso, para cobrir férias e ajustar a carga.",
+     "prioridade": "Baixa",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-QUALIFICADA-07"
+    }
+   ]
+  },
+  {
+   "id": "EP-006",
+   "nome": "Monitoramento e KPIs",
+   "objetivo": "Medir a recuperação e o efeito incremental da cobrança contra o grupo de controle",
+   "historias": [
+    {
+     "id": "HU-045",
+     "titulo": "Efeito incremental",
+     "descricao": "Como coordenador, quero comparar a carteira cobrada com o grupo de controle, para provar o efeito da cobrança.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-MONITORAMENTO-04"
+    },
+    {
+     "id": "HU-042",
+     "titulo": "Marcar notificado e regularizado",
+     "descricao": "Como sistema, quero marcar o andamento de cada item da carteira, para os indicadores contarem direto das tabelas.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-MONITORAMENTO-01"
+    },
+    {
+     "id": "HU-044",
+     "titulo": "Indicadores de funil",
+     "descricao": "Como coordenador, quero ver o funil do ciclo, para acompanhar a recuperação.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-MONITORAMENTO-03"
+    },
+    {
+     "id": "HU-048",
+     "titulo": "Painel Institucional",
+     "descricao": "Como coordenador, quero ver os indicadores do ciclo num painel, para prestar contas e decidir.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-MONITORAMENTO-07"
+    },
+    {
+     "id": "HU-047",
+     "titulo": "Realizado × meta",
+     "descricao": "Como coordenador, quero comparar o realizado com a meta por tributo, para saber onde a cobrança está abaixo do esperado.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-MONITORAMENTO-06"
+    },
+    {
+     "id": "HU-043",
+     "titulo": "Atribuir a origem da regularização",
+     "descricao": "Como sistema, quero saber se a regularização veio da cobrança, para medir o efeito da cobrança.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-MONITORAMENTO-02"
+    },
+    {
+     "id": "HU-046",
+     "titulo": "Retorno das réguas",
+     "descricao": "Como coordenador, quero saber quanto as réguas trazem de pagamento, para ajustar canais e etapas.",
+     "prioridade": "Baixa",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-MONITORAMENTO-05"
+    },
+    {
+     "id": "HU-049",
+     "titulo": "Regularizações por origem",
+     "descricao": "Como coordenador, quero listar as regularizações por origem, para conferir o que veio da cobrança.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-MONITORAMENTO-08"
+    },
+    {
+     "id": "HU-058",
+     "titulo": "Platform Analytics sem licença",
+     "descricao": "Como time de desenvolvimento, quero responder com medição: confirmar a licença; se não houver, montar o funil num relatório nativo: atende às 4 visões do painel, para evitar o impacto: sem painéis e sem a métrica principal.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "plano de segurança / riscos técnicos"
+    }
+   ]
+  },
+  {
+   "id": "EP-007",
+   "nome": "Governança, Acesso e Auditoria",
+   "objetivo": "Garantir que cada papel veja só o que lhe cabe e que toda ação relevante fique auditável",
+   "historias": [
+    {
+     "id": "HU-SEC-TRANSVERSAL",
+     "titulo": "Controles de segurança transversais da aplicação",
+     "descricao": "Como equipe de desenvolvimento da Cobrança Inteligente, quero colocar no lugar os controles de segurança que valem para a aplicação inteira, para nenhuma funcionalidade vá para produção com credencial exposta, dado pessoal em log ou alteração fora do escopo da aplicação.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "plano de segurança / riscos técnicos"
+    },
+    {
+     "id": "HU-050",
+     "titulo": "Controlar acesso por papel",
+     "descricao": "Como admin, quero aplicar as permissões de cada papel, para cada pessoa ver só o que lhe cabe.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-GOVERNANCA-01"
+    },
+    {
+     "id": "HU-053",
+     "titulo": "Auditar ações e parâmetros",
+     "descricao": "Como auditor, quero ver o histórico das alterações, para verificar quem mudou o quê.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-GOVERNANCA-04"
+    },
+    {
+     "id": "HU-054",
+     "titulo": "Administrar parâmetros, faixas e metas",
+     "descricao": "Como admin, quero manter os parâmetros da cobrança, para ajustar a operação sem desenvolvimento.",
+     "prioridade": "Média",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-GOVERNANCA-05"
+    },
+    {
+     "id": "HU-051",
+     "titulo": "Isolar a visão do atendente",
+     "descricao": "Como atendente, quero ver só meus casos e os contribuintes deles, para proteger os dados dos demais.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-GOVERNANCA-02"
+    },
+    {
+     "id": "HU-055",
+     "titulo": "Consultar auditoria",
+     "descricao": "Como auditor, quero consultar versões, eventos e histórico, para auditar a operação.",
+     "prioridade": "Baixa",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-GOVERNANCA-06"
+    },
+    {
+     "id": "HU-052",
+     "titulo": "Mascarar CPF e restringir exportação",
+     "descricao": "Como coordenador, quero proteger o CPF e controlar exportações, para cumprir a LGPD.",
+     "prioridade": "Alta",
+     "status": "pronta",
+     "decisoes": [],
+     "fonte": "RF-MOD-GOVERNANCA-03"
+    }
+   ]
+  }
+ ]
+}

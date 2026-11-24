@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pendências do MVP</title>
+<style>
+:root{--bg:#f5f4f8;--sf:#fff;--tx:#1d1a2b;--mu:#5f5a73;--bd:#dcd8e8;--ac:#4b2a8f;--acs:#ece6fa;--ok:#1e6b3a;--oks:#e3f3e8;--wa:#8a5a00;--was:#fbf0d9}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15131d;--sf:#1f1c2a;--tx:#ece9f5;--mu:#a9a3bd;--bd:#38334a;--ac:#b9a3ff;--acs:#2e2650;--ok:#7fd49c;--oks:#1d3326;--wa:#f0c46a;--was:#3a2f17}}
+:root[data-theme="dark"]{--bg:#15131d;--sf:#1f1c2a;--tx:#ece9f5;--mu:#a9a3bd;--bd:#38334a;--ac:#b9a3ff;--acs:#2e2650;--ok:#7fd49c;--oks:#1d3326;--wa:#f0c46a;--was:#3a2f17}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px 16px 120px}h1{margin:0 0 4px;font-size:22px}.sub{color:var(--mu);margin:0 0 16px}
+.card{background:var(--sf);border:1px solid var(--bd);border-left:4px solid var(--wa);border-radius:12px;padding:14px;margin-bottom:12px}.card.feito{border-left-color:var(--ok)}
+.top{display:flex;justify-content:space-between;font-size:12px;color:var(--mu)}.id{font-family:ui-monospace,Menlo,Consolas,monospace}
+.st{border-radius:999px;padding:1px 8px;background:var(--was);color:var(--wa)}.feito .st{background:var(--oks);color:var(--ok)}
+h2{font-size:15.5px;margin:6px 0}.card p{margin:0 0 8px}.afeta{font-size:12px;color:var(--mu)}
+.ops{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.op{text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit;cursor:pointer}
+.op small{display:block;color:var(--mu);margin-top:3px}.op.on{border-color:var(--ac);background:var(--acs)}.rec{font-size:11px;color:var(--ok);font-weight:600}
+.obs{width:100%;margin-top:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);color:var(--tx);font:inherit}
+.rod{position:fixed;left:0;right:0;bottom:0;background:var(--sf);border-top:1px solid var(--bd);padding:10px 16px}
+.rod div{max-width:860px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.rod button{padding:10px 16px;border-radius:8px;border:0;background:var(--ac);color:var(--sf);font:inherit;font-weight:600;cursor:pointer}
+.rod output{color:var(--mu);font-size:12.5px}
+</style></head><body>
+<main>
+  <h1>Pendências — Cobrança Inteligente 2.6 (exemplo)</h1>
+  <p class="sub">Rodada 1 · 2 decisões. Clique numa opção em cada cartão e depois em «Copiar respostas» para colar no chat.</p>
+  
+  <article class="card" data-id="PEND-01">
+    <div class="top"><span class="id">PEND-01</span><span class="st" data-st>pendente</span></div>
+    <h2>De onde vem o consentimento (opt-in) para mandar mensagem de ICMS, ITCD e parcelamentos?</h2>
+    <p>Só o IPVA tem fonte de opt-in. Sem fonte, as réguas desses segmentos ficam paradas (GAP-028).</p>
+    <p class="afeta">Afeta: HU-027 · HU-029 · HU-030</p>
+    <div class="ops"><button type="button" class="op" data-p="PEND-01" data-n="1"><b>1. Manter bloqueado</b> <span class=rec>recomendada</span><small>Réguas só para IPVA no MVP; 3 histórias ficam bloqueadas</small></button><button type="button" class="op" data-p="PEND-01" data-n="2"><b>2. E-mail institucional sem opt-in</b><small>Libera e-mail para todos; SMS e WhatsApp seguem bloqueados</small></button><button type="button" class="op" data-p="PEND-01" data-n="3"><b>3. Nova integração de consentimento</b><small>Cria uma história nova de integração no épico de réguas</small></button></div>
+    <input class="obs" data-obs="PEND-01" placeholder="Observação (opcional)" aria-label="Observação de PEND-01">
+  </article>
+  <article class="card" data-id="PEND-02">
+    <div class="top"><span class="id">PEND-02</span><span class="st" data-st>pendente</span></div>
+    <h2>O Platform Analytics está licenciado na instância?</h2>
+    <p>Os dois painéis dependem dele (GAP-002).</p>
+    <p class="afeta">Afeta: EP-06</p>
+    <div class="ops"><button type="button" class="op" data-p="PEND-02" data-n="1"><b>1. Sim, licenciado</b> <span class=rec>recomendada</span><small>Painéis seguem como estão</small></button><button type="button" class="op" data-p="PEND-02" data-n="2"><b>2. Não — usar relatório nativo</b><small>Histórias de painel viram relatórios nativos, com menos visões</small></button></div>
+    <input class="obs" data-obs="PEND-02" placeholder="Observação (opcional)" aria-label="Observação de PEND-02">
+  </article>
+</main>
+<div class="rod"><div><button id="cp" type="button">Copiar respostas</button><output id="msg" aria-live="polite"></output></div></div>
+<script>
+const CH='pend-cobrançainteligente26exemplo-1';let esc={};try{esc=JSON.parse(localStorage.getItem(CH)||'{}')}catch(x){}
+function salva(){try{localStorage.setItem(CH,JSON.stringify(esc))}catch(x){}}
+function pinta(){let n=0;document.querySelectorAll('.card').forEach(c=>{const id=c.dataset.id;const v=esc[id];c.querySelectorAll('.op').forEach(b=>b.classList.toggle('on',v&&b.dataset.n===String(v.n)));c.classList.toggle('feito',!!(v&&v.n));c.querySelector('[data-st]').textContent=v&&v.n?'decidida':'pendente';if(v&&v.n)n++;const o=c.querySelector('.obs');if(v&&v.obs&&!o.value)o.value=v.obs});document.getElementById('msg').textContent=n+' de 2 decididas'}
+document.querySelectorAll('.op').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.p;esc[id]=Object.assign(esc[id]||{},{n:+b.dataset.n});salva();pinta()}));
+document.querySelectorAll('.obs').forEach(i=>i.addEventListener('input',()=>{const id=i.dataset.obs;esc[id]=Object.assign(esc[id]||{},{obs:i.value});salva()}));
+document.getElementById('cp').addEventListener('click',async()=>{const linhas=[...document.querySelectorAll('.card')].map(c=>{const v=esc[c.dataset.id]||{};return c.dataset.id+'='+(v.n||'?')+(v.obs?' ('+v.obs.replace(/[;\n]/g,' ')+')':'')});const txt='Respostas rodada 1: '+linhas.join('; ');try{await navigator.clipboard.writeText(txt);document.getElementById('msg').textContent='Copiado. Cole no chat.'}catch(x){prompt('Copie o texto abaixo:',txt)}});
+pinta();
+</script></body></html>

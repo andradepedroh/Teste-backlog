@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kanban do MVP</title>
+<style>
+:root{--bg:#f5f4f8;--sf:#fff;--sf2:#f0eef6;--tx:#1d1a2b;--mu:#5f5a73;--bd:#dcd8e8;--ac:#4b2a8f;--acs:#ece6fa;--ok:#1e6b3a;--oks:#e3f3e8;--wa:#8a5a00;--was:#fbf0d9;--ba:#9b1c1c;--bas:#fbe4e4}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15131d;--sf:#1f1c2a;--sf2:#282436;--tx:#ece9f5;--mu:#a9a3bd;--bd:#38334a;--ac:#b9a3ff;--acs:#2e2650;--ok:#7fd49c;--oks:#1d3326;--wa:#f0c46a;--was:#3a2f17;--ba:#ff9a9a;--bas:#3d1c1c}}
+:root[data-theme="dark"]{--bg:#15131d;--sf:#1f1c2a;--sf2:#282436;--tx:#ece9f5;--mu:#a9a3bd;--bd:#38334a;--ac:#b9a3ff;--acs:#2e2650;--ok:#7fd49c;--oks:#1d3326;--wa:#f0c46a;--was:#3a2f17;--ba:#ff9a9a;--bas:#3d1c1c}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.top{padding:20px 16px 8px;max-width:1400px;margin:0 auto}h1{margin:0 0 4px;font-size:22px}.sub{margin:0 0 14px;color:var(--mu)}
+.stats{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}.stat{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:10px 14px;min-width:110px}.stat b{display:block;font-size:20px}.stat span{color:var(--mu);font-size:12px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.bar input{flex:1;min-width:200px;padding:9px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);font:inherit}
+.bar button{padding:8px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--sf);color:var(--tx);font:inherit;cursor:pointer}.bar button.on{background:var(--acs);color:var(--ac);border-color:var(--ac)}
+.board{display:flex;gap:12px;overflow-x:auto;padding:8px 16px 24px;align-items:flex-start}
+.col{flex:0 0 300px;background:var(--sf2);border:1px solid var(--bd);border-radius:12px;display:flex;flex-direction:column;max-height:calc(100vh - 40px)}
+.col-h{padding:12px;border-bottom:1px solid var(--bd)}.fid{font-weight:700;color:var(--ac);background:var(--acs);border-radius:6px;padding:1px 8px}
+.col-h h2{font-size:15px;margin:8px 0 4px}.resumo{margin:0 0 6px;font-size:12.5px}.meta{margin:2px 0;font-size:12px;color:var(--mu)}
+.cards{padding:10px;display:flex;flex-direction:column;gap:8px;overflow-y:auto}
+.card{background:var(--sf);border:1px solid var(--bd);border-left:4px solid var(--ok);border-radius:10px;padding:10px 11px}
+.card.st-depende-decisao{border-left-color:var(--wa)}.card.st-bloqueada{border-left-color:var(--ba)}.card.st-fora-do-mvp{opacity:.6;border-left-color:var(--mu)}
+.card-top{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mu)}.id{font-family:ui-monospace,Menlo,Consolas,monospace}
+.card h3{font-size:13.5px;margin:4px 0}.card p{margin:0 0 8px;font-size:12.5px}
+.tags{display:flex;flex-wrap:wrap;gap:4px}.tag{font-size:11px;border-radius:6px;padding:1px 7px}.prio{background:var(--acs);color:var(--ac)}
+.s-pronta{background:var(--oks);color:var(--ok)}.s-depende-decisao,.dec{background:var(--was);color:var(--wa)}.s-bloqueada{background:var(--bas);color:var(--ba)}.s-fora-do-mvp{background:var(--sf2);color:var(--mu)}
+.fonte{margin-top:6px;font-size:11px;color:var(--mu)}.hidden{display:none}
+@media (max-width:700px){.board{flex-direction:column}.col{flex:1 1 auto;width:100%;max-height:none}}
+</style></head><body>
+<div class="top">
+  <h1>Cobrança Inteligente 2.6 (exemplo) — Kanban do MVP</h1>
+  <p class="sub">versão 1.0 · 2026-11-24 · 7 épicos · 61 histórias · só descrição (sem critérios e tarefas)</p>
+  <div class="stats"><div class="stat"><b>59</b><span>Pronta</span></div><div class="stat"><b>2</b><span>Bloqueada</span></div></div>
+  <div class="bar"><input id="q" type="search" placeholder="Filtrar histórias" aria-label="Filtrar histórias"><button type="button" data-f="pronta">Pronta</button><button type="button" data-f="bloqueada">Bloqueada</button><button id="tema" type="button">Tema</button></div>
+</div>
+<main class="board">
+    <section class="col" data-col>
+      <header class="col-h">
+        <span class="fid">EP-001</span>
+        <h2>Ingestão e Carteira Consolidada</h2>
+        <p class="resumo">Manter, a cada ciclo diário, a visão única de cada contribuinte com todos os débitos das seis fontes</p>
+        <p class="meta"><strong><span data-count>16</span> histórias</strong></p>
+      </header>
+      <div class="cards">
+      <article class="card st-pronta" data-busca="hu-056 a consolidação de ~1,8 milhão de contribuintes pode passar de 4 horas na instância como time de desenvolvimento, quero responder com medição: rodar a consolidação com lote simulado de 1,8 milhão e medir: termina em até 4 horas, para evitar o impacto: carteira desatualizada no início do expediente. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-056</span><span class="tag prio">Alta</span></div>
+        <h3>A consolidação de ~1,8 milhão de contribuintes pode passar de 4 horas na instância</h3>
+        <p>Como time de desenvolvimento, quero responder com medição: rodar a consolidação com lote simulado de 1,8 milhão e medir: termina em até 4 horas, para evitar o impacto: carteira desatualizada no início do expediente.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: plano de segurança / riscos técnicos</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-001 receber débitos das fontes como sistema parceiro, quero enviar os débitos do dia em lotes, para a carteira refletir os débitos de todas as fontes. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-001</span><span class="tag prio">Alta</span></div>
+        <h3>Receber débitos das fontes</h3>
+        <p>Como sistema parceiro, quero enviar os débitos do dia em lotes, para a carteira refletir os débitos de todas as fontes.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-INGESTAO-01</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-005 fechar o ciclo diário e acompanhar as fontes como gestor de integração, quero ver a situação de cada fonte no dia, para agir quando uma fonte não entregou. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-005</span><span class="tag prio">Alta</span></div>
+        <h3>Fechar o ciclo diário e acompanhar as fontes</h3>
+        <p>Como gestor de integração, quero ver a situação de cada fonte no dia, para agir quando uma fonte não entregou.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-INGESTAO-05</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-006 seguir operando com fonte em falha como sistema, quero manter a carteira utilizável quando uma fonte falha, para a cobrança não parar. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-006</span><span class="tag prio">Média</span></div>
+        <h3>Seguir operando com fonte em falha</h3>
+        <p>Como sistema, quero manter a carteira utilizável quando uma fonte falha, para a cobrança não parar.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-INGESTAO-06</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-007 carga inicial e reconciliação como gestor de integração, quero receber o histórico das fontes, para começar a operar com a base completa. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-007</span><span class="tag prio">Média</span></div>
+        <h3>Carga inicial e reconciliação</h3>
+        <p>Como gestor de integração, quero receber o histórico das fontes, para começar a operar com a base completa.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-INGESTAO-07</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-015 simular cargas das fontes como gestor de integração, quero gerar lotes de teste por fonte, para testar as apis antes da integração real. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-015</span><span class="tag prio">Média</span></div>
+        <h3>Simular cargas das fontes</h3>
+        <p>Como gestor de integração, quero gerar lotes de teste por fonte, para testar as APIs antes da integração real.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-INGESTAO-15</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-012 receber sinalização coercitiva como atendente, quero ver se outra coordenadoria já está cobrando de forma coercitiva, para não conflitar com protesto ou notificação. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-012</span><span class="tag prio">Baixa</span></div>
+        <h3>Receber sinalização coercitiva</h3>
+        <p>Como atendente, quero ver se outra coordenadoria já está cobrando de forma coercitiva, para não conflitar com protesto ou notificação.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-INGESTAO-12</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-002 validar o documento do contribuinte como sistema parceiro, quero saber quais registros têm documento inválido, para corrigir na origem. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-002</span><span class="tag prio">Alta</span></div>
+        <h3>Validar o documento do contribuinte</h3>
+        <p>Como sistema parceiro, quero saber quais registros têm documento inválido, para corrigir na origem.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-INGESTAO-02</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-008 reprocessar registros rejeitados como gestor de integração, quero reprocessar um registro rejeitado sem pedir novo envio, para corrigir rejeições por causa já resolvida. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-008</span><span class="tag prio">Média</span></div>
+        <h3>Reprocessar registros rejeitados</h3>
+        <p>Como gestor de integração, quero reprocessar um registro rejeitado sem pedir novo envio, para corrigir rejeições por causa já resolvida.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-INGESTAO-08</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-003 consolidar débitos por contribuinte como sistema, quero juntar os débitos de várias fontes do mesmo contribuinte, para ter uma visão única por contribuinte e por tributo. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-003</span><span class="tag prio">Alta</span></div>
+        <h3>Consolidar débitos por contribuinte</h3>
+        <p>Como sistema, quero juntar os débitos de várias fontes do mesmo contribuinte, para ter uma visão única por contribuinte e por tributo.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-INGESTAO-03</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-011 transição mpi → big data como gestor de integração, quero receber as duas fontes durante a transição, para não perder débitos enquanto o mpi é desligado. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-011</span><span class="tag prio">Média</span></div>
+        <h3>Transição MPI → Big Data</h3>
+        <p>Como gestor de integração, quero receber as duas fontes durante a transição, para não perder débitos enquanto o MPI é desligado.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-INGESTAO-11</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-014 carteira consolidada como coordenador, quero listar a posição dos contribuintes por tributo, para escolher onde atuar. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-014</span><span class="tag prio">Média</span></div>
+        <h3>Carteira consolidada</h3>
+        <p>Como coordenador, quero listar a posição dos contribuintes por tributo, para escolher onde atuar.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-INGESTAO-14</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-009 atualizar a regularização durante o ciclo como sistema, quero saber no dia quem regularizou, para não cobrar quem já pagou. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-009</span><span class="tag prio">Alta</span></div>
+        <h3>Atualizar a regularização durante o ciclo</h3>
+        <p>Como sistema, quero saber no dia quem regularizou, para não cobrar quem já pagou.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-INGESTAO-09</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-013 visão única do contribuinte como coordenador, quero ver tudo de um contribuinte num lugar só, para decidir sem consultar outros sistemas. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-013</span><span class="tag prio">Alta</span></div>
+        <h3>Visão única do contribuinte</h3>
+        <p>Como coordenador, quero ver tudo de um contribuinte num lugar só, para decidir sem consultar outros sistemas.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-INGESTAO-13</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-010 alertar parcelamento em risco como coordenador, quero saber quais parcelamentos têm parcela vencida, para agir antes do rompimento. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-010</span><span class="tag prio">Média</span></div>
+        <h3>Alertar parcelamento em risco</h3>
+        <p>Como coordenador, quero saber quais parcelamentos têm parcela vencida, para agir antes do rompimento.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-INGESTAO-10</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-004 evitar duplicidade no reenvio como sistema parceiro, quero reenviar um pacote sem medo de duplicar, para recuperar falhas de comunicação. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-004</span><span class="tag prio">Alta</span></div>
+        <h3>Evitar duplicidade no reenvio</h3>
+        <p>Como sistema parceiro, quero reenviar um pacote sem medo de duplicar, para recuperar falhas de comunicação.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-INGESTAO-04</div>
+      </article></div>
+    </section>
+    <section class="col" data-col>
+      <header class="col-h">
+        <span class="fid">EP-002</span>
+        <h2>Qualificação e Parametrização da Carteira</h2>
+        <p class="resumo">Formar a carteira de cada ciclo por critérios versionados e auditáveis, com grupo de controle sorteado</p>
+        <p class="meta"><strong><span data-count>6</span> histórias</strong></p>
+      </header>
+      <div class="cards">
+      <article class="card st-pronta" data-busca="hu-016 parametrizar critérios da carteira como coordenador, quero definir os critérios de quem entra na carteira, para a seleção ser replicável. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-016</span><span class="tag prio">Alta</span></div>
+        <h3>Parametrizar critérios da carteira</h3>
+        <p>Como coordenador, quero definir os critérios de quem entra na carteira, para a seleção ser replicável.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-QUALIFICACAO-01</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-017 versionar critérios como coordenador, quero publicar uma nova versão dos critérios, para a carteira usar regras aprovadas e auditáveis. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-017</span><span class="tag prio">Média</span></div>
+        <h3>Versionar critérios</h3>
+        <p>Como coordenador, quero publicar uma nova versão dos critérios, para a carteira usar regras aprovadas e auditáveis.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-QUALIFICACAO-02</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-018 simular a carteira como coordenador, quero ver a carteira antes de publicar, para avaliar o efeito dos critérios. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-018</span><span class="tag prio">Média</span></div>
+        <h3>Simular a carteira</h3>
+        <p>Como coordenador, quero ver a carteira antes de publicar, para avaliar o efeito dos critérios.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-QUALIFICACAO-03</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-019 segmentar massificada × qualificada como sistema, quero separar a carteira em dois eixos, para cada contribuinte receber a estratégia certa. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-019</span><span class="tag prio">Alta</span></div>
+        <h3>Segmentar massificada × qualificada</h3>
+        <p>Como sistema, quero separar a carteira em dois eixos, para cada contribuinte receber a estratégia certa.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-QUALIFICACAO-04</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-020 sortear o grupo de controle como sistema, quero sortear quem não será cobrado, para medir o efeito da cobrança. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-020</span><span class="tag prio">Média</span></div>
+        <h3>Sortear o grupo de controle</h3>
+        <p>Como sistema, quero sortear quem não será cobrado, para medir o efeito da cobrança.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-QUALIFICACAO-05</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-021 confirmar a carteira como coordenador, quero confirmar a carteira do ciclo, para liberar as réguas e criar os casos. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-021</span><span class="tag prio">Alta</span></div>
+        <h3>Confirmar a carteira</h3>
+        <p>Como coordenador, quero confirmar a carteira do ciclo, para liberar as réguas e criar os casos.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-QUALIFICACAO-06</div>
+      </article></div>
+    </section>
+    <section class="col" data-col>
+      <header class="col-h">
+        <span class="fid">EP-003</span>
+        <h2>Scoring de Liquidez</h2>
+        <p class="resumo">Usar o score da UFMT para priorizar quem cobrar, sem depender dele para operar</p>
+        <p class="meta"><strong><span data-count>5</span> histórias</strong></p>
+      </header>
+      <div class="cards">
+      <article class="card st-pronta" data-busca="hu-024 operar sem score como coordenador, quero continuar qualificando e priorizando sem score, para a operação não depender do modelo da ufmt. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-024</span><span class="tag prio">Alta</span></div>
+        <h3>Operar sem score</h3>
+        <p>Como coordenador, quero continuar qualificando e priorizando sem score, para a operação não depender do modelo da UFMT.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-SCORE-03</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-060 lote de score com ~1,4 milhão de linhas pode estourar o limite de requisição da plataforma como time de desenvolvimento, quero responder com medição: enviar um lote simulado de 1,4 milhão em pacotes e medir o tamanho máximo aceito por pacote, para evitar o impacto: score atrasado. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-060</span><span class="tag prio">Alta</span></div>
+        <h3>Lote de score com ~1,4 milhão de linhas pode estourar o limite de requisição da plataforma</h3>
+        <p>Como time de desenvolvimento, quero responder com medição: enviar um lote simulado de 1,4 milhão em pacotes e medir o tamanho máximo aceito por pacote, para evitar o impacto: score atrasado.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: plano de segurança / riscos técnicos</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-022 receber o score da ufmt como ufmt (sistema), quero enviar o score por lote, para o produto priorizar com base analítica. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-022</span><span class="tag prio">Alta</span></div>
+        <h3>Receber o score da UFMT</h3>
+        <p>Como UFMT (sistema), quero enviar o score por lote, para o produto priorizar com base analítica.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-SCORE-01</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-023 classificar o score em faixas como sistema, quero classificar o score em faixas, para o coordenador usar faixas na estratégia. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-023</span><span class="tag prio">Média</span></div>
+        <h3>Classificar o score em faixas</h3>
+        <p>Como sistema, quero classificar o score em faixas, para o coordenador usar faixas na estratégia.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-SCORE-02</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-025 painel do score como gestor de integração, quero acompanhar a cobertura e a distribuição do score, para saber se o score está sendo útil. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-025</span><span class="tag prio">Média</span></div>
+        <h3>Painel do Score</h3>
+        <p>Como gestor de integração, quero acompanhar a cobertura e a distribuição do score, para saber se o score está sendo útil.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-SCORE-04</div>
+      </article></div>
+    </section>
+    <section class="col" data-col>
+      <header class="col-h">
+        <span class="fid">EP-004</span>
+        <h2>Réguas de Cobrança Massificada</h2>
+        <p class="resumo">Comunicar a carteira massificada por e-mail, SMS e WhatsApp sem confirmação manual</p>
+        <p class="meta"><strong><span data-count>11</span> histórias</strong></p>
+      </header>
+      <div class="cards">
+      <article class="card st-pronta" data-busca="hu-026 montar a régua como coordenador, quero cadastrar a régua de um segmento, para definir quando e por qual canal cobrar. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-026</span><span class="tag prio">Alta</span></div>
+        <h3>Montar a régua</h3>
+        <p>Como coordenador, quero cadastrar a régua de um segmento, para definir quando e por qual canal cobrar.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-REGUAS-01</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-033 pausar e retomar a régua como coordenador, quero pausar uma régua, para interromper a cobrança sem perder o histórico. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-033</span><span class="tag prio">Baixa</span></div>
+        <h3>Pausar e retomar a régua</h3>
+        <p>Como coordenador, quero pausar uma régua, para interromper a cobrança sem perder o histórico.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-REGUAS-08</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-027 enviar a etapa devida como sistema, quero enviar a etapa certa no dia certo, para cobrar sem confirmação manual. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-027</span><span class="tag prio">Alta</span></div>
+        <h3>Enviar a etapa devida</h3>
+        <p>Como sistema, quero enviar a etapa certa no dia certo, para cobrar sem confirmação manual.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-REGUAS-02</div>
+      </article>
+      <article class="card st-bloqueada" data-busca="hu-029 respeitar o consentimento como sistema, quero conferir o consentimento antes de enviar, para não mandar mensagem a quem não autorizou. bloqueada pend-01" data-st="bloqueada">
+        <div class="card-top"><span class="id">HU-029</span><span class="tag prio">Alta</span></div>
+        <h3>Respeitar o consentimento</h3>
+        <p>Como sistema, quero conferir o consentimento antes de enviar, para não mandar mensagem a quem não autorizou.</p>
+        <div class="tags"><span class="tag s-bloqueada">Bloqueada</span><span class="tag dec">PEND-01</span></div>
+        <div class="fonte">Fonte: RF-MOD-REGUAS-04</div>
+      </article>
+      <article class="card st-bloqueada" data-busca="hu-030 enviar por canal como sistema, quero enviar por e-mail, sms ou whatsapp, para alcançar o contribuinte pelo canal da etapa. bloqueada pend-01" data-st="bloqueada">
+        <div class="card-top"><span class="id">HU-030</span><span class="tag prio">Alta</span></div>
+        <h3>Enviar por canal</h3>
+        <p>Como sistema, quero enviar por e-mail, SMS ou WhatsApp, para alcançar o contribuinte pelo canal da etapa.</p>
+        <div class="tags"><span class="tag s-bloqueada">Bloqueada</span><span class="tag dec">PEND-01</span></div>
+        <div class="fonte">Fonte: RF-MOD-REGUAS-05</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-028 escalonar e encaminhar como sistema, quero intensificar a cobrança de quem não responde, para aumentar a recuperação. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-028</span><span class="tag prio">Média</span></div>
+        <h3>Escalonar e encaminhar</h3>
+        <p>Como sistema, quero intensificar a cobrança de quem não responde, para aumentar a recuperação.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-REGUAS-03</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-032 reenviar falhas como sistema, quero reenviar o que falhou, para não perder a comunicação por falha momentânea. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-032</span><span class="tag prio">Média</span></div>
+        <h3>Reenviar falhas</h3>
+        <p>Como sistema, quero reenviar o que falhou, para não perder a comunicação por falha momentânea.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-REGUAS-07</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-034 acompanhar a execução como coordenador, quero ver o que foi enviado e o que falhou, para corrigir problemas de envio. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-034</span><span class="tag prio">Média</span></div>
+        <h3>Acompanhar a execução</h3>
+        <p>Como coordenador, quero ver o que foi enviado e o que falhou, para corrigir problemas de envio.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-REGUAS-09</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-057 o provedor pode não sustentar 22 mil envios por dia como time de desenvolvimento, quero responder com medição: enviar 22 mil mensagens ao provedor de teste e medir: todas aceitas em até 6 horas, para evitar o impacto: etapas atrasadas e régua fora da cadência. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-057</span><span class="tag prio">Alta</span></div>
+        <h3>O provedor pode não sustentar 22 mil envios por dia</h3>
+        <p>Como time de desenvolvimento, quero responder com medição: enviar 22 mil mensagens ao provedor de teste e medir: todas aceitas em até 6 horas, para evitar o impacto: etapas atrasadas e régua fora da cadência.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: plano de segurança / riscos técnicos</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-059 sem fonte de opt-in fora do ipva, as réguas de icms, itcd e parcelamentos ficam paradas como time de desenvolvimento, quero responder com medição: levantar com a ti se o b-cadastro ou a dt-e têm consentimento por canal: existe campo utilizável, para evitar o impacto: cobrança massificada só para o ipva. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-059</span><span class="tag prio">Alta</span></div>
+        <h3>Sem fonte de opt-in fora do IPVA, as réguas de ICMS, ITCD e parcelamentos ficam paradas</h3>
+        <p>Como time de desenvolvimento, quero responder com medição: levantar com a TI se o B-Cadastro ou a DT-e têm consentimento por canal: existe campo utilizável, para evitar o impacto: cobrança massificada só para o ipva.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: plano de segurança / riscos técnicos</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-031 receber o status de entrega como provedor de mensagens (sistema), quero informar se a mensagem foi entregue, para a régua saber o que chegou ao contribuinte. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-031</span><span class="tag prio">Média</span></div>
+        <h3>Receber o status de entrega</h3>
+        <p>Como Provedor de mensagens (sistema), quero informar se a mensagem foi entregue, para a régua saber o que chegou ao contribuinte.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-REGUAS-06</div>
+      </article></div>
+    </section>
+    <section class="col" data-col>
+      <header class="col-h">
+        <span class="fid">EP-005</span>
+        <h2>Cobrança Qualificada</h2>
+        <p class="resumo">Dar a cada atendente uma fila priorizada de casos com o dossiê completo do contribuinte</p>
+        <p class="meta"><strong><span data-count>7</span> histórias</strong></p>
+      </header>
+      <div class="cards">
+      <article class="card st-pronta" data-busca="hu-035 criar casos como sistema, quero criar o caso de cobrança qualificada, para o atendente ter onde trabalhar. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-035</span><span class="tag prio">Alta</span></div>
+        <h3>Criar casos</h3>
+        <p>Como sistema, quero criar o caso de cobrança qualificada, para o atendente ter onde trabalhar.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-QUALIFICADA-01</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-036 distribuir casos como sistema, quero atribuir cada caso a um atendente, para a carga ficar equilibrada sem planilha. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-036</span><span class="tag prio">Média</span></div>
+        <h3>Distribuir casos</h3>
+        <p>Como sistema, quero atribuir cada caso a um atendente, para a carga ficar equilibrada sem planilha.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-QUALIFICADA-02</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-037 fila priorizada como atendente, quero ver meus casos do mais prioritário ao menos, para começar pelo que mais recupera. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-037</span><span class="tag prio">Alta</span></div>
+        <h3>Fila priorizada</h3>
+        <p>Como atendente, quero ver meus casos do mais prioritário ao menos, para começar pelo que mais recupera.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-QUALIFICADA-03</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-039 registrar interação como atendente, quero registrar cada contato com o contribuinte, para manter o histórico do caso. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-039</span><span class="tag prio">Alta</span></div>
+        <h3>Registrar interação</h3>
+        <p>Como atendente, quero registrar cada contato com o contribuinte, para manter o histórico do caso.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-QUALIFICADA-05</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-038 dossiê do caso como atendente, quero ver tudo do contribuinte dentro do caso, para conduzir o contato com contexto. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-038</span><span class="tag prio">Média</span></div>
+        <h3>Dossiê do caso</h3>
+        <p>Como atendente, quero ver tudo do contribuinte dentro do caso, para conduzir o contato com contexto.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-QUALIFICADA-04</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-040 follow-up com lembrete como atendente, quero agendar o próximo contato, para não esquecer de voltar ao contribuinte. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-040</span><span class="tag prio">Média</span></div>
+        <h3>Follow-up com lembrete</h3>
+        <p>Como atendente, quero agendar o próximo contato, para não esquecer de voltar ao contribuinte.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-QUALIFICADA-06</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-041 reatribuir casos como coordenador, quero mudar o atendente de um caso, para cobrir férias e ajustar a carga. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-041</span><span class="tag prio">Baixa</span></div>
+        <h3>Reatribuir casos</h3>
+        <p>Como coordenador, quero mudar o atendente de um caso, para cobrir férias e ajustar a carga.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-QUALIFICADA-07</div>
+      </article></div>
+    </section>
+    <section class="col" data-col>
+      <header class="col-h">
+        <span class="fid">EP-006</span>
+        <h2>Monitoramento e KPIs</h2>
+        <p class="resumo">Medir a recuperação e o efeito incremental da cobrança contra o grupo de controle</p>
+        <p class="meta"><strong><span data-count>9</span> histórias</strong></p>
+      </header>
+      <div class="cards">
+      <article class="card st-pronta" data-busca="hu-045 efeito incremental como coordenador, quero comparar a carteira cobrada com o grupo de controle, para provar o efeito da cobrança. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-045</span><span class="tag prio">Alta</span></div>
+        <h3>Efeito incremental</h3>
+        <p>Como coordenador, quero comparar a carteira cobrada com o grupo de controle, para provar o efeito da cobrança.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-MONITORAMENTO-04</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-042 marcar notificado e regularizado como sistema, quero marcar o andamento de cada item da carteira, para os indicadores contarem direto das tabelas. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-042</span><span class="tag prio">Alta</span></div>
+        <h3>Marcar notificado e regularizado</h3>
+        <p>Como sistema, quero marcar o andamento de cada item da carteira, para os indicadores contarem direto das tabelas.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-MONITORAMENTO-01</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-044 indicadores de funil como coordenador, quero ver o funil do ciclo, para acompanhar a recuperação. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-044</span><span class="tag prio">Média</span></div>
+        <h3>Indicadores de funil</h3>
+        <p>Como coordenador, quero ver o funil do ciclo, para acompanhar a recuperação.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-MONITORAMENTO-03</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-048 painel institucional como coordenador, quero ver os indicadores do ciclo num painel, para prestar contas e decidir. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-048</span><span class="tag prio">Alta</span></div>
+        <h3>Painel Institucional</h3>
+        <p>Como coordenador, quero ver os indicadores do ciclo num painel, para prestar contas e decidir.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-MONITORAMENTO-07</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-047 realizado × meta como coordenador, quero comparar o realizado com a meta por tributo, para saber onde a cobrança está abaixo do esperado. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-047</span><span class="tag prio">Média</span></div>
+        <h3>Realizado × meta</h3>
+        <p>Como coordenador, quero comparar o realizado com a meta por tributo, para saber onde a cobrança está abaixo do esperado.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-MONITORAMENTO-06</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-043 atribuir a origem da regularização como sistema, quero saber se a regularização veio da cobrança, para medir o efeito da cobrança. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-043</span><span class="tag prio">Alta</span></div>
+        <h3>Atribuir a origem da regularização</h3>
+        <p>Como sistema, quero saber se a regularização veio da cobrança, para medir o efeito da cobrança.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-MONITORAMENTO-02</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-046 retorno das réguas como coordenador, quero saber quanto as réguas trazem de pagamento, para ajustar canais e etapas. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-046</span><span class="tag prio">Baixa</span></div>
+        <h3>Retorno das réguas</h3>
+        <p>Como coordenador, quero saber quanto as réguas trazem de pagamento, para ajustar canais e etapas.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-MONITORAMENTO-05</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-049 regularizações por origem como coordenador, quero listar as regularizações por origem, para conferir o que veio da cobrança. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-049</span><span class="tag prio">Média</span></div>
+        <h3>Regularizações por origem</h3>
+        <p>Como coordenador, quero listar as regularizações por origem, para conferir o que veio da cobrança.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-MONITORAMENTO-08</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-058 platform analytics sem licença como time de desenvolvimento, quero responder com medição: confirmar a licença; se não houver, montar o funil num relatório nativo: atende às 4 visões do painel, para evitar o impacto: sem painéis e sem a métrica principal. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-058</span><span class="tag prio">Alta</span></div>
+        <h3>Platform Analytics sem licença</h3>
+        <p>Como time de desenvolvimento, quero responder com medição: confirmar a licença; se não houver, montar o funil num relatório nativo: atende às 4 visões do painel, para evitar o impacto: sem painéis e sem a métrica principal.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: plano de segurança / riscos técnicos</div>
+      </article></div>
+    </section>
+    <section class="col" data-col>
+      <header class="col-h">
+        <span class="fid">EP-007</span>
+        <h2>Governança, Acesso e Auditoria</h2>
+        <p class="resumo">Garantir que cada papel veja só o que lhe cabe e que toda ação relevante fique auditável</p>
+        <p class="meta"><strong><span data-count>7</span> histórias</strong></p>
+      </header>
+      <div class="cards">
+      <article class="card st-pronta" data-busca="hu-sec-transversal controles de segurança transversais da aplicação como equipe de desenvolvimento da cobrança inteligente, quero colocar no lugar os controles de segurança que valem para a aplicação inteira, para nenhuma funcionalidade vá para produção com credencial exposta, dado pessoal em log ou alteração fora do escopo da aplicação. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-SEC-TRANSVERSAL</span><span class="tag prio">Alta</span></div>
+        <h3>Controles de segurança transversais da aplicação</h3>
+        <p>Como equipe de desenvolvimento da Cobrança Inteligente, quero colocar no lugar os controles de segurança que valem para a aplicação inteira, para nenhuma funcionalidade vá para produção com credencial exposta, dado pessoal em log ou alteração fora do escopo da aplicação.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: plano de segurança / riscos técnicos</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-050 controlar acesso por papel como admin, quero aplicar as permissões de cada papel, para cada pessoa ver só o que lhe cabe. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-050</span><span class="tag prio">Alta</span></div>
+        <h3>Controlar acesso por papel</h3>
+        <p>Como admin, quero aplicar as permissões de cada papel, para cada pessoa ver só o que lhe cabe.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-GOVERNANCA-01</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-053 auditar ações e parâmetros como auditor, quero ver o histórico das alterações, para verificar quem mudou o quê. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-053</span><span class="tag prio">Média</span></div>
+        <h3>Auditar ações e parâmetros</h3>
+        <p>Como auditor, quero ver o histórico das alterações, para verificar quem mudou o quê.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-GOVERNANCA-04</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-054 administrar parâmetros, faixas e metas como admin, quero manter os parâmetros da cobrança, para ajustar a operação sem desenvolvimento. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-054</span><span class="tag prio">Média</span></div>
+        <h3>Administrar parâmetros, faixas e metas</h3>
+        <p>Como admin, quero manter os parâmetros da cobrança, para ajustar a operação sem desenvolvimento.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-GOVERNANCA-05</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-051 isolar a visão do atendente como atendente, quero ver só meus casos e os contribuintes deles, para proteger os dados dos demais. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-051</span><span class="tag prio">Alta</span></div>
+        <h3>Isolar a visão do atendente</h3>
+        <p>Como atendente, quero ver só meus casos e os contribuintes deles, para proteger os dados dos demais.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-GOVERNANCA-02</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-055 consultar auditoria como auditor, quero consultar versões, eventos e histórico, para auditar a operação. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-055</span><span class="tag prio">Baixa</span></div>
+        <h3>Consultar auditoria</h3>
+        <p>Como auditor, quero consultar versões, eventos e histórico, para auditar a operação.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-GOVERNANCA-06</div>
+      </article>
+      <article class="card st-pronta" data-busca="hu-052 mascarar cpf e restringir exportação como coordenador, quero proteger o cpf e controlar exportações, para cumprir a lgpd. pronta " data-st="pronta">
+        <div class="card-top"><span class="id">HU-052</span><span class="tag prio">Alta</span></div>
+        <h3>Mascarar CPF e restringir exportação</h3>
+        <p>Como coordenador, quero proteger o CPF e controlar exportações, para cumprir a LGPD.</p>
+        <div class="tags"><span class="tag s-pronta">Pronta</span></div>
+        <div class="fonte">Fonte: RF-MOD-GOVERNANCA-03</div>
+      </article></div>
+    </section></main>
+<script>
+let filtroSt=null;const q=document.getElementById('q');
+function aplica(){const t=q.value.trim().toLowerCase();document.querySelectorAll('[data-col]').forEach(c=>{let n=0;c.querySelectorAll('.card').forEach(k=>{const ok=(!t||k.dataset.busca.includes(t))&&(!filtroSt||k.dataset.st===filtroSt);k.classList.toggle('hidden',!ok);if(ok)n++});c.querySelector('[data-count]').textContent=n})}
+q.addEventListener('input',aplica);
+document.querySelectorAll('[data-f]').forEach(b=>b.addEventListener('click',()=>{filtroSt=filtroSt===b.dataset.f?null:b.dataset.f;document.querySelectorAll('[data-f]').forEach(x=>x.classList.toggle('on',x.dataset.f===filtroSt));aplica()}));
+document.getElementById('tema').addEventListener('click',()=>{const r=document.documentElement;const esc=r.dataset.theme?r.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;r.dataset.theme=esc?'light':'dark'});
+</script></body></html>

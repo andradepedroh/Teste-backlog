@@ -1,0 +1,50 @@
+{
+ "projeto": "Cobrança Inteligente 2.6 (exemplo)",
+ "rodada": 1,
+ "pendencias": [
+  {
+   "id": "PEND-01",
+   "pergunta": "De onde vem o consentimento (opt-in) para mandar mensagem de ICMS, ITCD e parcelamentos?",
+   "contexto": "Só o IPVA tem fonte de opt-in. Sem fonte, as réguas desses segmentos ficam paradas (GAP-028).",
+   "afeta": [
+    "HU-027",
+    "HU-029",
+    "HU-030"
+   ],
+   "opcoes": [
+    {
+     "rotulo": "Manter bloqueado",
+     "efeito": "Réguas só para IPVA no MVP; 3 histórias ficam bloqueadas"
+    },
+    {
+     "rotulo": "E-mail institucional sem opt-in",
+     "efeito": "Libera e-mail para todos; SMS e WhatsApp seguem bloqueados"
+    },
+    {
+     "rotulo": "Nova integração de consentimento",
+     "efeito": "Cria uma história nova de integração no épico de réguas"
+    }
+   ],
+   "recomendada": 0
+  },
+  {
+   "id": "PEND-02",
+   "pergunta": "O Platform Analytics está licenciado na instância?",
+   "contexto": "Os dois painéis dependem dele (GAP-002).",
+   "afeta": [
+    "EP-06"
+   ],
+   "opcoes": [
+    {
+     "rotulo": "Sim, licenciado",
+     "efeito": "Painéis seguem como estão"
+    },
+    {
+     "rotulo": "Não — usar relatório nativo",
+     "efeito": "Histórias de painel viram relatórios nativos, com menos visões"
+    }
+   ],
+   "recomendada": 0
+  }
+ ]
+}
